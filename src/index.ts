@@ -1,1 +1,2 @@
-console.info('Hello world!');
+export * from './vanilla';
+export * from './react/create-store';
