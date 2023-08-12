@@ -12,10 +12,10 @@ import {
 
 export type UseStore<T extends StoreData> = {
   (selectDeps?: SelectDeps<T>): T;
-  getSubscribers: () => Subscribers<T>;
-  subscribe: (fn: (state: T) => void, selectDeps?: SelectDeps<T>) => () => void;
   get: () => T;
   set: (value: SetStoreData<T>, silent?: boolean) => void;
+  subscribe: (fn: (state: T) => void, selectDeps?: SelectDeps<T>) => () => void;
+  getSubscribers: () => Subscribers<T>;
 };
 
 export const createStore = <T extends StoreData>(
@@ -24,14 +24,14 @@ export const createStore = <T extends StoreData>(
     defaultDeps?: SelectDeps<T>;
   } = {},
 ): UseStore<T> => {
-  const { getSubscribers, subscribe, getData, setData } = initStore(initializer, options);
+  const { get, set, subscribe, getSubscribers } = initStore(initializer, options);
   const { defaultDeps } = options;
 
   /**
    * Important note: selectDeps function must not be changed after initialization
    */
   const useStore = (selectDeps: SelectDeps<T> = defaultDeps) => {
-    const [state, setState] = useState(getData);
+    const [state, setState] = useState(get);
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
     useEffect(() => subscribe(setState, selectDeps), []);
@@ -39,10 +39,10 @@ export const createStore = <T extends StoreData>(
     return state;
   };
 
-  useStore.getSubscribers = getSubscribers;
+  useStore.get = get;
+  useStore.set = set;
   useStore.subscribe = subscribe;
-  useStore.get = getData;
-  useStore.set = setData;
+  useStore.getSubscribers = getSubscribers;
 
   return useStore;
 };

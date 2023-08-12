@@ -6,12 +6,11 @@ export type SelectDeps<T> = ((state: T) => any[]) | undefined;
 export type Subscribers<T> = Map<(state: T) => void, SelectDeps<T>>;
 
 export type StoreInitializer<T> = (api: {
-  set: (value: SetStoreData<T>, silent?: boolean) => void;
   get: () => T;
-  getSubscribers: () => Subscribers<T>;
+  set: (value: SetStoreData<T>, silent?: boolean) => void;
 }) => T;
 
-export type StoreEvent<T> = (state: T, subscribers: Subscribers<T>) => void;
+export type StoreEvent<T> = (state: T) => void;
 
 export type InitStoreOptions<T> = {
   intercept?: (nextState: T, prevState: T) => Partial<T>;
@@ -22,10 +21,10 @@ export type InitStoreOptions<T> = {
 };
 
 export type InitStoreReturn<T> = {
-  getSubscribers: () => Subscribers<T>;
+  get: () => T;
+  set: (value: SetStoreData<T>, silent?: boolean) => void;
   subscribe: (fn: (state: T) => void, selectDeps?: SelectDeps<T>) => () => void;
-  getData: () => T;
-  setData: (value: SetStoreData<T>, silent?: boolean) => void;
+  getSubscribers: () => Subscribers<T>;
 };
 
 export const initStore = <T extends StoreData>(
@@ -40,27 +39,16 @@ export const initStore = <T extends StoreData>(
     onLastUnsubscribe = noop,
   } = options;
 
-  let data: T;
-  let keys: (keyof T)[];
-
   const subscribers = new Map<(state: T) => void, SelectDeps<T>>();
 
   const getSubscribers = () => subscribers;
 
-  const subscribe = (fn: (state: T) => void, selectDeps?: SelectDeps<T>) => {
-    subscribers.set(fn, selectDeps);
-    if (subscribers.size === 1) onFirstSubscribe(data, subscribers);
-    onSubscribe(data, subscribers);
-    return () => {
-      subscribers.delete(fn);
-      onUnsubscribe(data, subscribers);
-      if (subscribers.size === 0) onLastUnsubscribe(data, subscribers);
-    };
-  };
+  let data: T;
+  let keys: (keyof T)[];
 
-  const getData = () => data;
+  const get = () => data;
 
-  const setData = (value: SetStoreData<T>, silent = false) => {
+  const set = (value: SetStoreData<T>, silent = false) => {
     const prevData = data;
     if (typeof value === 'function') {
       data = { ...data, ...value(data) };
@@ -94,8 +82,19 @@ export const initStore = <T extends StoreData>(
     });
   };
 
-  data = initializer({ set: setData, get: getData, getSubscribers });
+  const subscribe = (fn: (state: T) => void, selectDeps?: SelectDeps<T>) => {
+    subscribers.set(fn, selectDeps);
+    if (subscribers.size === 1) onFirstSubscribe(data);
+    onSubscribe(data);
+    return () => {
+      subscribers.delete(fn);
+      onUnsubscribe(data);
+      if (subscribers.size === 0) onLastUnsubscribe(data);
+    };
+  };
+
+  data = initializer({ get, set });
   keys = Object.keys(data);
 
-  return { getSubscribers, subscribe, getData, setData };
+  return { get, set, subscribe, getSubscribers };
 };
