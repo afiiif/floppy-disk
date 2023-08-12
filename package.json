@@ -1,0 +1,57 @@
+{
+  "name": "floppy-disk",
+  "version": "1.0.0",
+  "description": "FloppyDisk - lightweight & highly customizable state management library",
+  "keywords": [
+    "state",
+    "manager",
+    "management",
+    "react",
+    "hooks",
+    "store",
+    "utilities"
+  ],
+  "license": "MIT",
+  "main": "lib/index.js",
+  "module": "esm/index.js",
+  "sideEffects": false,
+  "files": [
+    "lib/",
+    "esm/"
+  ],
+  "types": "lib/index.d.ts",
+  "typings": "lib/index.d.ts",
+  "scripts": {
+    "prepare": "husky install",
+    "build:cjs": "tsc",
+    "build:es": "tsc -m esNext --outDir esm",
+    "build": "yarn clean && yarn build:cjs && yarn build:es",
+    "clean": "rimraf lib esm",
+    "format": "prettier --check .",
+    "format:fix": "prettier --write .",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "lint:types": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@commitlint/cli": "^17.0.0",
+    "@commitlint/config-conventional": "^17.0.0",
+    "@types/react": "^18.0.9",
+    "@types/react-dom": "^18.0.4",
+    "eslint": "^8.16.0",
+    "eslint-config-prettier": "^8.5.0",
+    "eslint-config-react-app": "^7.0.1",
+    "eslint-plugin-simple-import-sort": "^7.0.0",
+    "husky": "^8.0.1",
+    "lint-staged": "^12.4.1",
+    "prettier": "^2.6.2",
+    "react": "^18.1.0",
+    "react-dom": "^18.1.0",
+    "rimraf": "^3.0.2",
+    "typescript": "^4.6.4"
+  },
+  "peerDependencies": {
+    "react": "^17.0.0 || ^18.0.0",
+    "react-dom": "^17.0.0 || ^18.0.0"
+  }
+}

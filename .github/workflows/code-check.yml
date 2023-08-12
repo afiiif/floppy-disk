@@ -1,0 +1,90 @@
+name: Code Quality Check
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    types: [opened, synchronize]
+
+jobs:
+  install-deps:
+    name: Install dependencies
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Setup Node.js 14.x
+        uses: actions/setup-node@v1
+        with:
+          node-version: '14.x'
+
+      - name: Install locked dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: Cache dependencies
+        uses: actions/cache@v1
+        id: cache-deps
+        with:
+          path: '.'
+          key: ${{ github.sha }}
+
+  prettier:
+    name: Prettier
+    runs-on: ubuntu-latest
+    needs: install-deps
+    steps:
+      - name: Restore cached dependencies
+        uses: actions/cache@v1
+        id: restore-deps
+        with:
+          path: '.'
+          key: ${{ github.sha }}
+
+      - name: Setup Node.js 14.x
+        uses: actions/setup-node@v1
+        with:
+          node-version: '14.x'
+
+      - name: Run Prettier
+        run: yarn format
+
+  lint:
+    name: ESLint
+    runs-on: ubuntu-latest
+    needs: install-deps
+    steps:
+      - name: Restore cached dependencies
+        uses: actions/cache@v1
+        id: restore-deps
+        with:
+          path: '.'
+          key: ${{ github.sha }}
+
+      - name: Setup Node.js 14.x
+        uses: actions/setup-node@v1
+        with:
+          node-version: '14.x'
+
+      - name: Lint files
+        run: yarn lint
+
+  type-check:
+    name: Type check
+    runs-on: ubuntu-latest
+    needs: install-deps
+    steps:
+      - name: Restore cached dependencies
+        uses: actions/cache@v1
+        id: restore-deps
+        with:
+          path: '.'
+          key: ${{ github.sha }}
+
+      - name: Setup Node.js 14.x
+        uses: actions/setup-node@v1
+        with:
+          node-version: '14.x'
+
+      - name: Perform type checking
+        run: yarn lint:types
