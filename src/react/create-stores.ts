@@ -14,13 +14,16 @@ const hashStoreKey = (obj?: any) => JSON.stringify(obj, Object.keys(obj).sort())
 
 export type StoreKey = Record<string, any> | undefined;
 
-export type StoresInitializer<T> = (api: {
-  key: StoreKey;
+export type StoresInitializer<
+  TKey extends StoreKey = StoreKey,
+  T extends StoreData = StoreData,
+> = (api: {
+  key: TKey;
   get: () => T;
   set: (value: SetStoreData<T>, silent?: boolean) => void;
 }) => T;
 
-export type UseStores<T extends StoreData, TKey extends StoreKey = StoreKey> = {
+export type UseStores<TKey extends StoreKey = StoreKey, T extends StoreData = StoreData> = {
   (key?: TKey, selectDeps?: SelectDeps<T>): T;
   get: (key?: TKey) => T;
   set: (key: TKey, value: SetStoreData<T>, silent?: boolean) => void;
@@ -29,17 +32,17 @@ export type UseStores<T extends StoreData, TKey extends StoreKey = StoreKey> = {
   getSubscribers: (key: TKey) => Subscribers<T>;
 };
 
-export const createStores = <T extends StoreData, TKey extends StoreKey = StoreKey>(
-  initializer: StoresInitializer<T>,
+export const createStores = <TKey extends StoreKey = StoreKey, T extends StoreData = StoreData>(
+  initializer: StoresInitializer<TKey, T>,
   options: InitStoreOptions<T> & {
     defaultDeps?: SelectDeps<T>;
   } = {},
-): UseStores<T, TKey> => {
+): UseStores<TKey, T> => {
   const { defaultDeps } = options;
 
   const stores = new Map<string, InitStoreReturn<T>>();
 
-  const getStore = (key: StoreKey) => {
+  const getStore = (key: TKey) => {
     const normalizedKey = hashStoreKey(key);
     if (!stores.has(normalizedKey)) {
       stores.set(
@@ -53,7 +56,7 @@ export const createStores = <T extends StoreData, TKey extends StoreKey = StoreK
   /**
    * Important note: selectDeps function must not be changed after initialization
    */
-  const useStores = (key: StoreKey = {}, selectDeps: SelectDeps<T> = defaultDeps) => {
+  const useStores = (key: TKey = {} as TKey, selectDeps: SelectDeps<T> = defaultDeps) => {
     const normalizedKey = hashStoreKey(key);
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -73,12 +76,12 @@ export const createStores = <T extends StoreData, TKey extends StoreKey = StoreK
     return state;
   };
 
-  useStores.get = (key: StoreKey = {}) => {
+  useStores.get = (key: TKey = {} as TKey) => {
     const store = getStore(key);
     return store.get();
   };
 
-  useStores.set = (key: StoreKey = {}, value: SetStoreData<T>, silent?: boolean) => {
+  useStores.set = (key: TKey = {} as TKey, value: SetStoreData<T>, silent?: boolean) => {
     const store = getStore(key);
     store.set(value, silent);
   };
@@ -89,14 +92,14 @@ export const createStores = <T extends StoreData, TKey extends StoreKey = StoreK
   };
 
   useStores.subscribe = (
-    key: StoreKey = {},
+    key: TKey = {} as TKey,
     fn: (state: T) => void,
     selectDeps?: SelectDeps<T>,
   ) => {
     const store = getStore(key);
     return store.subscribe(fn, selectDeps);
   };
-  useStores.getSubscribers = (key: StoreKey = {}) => {
+  useStores.getSubscribers = (key: TKey = {} as TKey) => {
     const store = getStore(key);
     return store.getSubscribers();
   };
