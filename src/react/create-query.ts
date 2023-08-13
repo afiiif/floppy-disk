@@ -7,6 +7,7 @@ export type QueryStatus = 'loading' | 'success' | 'error';
 
 const INITIAL_QUERY_STATE = {
   isWaiting: false, // Network fetching
+  isWaitingNextPage: false,
   status: 'loading' as QueryStatus,
   isLoading: true,
   isSuccess: false,
@@ -21,6 +22,9 @@ const INITIAL_QUERY_STATE = {
   errorUpdatedAt: null,
   retryCount: 0,
   isGoingToRetry: false,
+  pageParam: undefined,
+  pageParams: [undefined],
+  hasNextPage: false,
 };
 
 export type QueryState<
@@ -32,7 +36,9 @@ export type QueryState<
   key: TKey;
   fetch: () => void;
   forceFetch: () => void;
+  fetchNextPage: () => void;
   isWaiting: boolean;
+  isWaitingNextPage: boolean;
   status: QueryStatus;
   isLoading: boolean;
   isSuccess: boolean;
@@ -47,6 +53,9 @@ export type QueryState<
   errorUpdatedAt: number | null;
   retryCount: number;
   isGoingToRetry: boolean;
+  pageParam: any;
+  pageParams: any[];
+  hasNextPage: boolean;
 };
 
 export type CreateQueryOptions<
@@ -55,7 +64,10 @@ export type CreateQueryOptions<
   TData = TResponse,
   TError = unknown,
 > = CreateStoresOptions<TKey, QueryState<TKey, TResponse, TData, TError>> & {
-  select?: (response: TResponse) => TData;
+  select?: (
+    response: TResponse,
+    state: Pick<QueryState<TKey, TResponse, TData, TError>, 'data' | 'key'>,
+  ) => TData;
   staleTime?: number;
   retry?: number;
   fetchOnMount?: boolean | ((key: TKey) => boolean);
@@ -63,7 +75,12 @@ export type CreateQueryOptions<
   getNextPageParam?: (lastPage: TResponse, index: number) => any;
 };
 
-const useQueryDefaultDeps = (state: QueryState<any>) => [state.data, state.error];
+const useQueryDefaultDeps = (state: QueryState<any>) => [
+  state.data,
+  state.error,
+  state.isWaitingNextPage,
+  state.hasNextPage,
+];
 
 export const createQuery = <
   TKey extends StoreKey = StoreKey,
@@ -84,6 +101,7 @@ export const createQuery = <
     retry = 1,
     fetchOnMount = true,
     keepPreviousData,
+    getNextPageParam = () => undefined,
     ...createStoresOptions
   } = options;
 
@@ -92,7 +110,11 @@ export const createQuery = <
       const key = _key as TKey;
 
       const forceFetch = () => {
-        const { isWaiting, isLoading, isGoingToRetry } = get();
+        const responseAllPages: TResponse[] = [];
+        const newPageParams: any[] = [undefined];
+        let pageParam: any = undefined;
+
+        const { isWaiting, isLoading, isGoingToRetry, pageParams } = get();
         if (isWaiting) return;
 
         if (isLoading) set({ isWaiting: true });
@@ -104,8 +126,18 @@ export const createQuery = <
             else set({ isGoingToRetry: false, isWaiting: true, isRefetching: true });
           }
 
-          queryFn(key, get())
+          queryFn(key, { ...get(), pageParam })
             .then((response) => {
+              responseAllPages.push(response);
+              const newPageParam = getNextPageParam(response, responseAllPages.length);
+              newPageParams.push(newPageParam);
+
+              if (newPageParam !== undefined && newPageParams.length < pageParams.length) {
+                pageParam = newPageParam;
+                callQuery();
+                return;
+              }
+
               set({
                 isWaiting: false,
                 status: 'success',
@@ -115,12 +147,17 @@ export const createQuery = <
                 isRefetching: false,
                 isRefetchError: false,
                 isPreviousData: false,
-                data: select(response),
+                data: responseAllPages.reduce((prev, response) => {
+                  return select(response, { key, data: prev });
+                }, null as TData | null),
                 response,
                 responseUpdatedAt: Date.now(),
                 error: null,
                 errorUpdatedAt: null,
                 retryCount: 0,
+                pageParam: newPageParam,
+                pageParams: newPageParams,
+                hasNextPage: newPageParam !== undefined,
               });
             })
             .catch((error: TError) => {
@@ -132,14 +169,21 @@ export const createQuery = <
                       isWaiting: false,
                       isRefetching: false,
                       isRefetchError: true,
+                      data: responseAllPages.reduce((prev, response) => {
+                        return select(response, { key, data: prev });
+                      }, null as TData | null),
                       error,
                       errorUpdatedAt,
+                      pageParam,
+                      hasNextPage: pageParam !== undefined,
                     }
                   : {
                       isWaiting: false,
                       isError: true,
                       error,
                       errorUpdatedAt,
+                      pageParam,
+                      hasNextPage: pageParam !== undefined,
                     },
               );
               if (prevState.retryCount < retry) {
@@ -159,11 +203,42 @@ export const createQuery = <
         forceFetch();
       };
 
+      const fetchNextPage = () => {
+        const state = get();
+        const { isLoading, isWaitingNextPage, data, hasNextPage, pageParam, pageParams } = state;
+
+        if (isLoading) return forceFetch();
+        if (isWaitingNextPage || !hasNextPage) return;
+
+        queryFn(key, { ...state, pageParam })
+          .then((response) => {
+            const newPageParam = getNextPageParam(response, pageParams.length);
+            set({
+              isWaitingNextPage: false,
+              response,
+              responseUpdatedAt: Date.now(),
+              data: select(response, { key, data }),
+              pageParam: newPageParam,
+              pageParams: pageParams.concat(newPageParam),
+              hasNextPage: newPageParam !== undefined,
+            });
+          })
+          .catch((error: TError) => {
+            set({
+              isWaitingNextPage: false,
+              isError: true,
+              error,
+              errorUpdatedAt: Date.now(),
+            });
+          });
+      };
+
       return {
         ...INITIAL_QUERY_STATE,
         key,
         fetch,
         forceFetch,
+        fetchNextPage,
       };
     },
     (() => {
