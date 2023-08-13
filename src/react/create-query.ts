@@ -53,6 +53,20 @@ export type QueryState<
    * You can ignore this if your query is not paginated.
    */
   fetchNextPage: () => void;
+  markAsStale: () => void;
+  reset: () => void;
+  helpers: {
+    /**
+     * Fetch all active queries.
+     *
+     * Same as `fetch` method, this will only be called if the data is stale or empty.
+     */
+    fetchAllActiveQueries: () => void;
+    /**
+     * Delete query data for all query keys.
+     */
+    resetAllQueries: () => void;
+  };
   /**
    * Network fetching status.
    */
@@ -327,12 +341,30 @@ export const createQuery = <
           });
       };
 
+      const fetchAllActiveQueries = () => {
+        useQuery.getAllWithSubscriber().forEach((state) => {
+          state.fetch();
+        });
+      };
+
+      const resetAllQueries = () => {
+        useQuery.getAll().forEach((state) => {
+          state.reset();
+        });
+      };
+
       return {
         ...INITIAL_QUERY_STATE,
         key,
         fetch,
         forceFetch,
         fetchNextPage,
+        markAsStale: () => set({ responseUpdatedAt: null }),
+        reset: () => set(INITIAL_QUERY_STATE),
+        helpers: {
+          fetchAllActiveQueries,
+          resetAllQueries,
+        },
       };
     },
     (() => {
