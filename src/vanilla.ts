@@ -1,4 +1,4 @@
-const noop = () => {};
+import { noop } from './utils';
 
 export type StoreData = Record<string, any>;
 export type SetStoreData<T> = Partial<T> | ((prevState: T) => Partial<T>);

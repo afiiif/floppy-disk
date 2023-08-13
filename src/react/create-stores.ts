@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 
+import { noop } from '../utils';
 import {
   initStore,
   InitStoreOptions,
@@ -10,7 +11,6 @@ import {
   Subscribers,
 } from '../vanilla';
 
-const noop = () => {};
 const hashStoreKey = (obj?: any) => JSON.stringify(obj, Object.keys(obj).sort());
 
 export type StoreKey = Record<string, any> | undefined;
