@@ -10,6 +10,7 @@ import {
   Subscribers,
 } from '../vanilla';
 
+const noop = () => {};
 const hashStoreKey = (obj?: any) => JSON.stringify(obj, Object.keys(obj).sort());
 
 export type StoreKey = Record<string, any> | undefined;
@@ -26,6 +27,8 @@ export type StoresInitializer<
 export type UseStores<TKey extends StoreKey = StoreKey, T extends StoreData = StoreData> = {
   (key?: TKey, selectDeps?: SelectDeps<T>): T;
   get: (key?: TKey) => T;
+  getAll: () => T[];
+  getAllWithSubscriber: () => T[];
   set: (key: TKey, value: SetStoreData<T>, silent?: boolean) => void;
   setAll: (value: SetStoreData<T>, silent?: boolean) => void;
   subscribe: (key: TKey, fn: (state: T) => void, selectDeps?: SelectDeps<T>) => () => void;
@@ -35,10 +38,11 @@ export type UseStores<TKey extends StoreKey = StoreKey, T extends StoreData = St
 export const createStores = <TKey extends StoreKey = StoreKey, T extends StoreData = StoreData>(
   initializer: StoresInitializer<TKey, T>,
   options: InitStoreOptions<T> & {
+    onBeforeChangeKey?: (nextKey: TKey, prevKey: TKey) => void;
     defaultDeps?: SelectDeps<T>;
   } = {},
 ): UseStores<TKey, T> => {
-  const { defaultDeps } = options;
+  const { onBeforeChangeKey = noop, defaultDeps } = options;
 
   const stores = new Map<string, InitStoreReturn<T>>();
 
@@ -65,9 +69,14 @@ export const createStores = <TKey extends StoreKey = StoreKey, T extends StoreDa
     const [state, setState] = useState(get);
 
     const isFirstRender = useRef(true);
+    const prevKey = useRef(key);
     useEffect(() => {
-      if (!isFirstRender.current) setState(get);
+      if (!isFirstRender.current) {
+        onBeforeChangeKey(key, prevKey.current);
+        setState(get);
+      }
       isFirstRender.current = false;
+      prevKey.current = key;
       const unsubs = subscribe(setState, selectDeps);
       return unsubs;
       // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -79,6 +88,21 @@ export const createStores = <TKey extends StoreKey = StoreKey, T extends StoreDa
   useStores.get = (key: TKey = {} as TKey) => {
     const store = getStore(key);
     return store.get();
+  };
+  useStores.getAll = () => {
+    const allStores: T[] = [];
+    stores.forEach((store) => {
+      allStores.push(store.get());
+    });
+    return allStores;
+  };
+  useStores.getAllWithSubscriber = () => {
+    const allStores: T[] = [];
+    stores.forEach((store) => {
+      const subscribers = store.getSubscribers();
+      if (subscribers.size > 0) allStores.push(store.get());
+    });
+    return allStores;
   };
 
   useStores.set = (key: TKey = {} as TKey, value: SetStoreData<T>, silent?: boolean) => {
