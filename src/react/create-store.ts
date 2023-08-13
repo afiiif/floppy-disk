@@ -11,6 +11,12 @@ import {
 } from '../vanilla';
 
 export type UseStore<T extends StoreData> = {
+  /**
+   * @param selectDeps A function that return the dependency array (just like in `useEffect`), to trigger reactivity.
+   * Defaults to `undefined` (reactive to all state change) if you didn't set `defaultDeps` on `createStore`.
+   *
+   * IMPORTANT NOTE: `selectDeps` must not be changed after initialization.
+   */
   (selectDeps?: SelectDeps<T>): T;
   get: () => T;
   set: (value: SetStoreData<T>, silent?: boolean) => void;
@@ -28,7 +34,7 @@ export const createStore = <T extends StoreData>(
   const { defaultDeps } = options;
 
   /**
-   * Important note: selectDeps function must not be changed after initialization
+   * IMPORTANT NOTE: selectDeps function must not be changed after initialization.
    */
   const useStore = (selectDeps: SelectDeps<T> = defaultDeps) => {
     const [state, setState] = useState(get);

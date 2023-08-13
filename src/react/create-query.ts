@@ -33,15 +33,61 @@ export type QueryState<
   TData = TResponse,
   TError = unknown,
 > = {
+  /**
+   * Query store key, an object that will be hashed into a string as a query store identifier.
+   */
   key: TKey;
+  /**
+   * Will only be called if the data is stale or empty.
+   */
   fetch: () => void;
+  /**
+   * Will be called even if the data is still fresh (not stale).
+   */
   forceFetch: () => void;
+  /**
+   * Fetch next page if has next page.
+   *
+   * If the data is empty, it will just fetch the first page.
+   *
+   * You can ignore this if your query is not paginated.
+   */
   fetchNextPage: () => void;
+  /**
+   * Network fetching status.
+   */
   isWaiting: boolean;
+  /**
+   * Network fetching status for fetching next page.
+   */
   isWaitingNextPage: boolean;
+  /**
+   * Status of the data.
+   *
+   * `"loading"` = no data.
+   *
+   * `"success"` = has data.
+   *
+   * `"error"` = has error.
+   *
+   * It has no relation with network fetching state.
+   * If you're looking for network fetching state, use `isWaiting` instead.
+   */
   status: QueryStatus;
+  /**
+   * Data state, will be `true` if the query has no data.
+   *
+   * It has no relation with network fetching state.
+   * If you're looking for network fetching state, use `isWaiting` instead.
+   */
   isLoading: boolean;
+  /**
+   * Data state, will be `true` if the query has a data.
+   */
   isSuccess: boolean;
+  /**
+   * Error state, will be `true` after data fetching error.
+   */
   isError: boolean;
   isRefetching: boolean;
   isRefetchError: boolean;
@@ -68,10 +114,37 @@ export type CreateQueryOptions<
     response: TResponse,
     state: Pick<QueryState<TKey, TResponse, TData, TError>, 'data' | 'key'>,
   ) => TData;
+  /**
+   * Stale time in miliseconds.
+   *
+   * Defaults to `3000` (3 seconds).
+   */
   staleTime?: number;
+  /**
+   * Number of maximum retries.
+   *
+   * Defaults to `1`.
+   */
   retry?: number;
+  /**
+   * Auto fetch when component is mounted.
+   *
+   * Will not be triggered if the data is still fresh (not stale).
+   *
+   * Defaults to `true`.
+   */
   fetchOnMount?: boolean | ((key: TKey) => boolean);
+  /**
+   * If set to `true`, previous `data` will be kept when fetching new data because the query key changed.
+   *
+   * This will only happened if there is no `data` in the next query.
+   */
   keepPreviousData?: boolean;
+  /**
+   * Only set this if you have an infinite query.
+   *
+   * This function should return a variable that will be used when fetching next page (`pageParam`).
+   */
   getNextPageParam?: (lastPage: TResponse, index: number) => any;
   onSuccess?: (response: TResponse, inputState: QueryState<TKey, TResponse, TData, TError>) => void;
   onError?: (error: TError, inputState: QueryState<TKey, TResponse, TData, TError>) => void;

@@ -25,6 +25,14 @@ export type StoresInitializer<
 }) => T;
 
 export type UseStores<TKey extends StoreKey = StoreKey, T extends StoreData = StoreData> = {
+  /**
+   * @param key Store key, an object that will be hashed into a string as a store identifier.
+   *
+   * @param selectDeps A function that return the dependency array (just like in `useEffect`), to trigger reactivity.
+   * Defaults to `undefined` (reactive to all state change) if you didn't set `defaultDeps` on `createStores`.
+   *
+   * IMPORTANT NOTE: `selectDeps` must not be changed after initialization.
+   */
   (key?: TKey, selectDeps?: SelectDeps<T>): T;
   get: (key?: TKey) => T;
   getAll: () => T[];
@@ -63,7 +71,7 @@ export const createStores = <TKey extends StoreKey = StoreKey, T extends StoreDa
   };
 
   /**
-   * Important note: selectDeps function must not be changed after initialization
+   * IMPORTANT NOTE: selectDeps function must not be changed after initialization.
    */
   const useStores = (key: TKey = {} as TKey, selectDeps: SelectDeps<T> = defaultDeps) => {
     const normalizedKey = hashStoreKey(key);
