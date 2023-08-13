@@ -127,13 +127,23 @@ export type CreateQueryOptions<
    */
   retry?: number;
   /**
-   * Auto fetch when component is mounted.
+   * Auto call the query when the component is mounted.
    *
-   * Will not be triggered if the data is still fresh (not stale).
+   * Defaults to `true`.
+   *
+   * Even if it set to `true`:
+   * - It won't call the query if the data is still fresh (not stale).
+   * - It won't call the query if the `enabled` option is set to `false`.
+   */
+  fetchOnMount?: boolean | ((key: TKey) => boolean);
+  /**
+   * If set to `false` or return `false`, the query won't be called in any condition.
+   * Auto fetch on mount will be disabled.
+   * Manually trigger `fetch` method (returned from `createQuery`) won't work too.
    *
    * Defaults to `true`.
    */
-  fetchOnMount?: boolean | ((key: TKey) => boolean);
+  enabled?: boolean | ((key: TKey) => boolean);
   /**
    * If set to `true`, previous `data` will be kept when fetching new data because the query key changed.
    *
@@ -176,6 +186,7 @@ export const createQuery = <
     staleTime = DEFAULT_STALE_TIME,
     retry = 1,
     fetchOnMount = true,
+    enabled = true,
     keepPreviousData,
     getNextPageParam = () => undefined,
     onSuccess = noop,
@@ -194,7 +205,8 @@ export const createQuery = <
         let pageParam: any = undefined;
 
         const { isWaiting, isLoading, isGoingToRetry, pageParams } = get();
-        if (isWaiting) return;
+        if (isWaiting || enabled === false || (typeof enabled === 'function' && !enabled(key)))
+          return;
 
         if (isLoading) set({ isWaiting: true });
         else set({ isWaiting: true, isRefetching: true });
