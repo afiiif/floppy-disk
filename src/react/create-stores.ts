@@ -35,12 +35,17 @@ export type UseStores<TKey extends StoreKey = StoreKey, T extends StoreData = St
   getSubscribers: (key: TKey) => Subscribers<T>;
 };
 
+export type CreateStoresOptions<
+  TKey extends StoreKey = StoreKey,
+  T extends StoreData = StoreData,
+> = InitStoreOptions<T> & {
+  onBeforeChangeKey?: (nextKey: TKey, prevKey: TKey) => void;
+  defaultDeps?: SelectDeps<T>;
+};
+
 export const createStores = <TKey extends StoreKey = StoreKey, T extends StoreData = StoreData>(
   initializer: StoresInitializer<TKey, T>,
-  options: InitStoreOptions<T> & {
-    onBeforeChangeKey?: (nextKey: TKey, prevKey: TKey) => void;
-    defaultDeps?: SelectDeps<T>;
-  } = {},
+  options: CreateStoresOptions<TKey, T> = {},
 ): UseStores<TKey, T> => {
   const { onBeforeChangeKey = noop, defaultDeps } = options;
 
