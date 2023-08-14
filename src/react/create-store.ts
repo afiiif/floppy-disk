@@ -10,6 +10,8 @@ import {
   Subscribers,
 } from '../vanilla';
 
+export type WatchProps<T> = { selectDeps?: SelectDeps<T>; render: (state: T) => any };
+
 export type UseStore<T extends StoreData> = {
   /**
    * @param selectDeps A function that return the dependency array (just like in `useEffect`), to trigger reactivity.
@@ -22,6 +24,7 @@ export type UseStore<T extends StoreData> = {
   set: (value: SetStoreData<T>, silent?: boolean) => void;
   subscribe: (fn: (state: T) => void, selectDeps?: SelectDeps<T>) => () => void;
   getSubscribers: () => Subscribers<T>;
+  Watch: (props: WatchProps<T>) => any;
 };
 
 export const createStore = <T extends StoreData>(
@@ -49,6 +52,12 @@ export const createStore = <T extends StoreData>(
   useStore.set = set;
   useStore.subscribe = subscribe;
   useStore.getSubscribers = getSubscribers;
+
+  const Watch = ({ selectDeps, render }: WatchProps<T>) => {
+    const store = useStore(selectDeps);
+    return render(store);
+  };
+  useStore.Watch = Watch;
 
   return useStore;
 };

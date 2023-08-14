@@ -10,6 +10,7 @@ import {
   StoreData,
   Subscribers,
 } from '../vanilla';
+import { WatchProps } from './create-store';
 
 const hashStoreKey = (obj?: any) => JSON.stringify(obj, Object.keys(obj).sort());
 
@@ -41,6 +42,7 @@ export type UseStores<TKey extends StoreKey = StoreKey, T extends StoreData = St
   setAll: (value: SetStoreData<T>, silent?: boolean) => void;
   subscribe: (key: TKey, fn: (state: T) => void, selectDeps?: SelectDeps<T>) => () => void;
   getSubscribers: (key: TKey) => Subscribers<T>;
+  Watch: (props: WatchProps<T> & { storeKey: TKey }) => any;
 };
 
 export type CreateStoresOptions<
@@ -140,6 +142,12 @@ export const createStores = <TKey extends StoreKey = StoreKey, T extends StoreDa
     const store = getStore(key);
     return store.getSubscribers();
   };
+
+  const Watch = ({ storeKey = {}, selectDeps, render }: WatchProps<T> & { storeKey: TKey }) => {
+    const store = useStores(storeKey as TKey, selectDeps);
+    return render(store);
+  };
+  useStores.Watch = Watch;
 
   return useStores;
 };
