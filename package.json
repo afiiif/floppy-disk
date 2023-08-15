@@ -1,7 +1,7 @@
 {
   "name": "floppy-disk",
   "version": "1.0.0",
-  "description": "FloppyDisk - lightweight & highly customizable state management library",
+  "description": "FloppyDisk - lightweight, simple, and powerful state management library",
   "keywords": [
     "state",
     "manager",
@@ -11,7 +11,16 @@
     "store",
     "utilities"
   ],
+  "author": "Muhammad Afifudin",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/afiiif/floppy-disk"
+  },
+  "bugs": {
+    "url": "https://github.com/afiiif/floppy-disk/issues"
+  },
+  "homepage": "https://github.com/afiiif/floppy-disk#readme",
   "main": "lib/index.js",
   "module": "esm/index.js",
   "sideEffects": false,
