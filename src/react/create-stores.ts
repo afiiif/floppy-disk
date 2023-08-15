@@ -27,14 +27,14 @@ export type StoresInitializer<
 
 export type UseStores<TKey extends StoreKey = StoreKey, T extends StoreData = StoreData> = {
   /**
-   * @param key Store key, an object that will be hashed into a string as a store identifier.
+   * @param key (Optional) Store key, an object that will be hashed into a string as a store identifier.
    *
    * @param selectDeps A function that return the dependency array (just like in `useEffect`), to trigger reactivity.
    * Defaults to `undefined` (reactive to all state change) if you didn't set `defaultDeps` on `createStores`.
    *
    * IMPORTANT NOTE: `selectDeps` must not be changed after initialization.
    */
-  (key?: TKey, selectDeps?: SelectDeps<T>): T;
+  (...args: [TKey?, SelectDeps<T>?] | [SelectDeps<T>?]): T;
   get: (key?: TKey) => T;
   getAll: () => T[];
   getAllWithSubscriber: () => T[];
@@ -75,7 +75,12 @@ export const createStores = <TKey extends StoreKey = StoreKey, T extends StoreDa
   /**
    * IMPORTANT NOTE: selectDeps function must not be changed after initialization.
    */
-  const useStores = (key: TKey = {} as TKey, selectDeps: SelectDeps<T> = defaultDeps) => {
+  const useStores = (...args: [TKey?, SelectDeps<T>?] | [SelectDeps<T>?]) => {
+    const [_key = {}, selectDeps = defaultDeps] = (
+      typeof args[0] === 'function' ? [{}, args[0]] : args
+    ) as [TKey, SelectDeps<T>];
+    const key = _key as TKey;
+
     const normalizedKey = hashStoreKey(key);
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
