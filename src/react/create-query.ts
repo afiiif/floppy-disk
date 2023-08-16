@@ -1,6 +1,18 @@
 import { identityFn, noop } from '../utils';
 import { createStores, CreateStoresOptions, StoreKey } from './create-stores';
 
+const getDecision = <T>(
+  value: boolean | 'always' | ((param: T) => boolean | 'always'),
+  param: T,
+  { ifTrue, ifAlways }: { ifTrue: () => void; ifAlways: () => void },
+) => {
+  if (value === true || (typeof value === 'function' && value(param) === true)) {
+    ifTrue();
+  } else if (value === 'always' || (typeof value === 'function' && value(param) === 'always')) {
+    ifAlways();
+  }
+};
+
 const DEFAULT_STALE_TIME = 3_000; // 3 seconds
 
 export type QueryStatus = 'loading' | 'success' | 'error';
@@ -62,6 +74,12 @@ export type QueryState<
      * Same as `fetch` method, this will only be called if the data is stale or empty.
      */
     fetchAllActiveQueries: () => void;
+    /**
+     * Fetch all active queries.
+     *
+     * Same as `fetch` method, this will only be called if the data is stale or empty.
+     */
+    forceFetchAllActiveQueries: () => void;
     /**
      * Delete query data for all query keys.
      */
@@ -145,11 +163,19 @@ export type CreateQueryOptions<
    *
    * Defaults to `true`.
    *
-   * Even if it set to `true`:
-   * - It won't call the query if the data is still fresh (not stale).
-   * - It won't call the query if the `enabled` option is set to `false`.
+   * - If set to `true`, the query will be called on mount focus **if the data is stale**.
+   * - If set to `false`, the query won't be called on mount focus.
+   * - If set to `"always"`, the query will be called on mount focus.
    */
-  fetchOnMount?: boolean | ((key: TKey) => boolean);
+  fetchOnMount?: boolean | 'always' | ((key: TKey) => boolean | 'always');
+  /**
+   * Defaults to `true`.
+   *
+   * - If set to `true`, the query will be called on window focus **if the data is stale**.
+   * - If set to `false`, the query won't be called on window focus.
+   * - If set to `"always"`, the query will be called on window focus.
+   */
+  fetchOnWindowFocus?: boolean | 'always' | ((key: TKey) => boolean | 'always');
   /**
    * If set to `false` or return `false`, the query won't be called in any condition.
    * Auto fetch on mount will be disabled.
@@ -192,6 +218,7 @@ export const createQuery = <
   options: CreateQueryOptions<TKey, TResponse, TData, TError> = {},
 ) => {
   const {
+    onFirstSubscribe = noop,
     onSubscribe = noop,
     onLastUnsubscribe = noop,
     onBeforeChangeKey = noop,
@@ -200,6 +227,7 @@ export const createQuery = <
     staleTime = DEFAULT_STALE_TIME,
     retry = 1,
     fetchOnMount = true,
+    fetchOnWindowFocus = true,
     enabled = true,
     keepPreviousData,
     getNextPageParam = () => undefined,
@@ -347,6 +375,12 @@ export const createQuery = <
         });
       };
 
+      const forceFetchAllActiveQueries = () => {
+        useQuery.getAllWithSubscriber().forEach((state) => {
+          state.forceFetch();
+        });
+      };
+
       const resetAllQueries = () => {
         useQuery.getAll().forEach((state) => {
           state.reset();
@@ -363,6 +397,7 @@ export const createQuery = <
         reset: () => set(INITIAL_QUERY_STATE),
         helpers: {
           fetchAllActiveQueries,
+          forceFetchAllActiveQueries,
           resetAllQueries,
         },
       };
@@ -371,21 +406,38 @@ export const createQuery = <
       const resetRetryCount = (key: TKey) => {
         useQuery.set(key, { retryCount: 0 }, true);
       };
+
+      const fetchWindowFocusHandler = () => {
+        useQuery.getAllWithSubscriber().forEach((state) => {
+          getDecision(fetchOnWindowFocus, state.key, {
+            ifTrue: state.fetch,
+            ifAlways: state.forceFetch,
+          });
+        });
+      };
+
       return {
         ...createStoresOptions,
         defaultDeps,
-        onSubscribe: (state) => {
-          if (
-            fetchOnMount === true ||
-            (typeof fetchOnMount === 'function' && fetchOnMount(state.key))
-          ) {
-            state.fetch();
+        onFirstSubscribe: (state) => {
+          if (typeof window !== 'undefined' && fetchOnWindowFocus) {
+            window.addEventListener('focus', fetchWindowFocusHandler);
           }
+          onFirstSubscribe(state);
+        },
+        onSubscribe: (state) => {
+          getDecision(fetchOnMount, state.key, {
+            ifTrue: state.fetch,
+            ifAlways: state.forceFetch,
+          });
           onSubscribe(state);
         },
         onLastUnsubscribe: (state) => {
-          onLastUnsubscribe(state);
+          if (typeof window !== 'undefined' && fetchOnWindowFocus) {
+            window.addEventListener('focus', fetchWindowFocusHandler);
+          }
           resetRetryCount(state.key);
+          onLastUnsubscribe(state);
         },
         onBeforeChangeKey: (nextKey, prevKey) => {
           if (keepPreviousData) {
