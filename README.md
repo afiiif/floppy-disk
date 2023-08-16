@@ -4,8 +4,6 @@ A lightweight, simple, and powerful state management library.
 
 This library was highly-inspired by [Zustand](https://www.npmjs.com/package/zustand) and [React-Query](https://tanstack.com/query). Both are awesome state manager, but I want to have something like that with **more power** and **less bundle size**.
 
-If you are familiar with both libraries, you might want to jump into the [comparison section](#comparison).
-
 ## Store
 
 ### Basic Concept
@@ -177,6 +175,7 @@ function CatPage() {
   );
 }
 
+// Optimized
 function CatPageOptimized() {
   return (
     <main>
@@ -246,9 +245,31 @@ function CatIsSleeping() {
 }
 ```
 
+Set default reactivity.
+
+```jsx
+const useCatStore = createStore(
+  ({ set }) => ({
+    age: 0,
+    isSleeping: false,
+    increaseAge: () => set((state) => ({ age: state.age + 1 })),
+    reset: () => set({ age: 0, isSleeping: false }),
+  }),
+  {
+    defaultDeps: (state) => [state.age], // 👈
+  },
+);
+
+function Cat() {
+  const { age } = useCatStore();
+  //                          ^will only re-render when age changed
+  return <div>Cat's age: {age}</div>;
+}
+```
+
 ## Stores. Yes, it's plural!
 
-The concept is same as [store](#store), but this can be used for multiple store.
+The concept is same as [store](#store), but this can be used for multiple stores.
 
 You need to specify the store key (an object) as identifier.
 
@@ -298,8 +319,263 @@ function Control({ catId }) {
 
 ## Query & Mutation
 
-🚧 TODO
+With the power of `createStores` function and a bit creativity, we can easily create a hook just like `useQuery` and `useInfiniteQuery` in [React-Query](https://tanstack.com/query) using `createQuery` function.
 
-## Comparison
+It can dedupe multiple request, handle caching, auto-update stale data, handle retry on error, handle infinite query, and many more. With the flexibility given in `createStores`, you can extend its power according to your needs.
 
-🚧 TODO
+### Single Query
+
+```jsx
+const useGitHubQuery = createQuery(async () => {
+  const res = await fetch('https://api.github.com/repos/afiiif/floppy-disk');
+  if (res.ok) return res.json();
+  throw res;
+});
+
+function SingleQuery() {
+  const { isLoading, data } = useGitHubQuery();
+
+  if (isLoading) return <div>Loading...</div>;
+
+  return (
+    <div>
+      <h1>{data.name}</h1>
+      <p>{data.description}</p>
+      <strong>⭐️ {data.stargazers_count}</strong>
+      <strong>🍴 {data.forks_count}</strong>
+    </div>
+  );
+}
+```
+
+Custom reactivity:
+
+```jsx
+// This component doesn't care whether the query is success or error.
+// It just listening to network fetching state. 👇
+function SingleQueryLoader() {
+  const { isWaiting } = useGitHubQuery((state) => [state.isWaiting]);
+  return <div>Is network fetching? {String(isWaiting)}</div>;
+}
+```
+
+Actions:
+
+```jsx
+function Actions() {
+  const { fetch, forceFetch, markAsStale, reset } = useGitHubQuery(() => []);
+  return (
+    <>
+      <button onClick={fetch}>Call query if the query data is stale</button>
+      <button onClick={forceFetch}>Call query</button>
+      <button onClick={markAsStale}>Invalidate query</button>
+      <button onClick={reset}>Reset query</button>
+    </>
+  );
+}
+```
+
+Options:
+
+```jsx
+const useGitHubQuery = createQuery(
+  async () => {
+    const res = await fetch('https://api.github.com/repos/afiiif/floppy-disk');
+    if (res.ok) return res.json();
+    throw res;
+  },
+  {
+    fetchOnMount: false,
+    enabled: () => !!useUserQuery.get().data?.user,
+    select: (response) => response.name
+    staleTime: Infinity, // Never stale
+    retry: 0, // No retry
+    onSuccess: (response) => {},
+    onError: (error) => {},
+    onSettled: () => {},
+  },
+);
+```
+
+Get data or do something outside component:
+
+```jsx
+const getData = () => {
+  console.log(useGitHubQuery.get().data);
+};
+
+const resetQuery = () => {
+  useGitHubQuery.get().reset();
+};
+
+function Actions() {
+  return (
+    <>
+      <button onClick={getData}>Get Data</button>
+      <button onClick={resetQuery}>Reset query</button>
+    </>
+  );
+}
+```
+
+### Single Query with Params
+
+```jsx
+const usePokemonQuery = createQuery(async ({ pokemon }) => {
+  const res = await fetch(`https://pokeapi.co/api/v2/pokemon/${pokemon}`);
+  if (res.ok) return res.json();
+  throw res;
+});
+
+function PokemonPage() {
+  const [currentPokemon, setCurrentPokemon] = useState();
+  const { isLoading, data } = usePokemonQuery({ pokemon: currentPokemon });
+
+  if (isLoading) return <div>Loading...</div>;
+
+  return (
+    <div>
+      <h1>{data.name}</h1>
+      <div>Weight: {data.weight}</div>
+    </div>
+  );
+}
+```
+
+Get data or do something outside component:
+
+```jsx
+const getDitto = () => {
+  console.log(usePokemonQuery.get({ pokemon: 'ditto' }).data);
+};
+
+const resetDitto = () => {
+  usePokemonQuery.get({ pokemon: 'ditto' }).reset();
+};
+
+function Actions() {
+  return (
+    <>
+      <button onClick={getDitto}>Get Ditto Data</button>
+      <button onClick={resetDitto}>Reset Ditto</button>
+    </>
+  );
+}
+```
+
+### Paginated Query or Infinite Query
+
+```jsx
+const usePokemonsInfQuery = createQuery(
+  async (_, { pageParam = 0 }) => {
+    const res = await fetch(`https://pokeapi.co/api/v2/pokemon?limit=10&offset=${pageParam}`);
+    if (res.ok) return res.json();
+    throw res;
+  },
+  {
+    select: (response, { data }) => [...(data || []), ...response.results],
+    getNextPageParam: (lastPageResponse, i) => {
+      if (i > 5) return undefined; // Return undefined means you have reached the end of the pages
+      return i * 10;
+    },
+  },
+);
+
+function PokemonListPage() {
+  const { data, fetchNextPage, hasNextPage, isWaitingNextPage } = usePokemonsInfQuery();
+
+  return (
+    <div>
+      {data?.map((pokemon) => (
+        <div key={pokemon.name}>{pokemon.name}</div>
+      ))}
+      {isWaitingNextPage ? (
+        <div>Loading more...</div>
+      ) : (
+        hasNextPage && <button onClick={fetchNextPage}>Load more</button>
+      )}
+    </div>
+  );
+}
+```
+
+**Note:**
+
+- The default stale time is 3 seconds.
+- The default reactivity of a query is `(state) => [state.data, state.error]`.  
+  (For paginated query `(state) => [state.data, state.error, state.isWaitingNextPage, state.hasNextPage]`)
+- You can change the `defaultDeps` on `createQuery` options.
+
+### Mutation
+
+```jsx
+const useLoginMutation = createMutation(
+  async (variables) => {
+    const res = await axios.post('/auth/login', {
+      email: variables.email,
+      password: variables.password,
+    });
+    return res.data;
+  },
+  {
+    onSuccess: (response, variables) => {
+      console.log(`Logged in as ${variables.email}`);
+      console.log(`Access token: ${response.data.accessToken}`);
+    },
+  },
+);
+
+function Login() {
+  const { mutate, isWaiting } = useLoginMutation();
+  return (
+    <div>
+      <button
+        disabled={isWaiting}
+        onClick={() =>
+          mutate({ email: 'foo@bar.baz', password: 's3cREt' }).then(() => {
+            showToast('Login success');
+          })
+        }
+      >
+        Login
+      </button>
+    </div>
+  );
+}
+```
+
+## Important Notes
+
+Don't mutate.
+
+```js
+import { createStore } from 'floppy-disk';
+
+const useCartStore = createStore(({ set, get }) => ({
+  products: [],
+  addProduct: (newProduct) => {
+    const currentProducts = get().products;
+    product.push(newProduct); // ❌ Don't mutate
+    set({ product });
+  },
+}));
+```
+
+You don't need to memoize the reactivity selector.
+
+```jsx
+function Cat() {
+  const selectAge = useCallback((state) => [state.age], []); // ❌
+  const { age } = useCatStore(selectAge);
+  return <div>Cat's age: {age}</div>;
+}
+```
+
+Don't use conditional reactivity selector.
+
+```jsx
+function Cat({ isSomething }) {
+  const { age } = useCatStore(isSomething ? (state) => [state.age] : null); // ❌
+  return <div>Cat's age: {age}</div>;
+}
+```
