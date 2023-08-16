@@ -4,6 +4,37 @@ A lightweight, simple, and powerful state management library.
 
 This library was highly-inspired by [Zustand](https://www.npmjs.com/package/zustand) and [React-Query](https://tanstack.com/query). Both are awesome state manager, but I want to have something like that with **more power** and **less bundle size**.
 
+**Bundle Size Comparison:**
+
+```js
+import { create } from 'zustand'; // 3.3k (gzipped: 1.5k)
+
+import { createStore } from 'floppy-disk'; // 1.1k (gzipped: 622) 🎉
+
+import {
+  QueryClient,
+  QueryClientProvider,
+  useQuery,
+  useInfiniteQuery,
+  useMutation,
+} from '@tanstack/react-query'; // 41k (gzipped: 11k)
+
+import { createQuery, createMutation } from 'floppy-disk'; // 6.1k (gzipped: 2.2k) 🎉
+```
+
+## Table of Contents
+
+- [Store](#store)
+  - [Basic Concept](#basic-concept)
+  - [Advanced Concept](#advanced-concept)
+- [Stores](#stores)
+- [Query \& Mutation](#query--mutation)
+  - [Single Query](#single-query)
+  - [Single Query with Params](#single-query-with-params)
+  - [Paginated Query or Infinite Query](#paginated-query-or-infinite-query)
+  - [Mutation](#mutation)
+- [Important Notes](#important-notes)
+
 ## Store
 
 ### Basic Concept
@@ -267,7 +298,7 @@ function Cat() {
 }
 ```
 
-## Stores. Yes, it's plural!
+## Stores
 
 The concept is same as [store](#store), but this can be used for multiple stores.
 
