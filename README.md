@@ -7,9 +7,9 @@ This library was highly-inspired by [Zustand](https://www.npmjs.com/package/zust
 **Bundle Size Comparison:**
 
 ```js
-import { create } from 'zustand'; // 3.3kB (gzipped: 1.5kB)
+import { create } from 'zustand'; // 3.3 kB (gzipped: 1.5 kB)
 
-import { createStore } from 'floppy-disk'; // 1.1kB (gzipped: 622B) 🎉
+import { createStore } from 'floppy-disk'; // 1.1 kB (gzipped: 622 B) 🎉
 
 import {
   QueryClient,
@@ -17,10 +17,15 @@ import {
   useQuery,
   useInfiniteQuery,
   useMutation,
-} from '@tanstack/react-query'; // 41kB (gzipped: 11kB)
+} from '@tanstack/react-query'; // 41 kB (gzipped: 11 kB)
 
-import { createQuery, createMutation } from 'floppy-disk'; // 6.1kB (gzipped: 2.2kB) 🎉
+import { createQuery, createMutation } from 'floppy-disk'; // 6.3 kB (gzipped: 2.3 kB) 🎉
 ```
+
+- Using Zustand & React-Query: https://demo-zustand-react-query.vercel.app/  
+  👉 Total: **309.16 kB** ~ gzipped 97.66 kB
+- Using Floppy Disk: https://demo-floppy-disk.vercel.app/  
+  👉 Total: **279.46 kB** ~ gzipped 89.33 kB
 
 ## Table of Contents
 
