@@ -202,9 +202,15 @@ export type CreateQueryOptions<
    * This function should return a variable that will be used when fetching next page (`pageParam`).
    */
   getNextPageParam?: (lastPage: TResponse, index: number) => any;
-  onSuccess?: (response: TResponse, inputState: QueryState<TKey, TResponse, TData, TError>) => void;
-  onError?: (error: TError, inputState: QueryState<TKey, TResponse, TData, TError>) => void;
-  onSettled?: (inputState: QueryState<TKey, TResponse, TData, TError>) => void;
+  onSuccess?: (
+    response: TResponse,
+    stateBeforeCallQuery: QueryState<TKey, TResponse, TData, TError>,
+  ) => void;
+  onError?: (
+    error: TError,
+    stateBeforeCallQuery: QueryState<TKey, TResponse, TData, TError>,
+  ) => void;
+  onSettled?: (stateBeforeCallQuery: QueryState<TKey, TResponse, TData, TError>) => void;
 };
 
 const useQueryDefaultDeps = (state: QueryState<any>) => [
@@ -264,8 +270,8 @@ export const createQuery = <
             if (isLoading) set({ isGoingToRetry: false, isWaiting: true });
             else set({ isGoingToRetry: false, isWaiting: true, isRefetching: true });
           }
-          const inputState = { ...get(), pageParam };
-          queryFn(key, inputState)
+          const stateBeforeCallQuery = { ...get(), pageParam };
+          queryFn(key, stateBeforeCallQuery)
             .then((response) => {
               responseAllPages.push(response);
               const newPageParam = getNextPageParam(response, responseAllPages.length);
@@ -296,7 +302,7 @@ export const createQuery = <
                 pageParams: newPageParams,
                 hasNextPage: newPageParam !== undefined,
               });
-              onSuccess(response, inputState);
+              onSuccess(response, stateBeforeCallQuery);
             })
             .catch((error: TError) => {
               const prevState = get();
@@ -328,10 +334,10 @@ export const createQuery = <
                 set({ retryCount: prevState.retryCount + 1, isGoingToRetry: true });
                 callQuery();
               }
-              onError(error, inputState);
+              onError(error, stateBeforeCallQuery);
             })
             .finally(() => {
-              onSettled(inputState);
+              onSettled(stateBeforeCallQuery);
             });
         };
 

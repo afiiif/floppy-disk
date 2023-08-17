@@ -21,21 +21,21 @@ export type CreateMutationOptions<TVar, TResponse = any, TError = unknown> = Ini
 > & {
   onMutate?: (
     variables: TVar | undefined,
-    inputState: MutationState<TVar, TResponse, TError>,
+    stateBeforeMutate: MutationState<TVar, TResponse, TError>,
   ) => void;
   onSuccess?: (
     response: TResponse,
     variables: TVar | undefined,
-    inputState: MutationState<TVar, TResponse, TError>,
+    stateBeforeMutate: MutationState<TVar, TResponse, TError>,
   ) => void;
   onError?: (
     error: TError,
     variables: TVar | undefined,
-    inputState: MutationState<TVar, TResponse, TError>,
+    stateBeforeMutate: MutationState<TVar, TResponse, TError>,
   ) => void;
   onSettled?: (
     variables: TVar | undefined,
-    inputState: MutationState<TVar, TResponse, TError>,
+    stateBeforeMutate: MutationState<TVar, TResponse, TError>,
   ) => void;
 };
 
@@ -65,10 +65,10 @@ export const createMutation = <TVar, TResponse = any, TError = unknown>(
       errorUpdatedAt: null,
       mutate: (variables) => {
         set({ isWaiting: true });
-        const state = get();
-        onMutate(variables, state);
+        const stateBeforeMutate = get();
+        onMutate(variables, stateBeforeMutate);
         return new Promise((resolve, reject) => {
-          mutationFn(variables, state)
+          mutationFn(variables, stateBeforeMutate)
             .then((response) => {
               set({
                 isWaiting: false,
@@ -79,7 +79,7 @@ export const createMutation = <TVar, TResponse = any, TError = unknown>(
                 error: null,
                 errorUpdatedAt: null,
               });
-              onSuccess(response, variables, state);
+              onSuccess(response, variables, stateBeforeMutate);
               resolve(response);
             })
             .catch((error: TError) => {
@@ -90,11 +90,11 @@ export const createMutation = <TVar, TResponse = any, TError = unknown>(
                 error,
                 errorUpdatedAt: Date.now(),
               });
-              onError(error, variables, state);
+              onError(error, variables, stateBeforeMutate);
               reject(error);
             })
             .finally(() => {
-              onSettled(variables, state);
+              onSettled(variables, stateBeforeMutate);
             });
         });
       },
