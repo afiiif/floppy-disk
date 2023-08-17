@@ -36,11 +36,11 @@ export default function HomePage() {
 
       <a
         className="inline-block mt-8 text-red-500 underline"
-        href="https://github.com/afiiif/floppy-disk/tree/comparison/comparison/nextjs"
+        href="https://github.com/afiiif/floppy-disk/tree/main/comparison/nextjs"
         target="_blank"
         rel="noreferrer"
       >
-        https://github.com/afiiif/floppy-disk/tree/comparison/comparison/nextjs
+        https://github.com/afiiif/floppy-disk/tree/main/comparison/nextjs
       </a>
     </>
   );
