@@ -13,7 +13,10 @@ export type MutationState<TVar, TResponse = any, TError = unknown> = {
   responseUpdatedAt: number | null;
   error: TError | null;
   errorUpdatedAt: number | null;
-  mutate: (variables?: TVar) => Promise<TResponse>;
+  /**
+   * Mutate function is a promise that will always resolve.
+   */
+  mutate: (variables?: TVar) => Promise<{ response?: TResponse; error?: TError; variables?: TVar }>;
 };
 
 export type CreateMutationOptions<TVar, TResponse = any, TError = unknown> = InitStoreOptions<
@@ -67,7 +70,7 @@ export const createMutation = <TVar, TResponse = any, TError = unknown>(
         set({ isWaiting: true });
         const stateBeforeMutate = get();
         onMutate(variables, stateBeforeMutate);
-        return new Promise((resolve, reject) => {
+        return new Promise((resolve) => {
           mutationFn(variables, stateBeforeMutate)
             .then((response) => {
               set({
@@ -80,7 +83,7 @@ export const createMutation = <TVar, TResponse = any, TError = unknown>(
                 errorUpdatedAt: null,
               });
               onSuccess(response, variables, stateBeforeMutate);
-              resolve(response);
+              resolve({ response, variables });
             })
             .catch((error: TError) => {
               set({
@@ -91,7 +94,7 @@ export const createMutation = <TVar, TResponse = any, TError = unknown>(
                 errorUpdatedAt: Date.now(),
               });
               onError(error, variables, stateBeforeMutate);
-              reject(error);
+              resolve({ error, variables });
             })
             .finally(() => {
               onSettled(variables, stateBeforeMutate);
