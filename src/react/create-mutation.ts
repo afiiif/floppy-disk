@@ -73,6 +73,7 @@ export const createMutation = <TVar, TResponse = any, TError = unknown>(
               set({
                 isWaiting: false,
                 isSuccess: true,
+                isError: false,
                 response,
                 responseUpdatedAt: Date.now(),
                 error: null,
@@ -83,7 +84,8 @@ export const createMutation = <TVar, TResponse = any, TError = unknown>(
             })
             .catch((error: TError) => {
               set({
-                isWaiting: true,
+                isWaiting: false,
+                isSuccess: false,
                 isError: true,
                 error,
                 errorUpdatedAt: Date.now(),
