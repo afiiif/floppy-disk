@@ -9,6 +9,7 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@tabler/icons-react": "^2.30.0",
     "@tanstack/react-query": "^4.32.6",
     "@types/node": "20.5.0",
     "@types/react": "18.2.20",
