@@ -1,10 +1,16 @@
 import { cn } from '@/utils';
 import { useCountStore } from './store';
+import Head from 'next/head';
 
 export default function StorePage() {
   return (
     <>
+      <Head>
+        <title>Store | Zustand & React-Query</title>
+        <meta property="og:title" content="Store | Zustand & React-Query" key="title" />
+      </Head>
       <h1 className="h1">Store</h1>
+
       <div className="flex flex-wrap gap-x-6">
         <Counter />
         <div className="border border-neutral-800 rounded-lg p-2 inline-block w-36 mb-6">

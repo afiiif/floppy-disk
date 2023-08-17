@@ -1,12 +1,17 @@
 import { useState } from 'react';
 import WithoutParam from './WithoutParam';
 import WithParam from './WithParam';
+import Head from 'next/head';
 
 export default function SingleQueryPage() {
   const [packageName, setPackageName] = useState('');
 
   return (
     <>
+      <Head>
+        <title>Single Query | Zustand & React-Query</title>
+        <meta property="og:title" content="Single Query | Zustand & React-Query" key="title" />
+      </Head>
       <h1 className="h1">Single Query</h1>
 
       <h2 className="h2 border-b">Without Param</h2>

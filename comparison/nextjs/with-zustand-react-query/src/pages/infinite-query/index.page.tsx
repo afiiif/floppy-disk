@@ -1,5 +1,6 @@
 import { useInfiniteQuery } from '@tanstack/react-query';
 import { fetchRepos } from './api';
+import Head from 'next/head';
 
 const keyword = 'chocobo language:javascript';
 
@@ -16,6 +17,10 @@ export default function InfiniteQueryPage() {
 
   return (
     <>
+      <Head>
+        <title>Infinite Query | Zustand & React-Query</title>
+        <meta property="og:title" content="Infinite Query | Zustand & React-Query" key="title" />
+      </Head>
       <h1 className="h1">Infinite Query</h1>
 
       <ul className="list-disc pl-7">
