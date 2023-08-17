@@ -28,18 +28,25 @@ export default function MutationPage() {
 }
 
 function MutationComponent({ title }: { title: string }) {
-  const { mutate, response, isWaiting } = useMyMutation();
+  const { mutate, isWaiting, isSuccess, response, responseUpdatedAt, isError, errorUpdatedAt } =
+    useMyMutation();
   return (
     <section className="border p-5 rounded-lg mt-6 flex items-start gap-6 flex-wrap">
       <button className="btn" onClick={() => mutate(title)}>
         Add {title}
       </button>
-      {isWaiting ? <div>Loading...</div> : <pre>{JSON.stringify(response, null, 2)}</pre>}
+      <pre className="text-sm">
+        {JSON.stringify(
+          { isWaiting, isSuccess, isError, response, responseUpdatedAt, errorUpdatedAt },
+          null,
+          2,
+        )}
+      </pre>
     </section>
   );
 }
 
 function IsMutating() {
   const { isWaiting } = useMyMutation((state) => [state.isWaiting]);
-  return <div className="mt-6">Is mutating: {isWaiting}</div>;
+  return <div className="mt-6">Is mutating: {String(isWaiting)}</div>;
 }
