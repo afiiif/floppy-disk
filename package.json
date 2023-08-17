@@ -30,6 +30,9 @@
   ],
   "types": "lib/index.d.ts",
   "typings": "lib/index.d.ts",
+  "engines": {
+    "node": ">=18"
+  },
   "scripts": {
     "prepare": "husky install",
     "build:cjs": "tsc",
