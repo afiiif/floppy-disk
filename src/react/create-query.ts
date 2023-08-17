@@ -67,6 +67,12 @@ export type QueryState<
   fetchNextPage: () => void;
   markAsStale: () => void;
   reset: () => void;
+  /**
+   * Set query response & data.
+   */
+  setResponse: (
+    responseSetter: TResponse | ((state: QueryState<TKey, TResponse, TData, TError>) => TResponse),
+  ) => void;
   helpers: {
     /**
      * Fetch all active queries.
@@ -370,6 +376,30 @@ export const createQuery = <
           });
       };
 
+      const setResponse = (
+        responseSetter:
+          | TResponse
+          | ((state: QueryState<TKey, TResponse, TData, TError>) => TResponse),
+      ) => {
+        if (responseSetter === undefined) return;
+        const store = useQuery.get(key);
+        const response: TResponse =
+          typeof responseSetter === 'function'
+            ? (responseSetter as (state: QueryState<TKey, TResponse, TData, TError>) => TResponse)(
+                store,
+              )
+            : responseSetter;
+        useQuery.set(key, {
+          status: 'success',
+          isLoading: false,
+          isSuccess: true,
+          isError: false,
+          response,
+          responseUpdatedAt: Date.now(),
+          data: select(response, { key, data: store.data }),
+        });
+      };
+
       const fetchAllActiveQueries = () => {
         useQuery.getAllWithSubscriber().forEach((state) => {
           state.fetch();
@@ -396,6 +426,7 @@ export const createQuery = <
         fetchNextPage,
         markAsStale: () => set({ responseUpdatedAt: null }),
         reset: () => set(INITIAL_QUERY_STATE),
+        setResponse,
         helpers: {
           fetchAllActiveQueries,
           forceFetchAllActiveQueries,
