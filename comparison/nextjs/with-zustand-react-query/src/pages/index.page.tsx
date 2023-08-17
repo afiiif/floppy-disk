@@ -18,14 +18,14 @@ export default function HomePage() {
 
       <pre className="text-sm border rounded-lg p-4 overflow-auto mt-6">
         {`Route (pages)                              Size     First Load JS
-┌ ○ /                                      930 B          87.6 kB
+┌ ○ /                                      931 B          87.6 kB
 ├   /_app                                  0 B            86.7 kB
 ├ ○ /404                                   182 B          86.9 kB
-├ ○ /infinite-query                        1.3 kB         91.8 kB
-├ ● /infinite-query-ssg                    1.8 kB         92.3 kB
-├ ○ /mutation                              2.22 kB        88.9 kB
-├ ○ /single-query                          1.13 kB        91.6 kB
-└ ○ /store                                 2.04 kB        88.7 kB
+├ ○ /infinite-query                        1.28 kB        91.8 kB
+├ ● /infinite-query-ssg                    1.78 kB        92.3 kB
+├ ○ /mutation                              2.2 kB         88.9 kB
+├ ○ /single-query                          1.11 kB        91.6 kB
+└ ○ /store                                 2.02 kB        88.7 kB
 + First Load JS shared by all              89.4 kB
   ├ chunks/framework-63157d71ad419e09.js   45.2 kB
   ├ chunks/main-14b4672be0fd158b.js        28.6 kB

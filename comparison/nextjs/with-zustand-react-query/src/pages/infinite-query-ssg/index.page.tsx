@@ -37,12 +37,8 @@ export default function InfiniteQuerySsgPage() {
   return (
     <>
       <Head>
-        <title>Infinite Query SSG | Zustand & React-Query</title>
-        <meta
-          property="og:title"
-          content="Infinite Query SSG | Zustand & React-Query"
-          key="title"
-        />
+        <title>Infinite Query SSG</title>
+        <meta property="og:title" content="Infinite Query SSG" key="title" />
       </Head>
       <h1 className="h1">Infinite Query SSG</h1>
 

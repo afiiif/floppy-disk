@@ -6,8 +6,8 @@ export default function StorePage() {
   return (
     <>
       <Head>
-        <title>Store | Zustand & React-Query</title>
-        <meta property="og:title" content="Store | Zustand & React-Query" key="title" />
+        <title>Store</title>
+        <meta property="og:title" content="Store" key="title" />
       </Head>
       <h1 className="h1">Store</h1>
 

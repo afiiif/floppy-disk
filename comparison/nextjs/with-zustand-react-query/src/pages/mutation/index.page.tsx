@@ -15,8 +15,8 @@ export default function MutationPage() {
   return (
     <>
       <Head>
-        <title>Mutation | Zustand & React-Query</title>
-        <meta property="og:title" content="Mutation | Zustand & React-Query" key="title" />
+        <title>Mutation</title>
+        <meta property="og:title" content="Mutation" key="title" />
       </Head>
       <h1 className="h1">Mutation</h1>
 

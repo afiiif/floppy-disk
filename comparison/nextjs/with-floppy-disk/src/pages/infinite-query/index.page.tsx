@@ -22,8 +22,8 @@ export default function InfiniteQueryPage() {
   return (
     <>
       <Head>
-        <title>Infinite Query | Zustand & React-Query</title>
-        <meta property="og:title" content="Infinite Query | Zustand & React-Query" key="title" />
+        <title>Infinite Query</title>
+        <meta property="og:title" content="Infinite Query" key="title" />
       </Head>
       <h1 className="h1">Infinite Query</h1>
 

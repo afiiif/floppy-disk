@@ -9,8 +9,8 @@ export default function SingleQueryPage() {
   return (
     <>
       <Head>
-        <title>Single Query | Zustand & React-Query</title>
-        <meta property="og:title" content="Single Query | Zustand & React-Query" key="title" />
+        <title>Single Query</title>
+        <meta property="og:title" content="Single Query" key="title" />
       </Head>
       <h1 className="h1">Single Query</h1>
 
