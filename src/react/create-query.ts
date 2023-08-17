@@ -346,6 +346,7 @@ export const createQuery = <
         if (isLoading) return forceFetch();
         if (isWaitingNextPage || !hasNextPage) return;
 
+        set({ isWaitingNextPage: true });
         queryFn(key, { ...state, pageParam })
           .then((response) => {
             const newPageParam = getNextPageParam(response, pageParams.length);
