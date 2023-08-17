@@ -7,9 +7,9 @@ This library was highly-inspired by [Zustand](https://www.npmjs.com/package/zust
 **Bundle Size Comparison:**
 
 ```js
-import { create } from 'zustand'; // 3.3k (gzipped: 1.5k)
+import { create } from 'zustand'; // 3.3kB (gzipped: 1.5kB)
 
-import { createStore } from 'floppy-disk'; // 1.1k (gzipped: 622) 🎉
+import { createStore } from 'floppy-disk'; // 1.1kB (gzipped: 622B) 🎉
 
 import {
   QueryClient,
@@ -17,9 +17,9 @@ import {
   useQuery,
   useInfiniteQuery,
   useMutation,
-} from '@tanstack/react-query'; // 41k (gzipped: 11k)
+} from '@tanstack/react-query'; // 41kB (gzipped: 11kB)
 
-import { createQuery, createMutation } from 'floppy-disk'; // 6.1k (gzipped: 2.2k) 🎉
+import { createQuery, createMutation } from 'floppy-disk'; // 6.1kB (gzipped: 2.2kB) 🎉
 ```
 
 ## Table of Contents
