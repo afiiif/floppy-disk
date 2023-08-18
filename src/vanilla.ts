@@ -44,7 +44,6 @@ export const initStore = <T extends StoreData>(
   const getSubscribers = () => subscribers;
 
   let data: T;
-  let keys: (keyof T)[];
 
   const get = () => data;
 
@@ -61,6 +60,8 @@ export const initStore = <T extends StoreData>(
     }
 
     if (silent) return;
+
+    const keys = Object.keys(data) as (keyof T)[];
     subscribers.forEach((selectDeps, fn) => {
       if (!selectDeps) {
         for (let i = 0, n = keys.length; i < n; i++) {
@@ -94,7 +95,6 @@ export const initStore = <T extends StoreData>(
   };
 
   data = initializer({ get, set });
-  keys = Object.keys(data);
 
   return { get, set, subscribe, getSubscribers };
 };
