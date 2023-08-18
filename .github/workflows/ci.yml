@@ -33,9 +33,22 @@ jobs:
       - name: Perform type checking
         run: yarn lint:types
 
+  test:
+    name: Unit test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 18
+      - name: Install dependencies
+        uses: bahmutov/npm-install@v1
+      - name: Perform unit test
+        run: yarn test
+
   publish:
     name: Publish to NPM
-    needs: [lint, type-check]
+    needs: [lint, type-check, test]
     if: github.repository == 'afiiif/floppy-disk' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/alpha' || github.ref == 'refs/heads/beta')
     runs-on: ubuntu-latest
     steps:
