@@ -563,13 +563,18 @@ const useLoginMutation = createMutation(
 
 function Login() {
   const { mutate, isWaiting } = useLoginMutation();
+  const showToast = useToast();
   return (
     <div>
       <button
         disabled={isWaiting}
         onClick={() =>
-          mutate({ email: 'foo@bar.baz', password: 's3cREt' }).then(() => {
-            showToast('Login success');
+          mutate({ email: 'foo@bar.baz', password: 's3cREt' }).then(({ response, error }) => {
+            if (error) {
+              showToast('Login failed');
+            } else {
+              showToast('Login success');
+            }
           })
         }
       >
