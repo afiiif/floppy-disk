@@ -290,9 +290,12 @@ export const createQuery = <
                 isRefetching: false,
                 isRefetchError: false,
                 isPreviousData: false,
-                data: responseAllPages.reduce((prev, response) => {
-                  return select(response, { key, data: prev });
-                }, null as TData | null),
+                data: responseAllPages.reduce(
+                  (prev, response) => {
+                    return select(response, { key, data: prev });
+                  },
+                  null as TData | null,
+                ),
                 response,
                 responseUpdatedAt: Date.now(),
                 error: null,
@@ -313,9 +316,12 @@ export const createQuery = <
                       isWaiting: false,
                       isRefetching: false,
                       isRefetchError: true,
-                      data: responseAllPages.reduce((prev, response) => {
-                        return select(response, { key, data: prev });
-                      }, null as TData | null),
+                      data: responseAllPages.reduce(
+                        (prev, response) => {
+                          return select(response, { key, data: prev });
+                        },
+                        null as TData | null,
+                      ),
                       error,
                       errorUpdatedAt,
                       pageParam,
