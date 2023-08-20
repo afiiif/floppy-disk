@@ -77,6 +77,12 @@ describe('initStore', () => {
     expect(store.get().text).toEqual(initialData.text);
   });
 
+  it('should update the store data when set is called with a function', () => {
+    store.set((prev) => ({ counter: prev.counter + 3 }));
+    expect(store.get().counter).toEqual(3);
+    expect(store.get().text).toEqual(initialData.text);
+  });
+
   it('should call subscribers when set is called', () => {
     const subscriber1 = jest.fn();
     const subscriber2 = jest.fn();
@@ -85,8 +91,56 @@ describe('initStore', () => {
     store.subscribe(subscriber2);
 
     store.set({ counter: 2 });
-
     expect(subscriber1).toHaveBeenCalledWith(store.get());
     expect(subscriber2).toHaveBeenCalledWith(store.get());
+  });
+
+  it('should call subscribers with matched dependency when set is called', () => {
+    const subscriber1 = jest.fn();
+    const subscriber2 = jest.fn();
+
+    store.subscribe(subscriber1, (state) => [state.counter]);
+    store.subscribe(subscriber2, (state) => [state.text]);
+
+    store.set({ counter: 2 });
+    expect(subscriber1).toHaveBeenCalledWith(store.get());
+    expect(subscriber2).not.toHaveBeenCalled();
+
+    store.set({ text: 'updated' });
+    expect(subscriber1).toHaveBeenCalledTimes(1);
+    expect(subscriber2).toHaveBeenCalledTimes(1);
+    expect(subscriber2).toHaveBeenCalledWith({ counter: 2, text: 'updated' });
+  });
+
+  it('should not call subscribers when silent option is true', () => {
+    const subscriber = jest.fn();
+    store.subscribe(subscriber);
+
+    store.set({ counter: 1 });
+    expect(subscriber).toHaveBeenCalledWith(store.get());
+
+    store.set({ counter: 2 }, true);
+    expect(store.get().counter).toEqual(2);
+    expect(subscriber).toHaveBeenCalledTimes(1);
+  });
+
+  it('should call intercept', () => {
+    store = initStore(mockStoreInitializer, {
+      intercept: (nextState, prevState) => {
+        return nextState.counter > 2 ? prevState : nextState;
+      },
+    });
+
+    const subscriber = jest.fn();
+
+    store.subscribe(subscriber);
+
+    store.set({ counter: 2 });
+    expect(store.get().counter).toEqual(2);
+    expect(subscriber).toHaveBeenCalledWith(store.get());
+
+    store.set({ counter: 3 });
+    expect(store.get().counter).toEqual(2);
+    expect(subscriber).toHaveBeenCalledTimes(1);
   });
 });
