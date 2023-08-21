@@ -51,18 +51,19 @@ export type CreateStoresOptions<
 > = InitStoreOptions<T> & {
   onBeforeChangeKey?: (nextKey: TKey, prevKey: TKey) => void;
   defaultDeps?: SelectDeps<T>;
+  hashKeyFn?: (obj: TKey) => string;
 };
 
 export const createStores = <TKey extends StoreKey = StoreKey, T extends StoreData = StoreData>(
   initializer: StoresInitializer<TKey, T>,
   options: CreateStoresOptions<TKey, T> = {},
 ): UseStores<TKey, T> => {
-  const { onBeforeChangeKey = noop, defaultDeps } = options;
+  const { onBeforeChangeKey = noop, defaultDeps, hashKeyFn = hashStoreKey } = options;
 
   const stores = new Map<string, InitStoreReturn<T>>();
 
   const getStore = (key: TKey) => {
-    const normalizedKey = hashStoreKey(key);
+    const normalizedKey = hashKeyFn(key);
     if (!stores.has(normalizedKey)) {
       stores.set(
         normalizedKey,
@@ -81,7 +82,7 @@ export const createStores = <TKey extends StoreKey = StoreKey, T extends StoreDa
     ) as [TKey, SelectDeps<T>];
     const key = _key as TKey;
 
-    const normalizedKey = hashStoreKey(key);
+    const normalizedKey = hashKeyFn(key);
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
     const { get, subscribe } = useMemo(() => getStore(key), [normalizedKey]);
