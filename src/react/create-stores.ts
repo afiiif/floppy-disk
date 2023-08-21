@@ -14,6 +14,8 @@ import { WatchProps } from './create-store';
 
 const hashStoreKey = (obj?: any) => JSON.stringify(obj, Object.keys(obj).sort());
 
+type Maybe<T> = T | null | undefined;
+
 export type StoreKey = Record<string, any> | undefined;
 
 export type StoresInitializer<
@@ -34,15 +36,15 @@ export type UseStores<TKey extends StoreKey = StoreKey, T extends StoreData = St
    *
    * IMPORTANT NOTE: `selectDeps` must not be changed after initialization.
    */
-  (...args: [TKey?, SelectDeps<T>?] | [SelectDeps<T>?]): T;
-  get: (key?: TKey) => T;
+  (...args: [Maybe<TKey>, SelectDeps<T>?] | [SelectDeps<T>?]): T;
+  get: (key?: Maybe<TKey>) => T;
   getAll: () => T[];
   getAllWithSubscriber: () => T[];
-  set: (key: TKey, value: SetStoreData<T>, silent?: boolean) => void;
+  set: (key: Maybe<TKey>, value: SetStoreData<T>, silent?: boolean) => void;
   setAll: (value: SetStoreData<T>, silent?: boolean) => void;
-  subscribe: (key: TKey, fn: (state: T) => void, selectDeps?: SelectDeps<T>) => () => void;
-  getSubscribers: (key: TKey) => Subscribers<T>;
-  Watch: (props: WatchProps<T> & { storeKey?: TKey }) => any;
+  subscribe: (key: Maybe<TKey>, fn: (state: T) => void, selectDeps?: SelectDeps<T>) => () => void;
+  getSubscribers: (key: Maybe<TKey>) => Subscribers<T>;
+  Watch: (props: WatchProps<T> & { storeKey?: Maybe<TKey> }) => any;
 };
 
 export type CreateStoresOptions<
@@ -62,7 +64,8 @@ export const createStores = <TKey extends StoreKey = StoreKey, T extends StoreDa
 
   const stores = new Map<string, InitStoreReturn<T>>();
 
-  const getStore = (key: TKey) => {
+  const getStore = (_key: Maybe<TKey>) => {
+    const key = _key || ({} as TKey);
     const normalizedKey = hashKeyFn(key);
     if (!stores.has(normalizedKey)) {
       stores.set(
@@ -76,11 +79,11 @@ export const createStores = <TKey extends StoreKey = StoreKey, T extends StoreDa
   /**
    * IMPORTANT NOTE: selectDeps function must not be changed after initialization.
    */
-  const useStores = (...args: [TKey?, SelectDeps<T>?] | [SelectDeps<T>?]) => {
-    const [_key = {}, selectDeps = defaultDeps] = (
+  const useStores = (...args: [Maybe<TKey>, SelectDeps<T>?] | [SelectDeps<T>?]) => {
+    const [_key, selectDeps = defaultDeps] = (
       typeof args[0] === 'function' ? [{}, args[0]] : args
     ) as [TKey, SelectDeps<T>];
-    const key = _key as TKey;
+    const key = _key || ({} as TKey);
 
     const normalizedKey = hashKeyFn(key);
 
@@ -106,7 +109,7 @@ export const createStores = <TKey extends StoreKey = StoreKey, T extends StoreDa
     return state;
   };
 
-  useStores.get = (key: TKey = {} as TKey) => {
+  useStores.get = (key?: Maybe<TKey>) => {
     const store = getStore(key);
     return store.get();
   };
@@ -126,7 +129,7 @@ export const createStores = <TKey extends StoreKey = StoreKey, T extends StoreDa
     return allStores;
   };
 
-  useStores.set = (key: TKey = {} as TKey, value: SetStoreData<T>, silent?: boolean) => {
+  useStores.set = (key: Maybe<TKey>, value: SetStoreData<T>, silent?: boolean) => {
     const store = getStore(key);
     store.set(value, silent);
   };
@@ -136,21 +139,17 @@ export const createStores = <TKey extends StoreKey = StoreKey, T extends StoreDa
     });
   };
 
-  useStores.subscribe = (
-    key: TKey = {} as TKey,
-    fn: (state: T) => void,
-    selectDeps?: SelectDeps<T>,
-  ) => {
+  useStores.subscribe = (key: Maybe<TKey>, fn: (state: T) => void, selectDeps?: SelectDeps<T>) => {
     const store = getStore(key);
     return store.subscribe(fn, selectDeps);
   };
-  useStores.getSubscribers = (key: TKey = {} as TKey) => {
+  useStores.getSubscribers = (key: Maybe<TKey>) => {
     const store = getStore(key);
     return store.getSubscribers();
   };
 
-  const Watch = ({ storeKey = {}, selectDeps, render }: WatchProps<T> & { storeKey?: TKey }) => {
-    const store = useStores(storeKey as TKey, selectDeps);
+  const Watch = ({ storeKey, selectDeps, render }: WatchProps<T> & { storeKey?: Maybe<TKey> }) => {
+    const store = useStores(storeKey, selectDeps);
     return render(store);
   };
   useStores.Watch = Watch;
