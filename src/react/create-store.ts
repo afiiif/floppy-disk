@@ -24,6 +24,12 @@ export type UseStore<T extends StoreData> = {
   set: (value: SetStoreData<T>, silent?: boolean) => void;
   subscribe: (fn: (state: T) => void, selectDeps?: SelectDeps<T>) => () => void;
   getSubscribers: () => Subscribers<T>;
+  /**
+   * Set default values inside a component.
+   *
+   * IMPORTANT NOTE: Put this on the root component or parent component, before any component subscribed!
+   */
+  setDefaultValues: (values: SetStoreData<T>) => void;
   Watch: (props: WatchProps<T>) => any;
 };
 
@@ -52,6 +58,19 @@ export const createStore = <T extends StoreData>(
   useStore.set = set;
   useStore.subscribe = subscribe;
   useStore.getSubscribers = getSubscribers;
+
+  useStore.setDefaultValues = (value: SetStoreData<T>) => {
+    // eslint-disable-next-line react-hooks/rules-of-hooks
+    useState(() => {
+      const subscribers = getSubscribers();
+      if (subscribers.size > 0) {
+        console.warn(
+          'Put setDefaultValues on the root component or parent component, before any component subscribed!',
+        );
+      }
+      set(value);
+    });
+  };
 
   const Watch = ({ selectDeps, render }: WatchProps<T>) => {
     const store = useStore(selectDeps);

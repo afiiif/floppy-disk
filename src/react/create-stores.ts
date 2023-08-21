@@ -44,6 +44,12 @@ export type UseStores<TKey extends StoreKey = StoreKey, T extends StoreData = St
   setAll: (value: SetStoreData<T>, silent?: boolean) => void;
   subscribe: (key: Maybe<TKey>, fn: (state: T) => void, selectDeps?: SelectDeps<T>) => () => void;
   getSubscribers: (key: Maybe<TKey>) => Subscribers<T>;
+  /**
+   * Set default values inside a component.
+   *
+   * IMPORTANT NOTE: Put this on the root component or parent component, before any component subscribed!
+   */
+  setDefaultValues: (key: Maybe<TKey>, values: SetStoreData<T>) => void;
   Watch: (props: WatchProps<T> & { storeKey?: Maybe<TKey> }) => any;
 };
 
@@ -146,6 +152,20 @@ export const createStores = <TKey extends StoreKey = StoreKey, T extends StoreDa
   useStores.getSubscribers = (key: Maybe<TKey>) => {
     const store = getStore(key);
     return store.getSubscribers();
+  };
+
+  useStores.setDefaultValues = (key: Maybe<TKey>, value: SetStoreData<T>) => {
+    // eslint-disable-next-line react-hooks/rules-of-hooks
+    useState(() => {
+      const store = getStore(key);
+      const subscribers = store.getSubscribers();
+      if (subscribers.size > 0) {
+        console.warn(
+          'Put setDefaultValues on the root component or parent component, before any component subscribed!',
+        );
+      }
+      store.set(value);
+    });
   };
 
   const Watch = ({ storeKey, selectDeps, render }: WatchProps<T> & { storeKey?: Maybe<TKey> }) => {
