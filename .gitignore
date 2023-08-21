@@ -29,8 +29,12 @@ yarn-error.log*
 # local env files
 .env*.local
 
+# vercel
+.vercel
+
 # typescript
 *.tsbuildinfo
+**/next-env.d.ts
 
 # others
 /comparison/**/public/analyze
