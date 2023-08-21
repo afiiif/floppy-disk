@@ -159,11 +159,11 @@ export type CreateQueryOptions<
    */
   staleTime?: number;
   /**
-   * Number of maximum retries.
+   * Number of maximum error retries.
    *
    * Defaults to `1`.
    */
-  maxRetryCount?: number | ((error: TError, key: TKey) => number);
+  retry?: number | ((error: TError, key: TKey) => number);
   /**
    * Auto call the query when the component is mounted.
    *
@@ -237,7 +237,7 @@ export const createQuery = <
     defaultDeps = useQueryDefaultDeps,
     select = identityFn as (response: TResponse) => TData,
     staleTime = DEFAULT_STALE_TIME,
-    maxRetryCount = 1,
+    retry = 1,
     fetchOnMount = true,
     fetchOnWindowFocus = true,
     enabled = true,
@@ -336,8 +336,7 @@ export const createQuery = <
                       hasNextPage: pageParam !== undefined,
                     },
               );
-              const retryCount =
-                typeof maxRetryCount === 'function' ? maxRetryCount(error, key) : maxRetryCount;
+              const retryCount = typeof retry === 'function' ? retry(error, key) : retry;
               if (typeof retryCount === 'number' && prevState.retryCount < retryCount) {
                 set({ retryCount: prevState.retryCount + 1, isGoingToRetry: true });
                 callQuery();
