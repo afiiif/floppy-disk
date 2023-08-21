@@ -291,8 +291,8 @@ export const createQuery = <
                 isRefetchError: false,
                 isPreviousData: false,
                 data: responseAllPages.reduce(
-                  (prev, response) => {
-                    return select(response, { key, data: prev });
+                  (prev, responseCurrentPage) => {
+                    return select(responseCurrentPage, { key, data: prev });
                   },
                   null as TData | null,
                 ),
