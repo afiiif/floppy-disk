@@ -1,4 +1,4 @@
-import { identityFn, noop } from '../utils';
+import { hashStoreKey, identityFn, noop } from '../utils';
 import { createStores, CreateStoresOptions, StoreKey } from './create-stores';
 
 const getDecision = <T>(
@@ -159,12 +159,6 @@ export type CreateQueryOptions<
    */
   staleTime?: number;
   /**
-   * Number of maximum error retries.
-   *
-   * Defaults to `1`.
-   */
-  retry?: number | ((error: TError, key: TKey) => number);
-  /**
    * Auto call the query when the component is mounted.
    *
    * Defaults to `true`.
@@ -190,6 +184,18 @@ export type CreateQueryOptions<
    * Defaults to `true`.
    */
   enabled?: boolean | ((key: TKey) => boolean);
+  /**
+   * Number of maximum error retries.
+   *
+   * Defaults to `1`.
+   */
+  retry?: number | ((error: TError, key: TKey) => number);
+  /**
+   * Error retry delay in miliseconds.
+   *
+   * Defaults to `3000` (3 seconds).
+   */
+  retryDelay?: number | ((error: TError, key: TKey) => number);
   /**
    * If set to `true`, previous `data` will be kept when fetching new data because the query key changed.
    *
@@ -237,17 +243,21 @@ export const createQuery = <
     defaultDeps = useQueryDefaultDeps,
     select = identityFn as (response: TResponse) => TData,
     staleTime = DEFAULT_STALE_TIME,
-    retry = 1,
     fetchOnMount = true,
     fetchOnWindowFocus = true,
     enabled = true,
+    retry = 1,
+    retryDelay = 3000,
     keepPreviousData,
     getNextPageParam = () => undefined,
     onSuccess = noop,
     onError = noop,
     onSettled = noop,
+    hashKeyFn = hashStoreKey,
     ...createStoresOptions
   } = options;
+
+  const retryTimeoutId = new Map<string, number>();
 
   const useQuery = createStores<TKey, QueryState<TKey, TResponse, TData, TError>>(
     ({ key: _key, get, set }) => {
@@ -338,8 +348,15 @@ export const createQuery = <
               );
               const retryCount = typeof retry === 'function' ? retry(error, key) : retry;
               if (typeof retryCount === 'number' && prevState.retryCount < retryCount) {
-                set({ retryCount: prevState.retryCount + 1, isGoingToRetry: true });
-                callQuery();
+                const delay =
+                  typeof retryDelay === 'function' ? retryDelay(error, key) : retryDelay;
+                retryTimeoutId.set(
+                  hashKeyFn(key),
+                  window.setTimeout(() => {
+                    set({ retryCount: prevState.retryCount + 1, isGoingToRetry: true });
+                    callQuery();
+                  }, delay),
+                );
               }
               onError(error, stateBeforeCallQuery);
             })
@@ -464,6 +481,7 @@ export const createQuery = <
       return {
         ...createStoresOptions,
         defaultDeps,
+        hashKeyFn,
         onFirstSubscribe: (state) => {
           if (typeof window !== 'undefined' && fetchOnWindowFocus) {
             window.addEventListener('focus', fetchWindowFocusHandler);
@@ -482,6 +500,7 @@ export const createQuery = <
             window.removeEventListener('focus', fetchWindowFocusHandler);
           }
           resetRetryCount(state.key);
+          clearTimeout(retryTimeoutId.get(hashKeyFn(state.key)));
           onLastUnsubscribe(state);
         },
         onBeforeChangeKey: (nextKey, prevKey) => {

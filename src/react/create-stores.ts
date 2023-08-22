@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 
-import { noop } from '../utils';
+import { hashStoreKey, noop } from '../utils';
 import {
   initStore,
   InitStoreOptions,
@@ -11,8 +11,6 @@ import {
   Subscribers,
 } from '../vanilla';
 import { WatchProps } from './create-store';
-
-const hashStoreKey = (obj?: any) => JSON.stringify(obj, Object.keys(obj).sort());
 
 type Maybe<T> = T | null | undefined;
 
