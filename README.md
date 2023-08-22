@@ -122,6 +122,11 @@ const unsub = useCatStore.subscribe(
 );
 ```
 
+> **Examples:**
+>
+> - [https://codesandbox.io/.../examples/react/basic](https://codesandbox.io/p/sandbox/github/afiiif/floppy-disk/tree/main/examples/react/basic)
+> - [https://codesandbox.io/.../examples/react/custom-reactivity](https://codesandbox.io/p/sandbox/github/afiiif/floppy-disk/tree/main/examples/react/custom-reactivity)
+
 ### Advanced Concept
 
 Set the state **silently** (without broadcast the state change to **any subscribers**).
@@ -170,6 +175,11 @@ const useCatStore = createStore(
   },
 );
 ```
+
+> **Examples:**
+>
+> - [https://codesandbox.io/.../examples/react/store-event](https://codesandbox.io/p/sandbox/github/afiiif/floppy-disk/tree/main/examples/react/store-event)
+> - [https://codesandbox.io/.../examples/react/intercept](https://codesandbox.io/p/sandbox/github/afiiif/floppy-disk/tree/main/examples/react/intercept)
 
 Let's go wild using IIFE.
 
@@ -227,6 +237,10 @@ function CatPageOptimized() {
   );
 }
 ```
+
+> **Examples:**
+>
+> - [https://codesandbox.io/.../examples/react/watch-component](https://codesandbox.io/p/sandbox/github/afiiif/floppy-disk/tree/main/examples/react/watch-component)
 
 Want a local state instead of global state?  
 Or, want to set the initial state inside component?
