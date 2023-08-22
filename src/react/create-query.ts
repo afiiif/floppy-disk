@@ -291,6 +291,7 @@ export const createQuery = <
           if (get().isGoingToRetry) {
             if (isLoading) set({ isGoingToRetry: false, isWaiting: true });
             else set({ isGoingToRetry: false, isWaiting: true, isRefetching: true });
+            clearTimeout(retryTimeoutId.get(hashKeyFn(key)));
           }
           const stateBeforeCallQuery = { ...get(), pageParam };
           queryFn(key, stateBeforeCallQuery)
@@ -395,6 +396,7 @@ export const createQuery = <
         if (isWaitingNextPage || !hasNextPage) return;
 
         set({ isWaitingNextPage: true, isGoingToRetryNextPage: false });
+        clearTimeout(retryNextPageTimeoutId.get(hashKeyFn(key)));
         queryFn(key, { ...state, pageParam })
           .then((response) => {
             const newPageParam = getNextPageParam(response, pageParams.length);
