@@ -37,6 +37,8 @@ const INITIAL_QUERY_STATE = {
   pageParam: undefined,
   pageParams: [undefined],
   hasNextPage: false,
+  retryNextPageCount: 0,
+  isGoingToRetryNextPage: false,
 };
 
 export type QueryState<
@@ -140,6 +142,8 @@ export type QueryState<
   pageParam: any;
   pageParams: any[];
   hasNextPage: boolean;
+  retryNextPageCount: number;
+  isGoingToRetryNextPage: boolean;
 };
 
 export type CreateQueryOptions<
@@ -258,6 +262,7 @@ export const createQuery = <
   } = options;
 
   const retryTimeoutId = new Map<string, number>();
+  const retryNextPageTimeoutId = new Map<string, number>();
 
   const useQuery = createStores<TKey, QueryState<TKey, TResponse, TData, TError>>(
     ({ key: _key, get, set }) => {
@@ -389,7 +394,7 @@ export const createQuery = <
         if (isLoading) return forceFetch();
         if (isWaitingNextPage || !hasNextPage) return;
 
-        set({ isWaitingNextPage: true });
+        set({ isWaitingNextPage: true, isGoingToRetryNextPage: false });
         queryFn(key, { ...state, pageParam })
           .then((response) => {
             const newPageParam = getNextPageParam(response, pageParams.length);
@@ -404,12 +409,24 @@ export const createQuery = <
             });
           })
           .catch((error: TError) => {
+            const prevState = get();
+            const { shouldRetry, delay } = getRetryProps(error, prevState.retryNextPageCount);
             set({
               isWaitingNextPage: false,
               isError: true,
               error,
               errorUpdatedAt: Date.now(),
+              isGoingToRetryNextPage: shouldRetry,
             });
+            if (shouldRetry) {
+              retryNextPageTimeoutId.set(
+                hashKeyFn(key),
+                window.setTimeout(() => {
+                  set({ retryNextPageCount: prevState.retryNextPageCount + 1 });
+                  fetchNextPage();
+                }, delay),
+              );
+            }
           });
       };
 
@@ -472,10 +489,6 @@ export const createQuery = <
       };
     },
     (() => {
-      const resetRetryCount = (key: TKey) => {
-        useQuery.set(key, { retryCount: 0 }, true);
-      };
-
       const fetchWindowFocusHandler = () => {
         useQuery.getAllWithSubscriber().forEach((state) => {
           getDecision(fetchOnWindowFocus, state.key, {
@@ -506,8 +519,9 @@ export const createQuery = <
           if (typeof window !== 'undefined' && fetchOnWindowFocus) {
             window.removeEventListener('focus', fetchWindowFocusHandler);
           }
-          resetRetryCount(state.key);
+          useQuery.set(state.key, { retryCount: 0, retryNextPageCount: 0 }, true);
           clearTimeout(retryTimeoutId.get(hashKeyFn(state.key)));
+          clearTimeout(retryNextPageTimeoutId.get(hashKeyFn(state.key)));
           onLastUnsubscribe(state);
         },
         onBeforeChangeKey: (nextKey, prevKey) => {
