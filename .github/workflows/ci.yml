@@ -58,6 +58,10 @@ jobs:
           node-version: 18
       - name: Install dependencies
         uses: bahmutov/npm-install@v1
+      - name: Update package.json
+        run: |
+          npm pkg set 'engines.node'='>=14'
+          npm pkg delete 'devDependencies'
       - name: Build package
         run: yarn build
       - name: Release package
