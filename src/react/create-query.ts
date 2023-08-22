@@ -263,12 +263,19 @@ export const createQuery = <
     ({ key: _key, get, set }) => {
       const key = _key as TKey;
 
+      const getRetryProps = (error: TError, retryCount: number) => {
+        const maxRetryCount = (typeof retry === 'function' ? retry(error, key) : retry) || 0;
+        const shouldRetry = retryCount < maxRetryCount;
+        const delay = (typeof retryDelay === 'function' ? retryDelay(error, key) : retryDelay) || 0;
+        return { shouldRetry, delay };
+      };
+
       const forceFetch = () => {
         const responseAllPages: TResponse[] = [];
         const newPageParams: any[] = [undefined];
         let pageParam: any = undefined;
 
-        const { isWaiting, isLoading, isGoingToRetry, pageParams } = get();
+        const { isWaiting, isLoading, pageParams } = get();
         if (isWaiting || enabled === false || (typeof enabled === 'function' && !enabled(key)))
           return;
 
@@ -276,7 +283,7 @@ export const createQuery = <
         else set({ isWaiting: true, isRefetching: true });
 
         const callQuery = () => {
-          if (isGoingToRetry) {
+          if (get().isGoingToRetry) {
             if (isLoading) set({ isGoingToRetry: false, isWaiting: true });
             else set({ isGoingToRetry: false, isWaiting: true, isRefetching: true });
           }
@@ -320,6 +327,7 @@ export const createQuery = <
             .catch((error: TError) => {
               const prevState = get();
               const errorUpdatedAt = Date.now();
+              const { shouldRetry, delay } = getRetryProps(error, prevState.retryCount);
               set(
                 prevState.isSuccess
                   ? {
@@ -334,6 +342,7 @@ export const createQuery = <
                       ),
                       error,
                       errorUpdatedAt,
+                      isGoingToRetry: shouldRetry,
                       pageParam,
                       hasNextPage: pageParam !== undefined,
                     }
@@ -342,18 +351,16 @@ export const createQuery = <
                       isError: true,
                       error,
                       errorUpdatedAt,
+                      isGoingToRetry: shouldRetry,
                       pageParam,
                       hasNextPage: pageParam !== undefined,
                     },
               );
-              const retryCount = typeof retry === 'function' ? retry(error, key) : retry;
-              if (typeof retryCount === 'number' && prevState.retryCount < retryCount) {
-                const delay =
-                  typeof retryDelay === 'function' ? retryDelay(error, key) : retryDelay;
+              if (shouldRetry) {
                 retryTimeoutId.set(
                   hashKeyFn(key),
                   window.setTimeout(() => {
-                    set({ retryCount: prevState.retryCount + 1, isGoingToRetry: true });
+                    set({ retryCount: prevState.retryCount + 1 });
                     callQuery();
                   }, delay),
                 );
