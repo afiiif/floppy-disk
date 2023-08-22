@@ -479,7 +479,7 @@ export const createQuery = <
         },
         onLastUnsubscribe: (state) => {
           if (typeof window !== 'undefined' && fetchOnWindowFocus) {
-            window.addEventListener('focus', fetchWindowFocusHandler);
+            window.removeEventListener('focus', fetchWindowFocusHandler);
           }
           resetRetryCount(state.key);
           onLastUnsubscribe(state);
