@@ -501,6 +501,10 @@ function PokemonPage() {
 }
 ```
 
+> **Examples:**
+>
+> - [https://codesandbox.io/.../examples/react/query-with-param](https://codesandbox.io/p/sandbox/github/afiiif/floppy-disk/tree/main/examples/react/query-with-param)
+
 Get data or do something outside component:
 
 ```jsx
