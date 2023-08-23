@@ -338,6 +338,7 @@ const useCatStores = createStores(
     onBeforeChangeKey: (nextKey, prevKey) => {
       console.log('Store key changed', nextKey, prevKey);
     },
+    // ... same as createStore
   },
 );
 
@@ -366,6 +367,10 @@ function Control({ catId }) {
   return <button onClick={increaseAge}>Increase cat's age</button>;
 }
 ```
+
+> **Examples:**
+>
+> - [https://codesandbox.io/.../examples/react/stores](https://codesandbox.io/p/sandbox/github/afiiif/floppy-disk/tree/main/examples/react/stores)
 
 ## Query & Mutation
 
