@@ -1,8 +1,7 @@
-import React from 'react';
+import React, { useRef } from 'react';
 import ReactDOM from 'react-dom/client';
 
 import { createMutation } from 'floppy-disk';
-import { useRef } from 'react';
 
 const useLoginMutation = createMutation(
   async ({ email, password }) => {
