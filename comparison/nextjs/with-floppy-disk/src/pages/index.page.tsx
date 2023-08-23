@@ -21,11 +21,11 @@ export default function HomePage() {
 ┌ ○ /                                      921 B          79.8 kB
 ├   /_app                                  0 B            78.9 kB
 ├ ○ /404                                   182 B          79.1 kB
-├ ○ /infinite-query                        2.71 kB        81.6 kB
-├ ● /infinite-query-ssg (1037 ms)          3.23 kB        82.1 kB
-├ ○ /mutation                              1.41 kB        80.3 kB
-├ ○ /single-query                          2.95 kB        81.9 kB
-└ ○ /store                                 1.19 kB        80.1 kB
+├ ○ /infinite-query                        3 kB           81.9 kB
+├ ● /infinite-query-ssg (1024 ms)          3.53 kB        82.4 kB
+├ ○ /mutation                              1.52 kB        80.4 kB
+├ ○ /single-query                          3.25 kB        82.2 kB
+└ ○ /store                                 1.31 kB        80.2 kB
 + First Load JS shared by all              81.6 kB
   ├ chunks/framework-63157d71ad419e09.js   45.2 kB
   ├ chunks/main-14b4672be0fd158b.js        28.6 kB
