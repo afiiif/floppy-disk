@@ -403,6 +403,10 @@ function SingleQuery() {
 }
 ```
 
+> **Examples:**
+>
+> - [https://codesandbox.io/.../examples/react/query](https://codesandbox.io/p/sandbox/github/afiiif/floppy-disk/tree/main/examples/react/query)
+
 Custom reactivity:
 
 ```jsx
@@ -557,8 +561,9 @@ function PokemonListPage() {
 **Note:**
 
 - The default stale time is 3 seconds.
-- The default reactivity of a query is `(state) => [state.data, state.error]`.  
-  (For paginated query `(state) => [state.data, state.error, state.isWaitingNextPage, state.hasNextPage]`)
+- The default error retry attempt is 1 time, and retry delay is 3 seconds.
+- The default reactivity of a query is `(s) => [s.data, s.error]`.  
+  (For paginated: `(s) => [s.data, s.error, s.isWaitingNextPage, s.hasNextPage]`)
 - You can change the `defaultDeps` on `createQuery` options.
 
 ### Mutation
@@ -603,6 +608,17 @@ function Login() {
   );
 }
 ```
+
+> **Examples:**
+>
+> - [https://codesandbox.io/.../examples/react/mutation](https://codesandbox.io/p/sandbox/github/afiiif/floppy-disk/tree/main/examples/react/mutation)
+
+<br><br>
+
+<p align="center">
+  — ✨ 💾 ✨ —
+</p>
+<br>
 
 ## Important Notes
 
