@@ -60,7 +60,7 @@ jobs:
         uses: bahmutov/npm-install@v1
       - name: Update package.json
         run: |
-          npm pkg set 'engines.node'='>=14'
+          npm pkg delete 'engines'
           npm pkg delete 'devDependencies'
       - name: Build package
         run: yarn build
