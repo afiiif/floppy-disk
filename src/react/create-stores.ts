@@ -42,6 +42,7 @@ export type UseStores<TKey extends StoreKey = StoreKey, T extends StoreData = St
   setAll: (value: SetStoreData<T>, silent?: boolean) => void;
   subscribe: (key: Maybe<TKey>, fn: (state: T) => void, selectDeps?: SelectDeps<T>) => () => void;
   getSubscribers: (key: Maybe<TKey>) => Subscribers<T>;
+  getStore: (key?: Maybe<TKey>) => InitStoreReturn<T>;
   /**
    * Set default values inside a component.
    *
@@ -151,6 +152,8 @@ export const createStores = <TKey extends StoreKey = StoreKey, T extends StoreDa
     const store = getStore(key);
     return store.getSubscribers();
   };
+
+  useStores.getStore = (key?: Maybe<TKey>) => getStore(key);
 
   useStores.setDefaultValues = (key: Maybe<TKey>, value: SetStoreData<T>) => {
     // eslint-disable-next-line react-hooks/rules-of-hooks
