@@ -233,6 +233,8 @@ export type UseQuery<
    * IMPORTANT NOTE: Put this on the root component or parent component, before any component subscribed!
    */
   setInitialResponse: (options: { key?: TKey; response: TResponse }) => void;
+  invalidate: () => void;
+  invalidateSpecificKey: (key?: TKey | null) => void;
 };
 
 const useQueryDefaultDeps = (state: QueryState<any>) => [
@@ -556,6 +558,21 @@ export const createQuery = <
         hasNextPage: newPageParam !== undefined,
       });
     });
+  };
+
+  useQuery.invalidate = () => {
+    useQuery.getAll().forEach(({ key }) => {
+      useQuery.get(key).markAsStale();
+    });
+    useQuery.getAllWithSubscriber().forEach(({ key }) => {
+      useQuery.get(key).forceFetch();
+    });
+  };
+
+  useQuery.invalidateSpecificKey = (key?: TKey | null) => {
+    useQuery.get(key).markAsStale();
+    const { getSubscribers } = useQuery.getStore(key);
+    if (getSubscribers().size > 0) useQuery.get(key).forceFetch();
   };
 
   return useQuery;
