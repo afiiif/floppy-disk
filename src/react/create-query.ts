@@ -1,5 +1,5 @@
 import { hashStoreKey, identityFn, noop } from '../utils';
-import { createStores, CreateStoresOptions, StoreKey } from './create-stores';
+import { createStores, CreateStoresOptions, StoreKey, UseStores } from './create-stores';
 
 const getDecision = <T>(
   value: boolean | 'always' | ((param: T) => boolean | 'always'),
@@ -223,6 +223,13 @@ export type CreateQueryOptions<
   onSettled?: (stateBeforeCallQuery: QueryState<TKey, TResponse, TData, TError>) => void;
 };
 
+export type UseQuery<
+  TKey extends StoreKey = StoreKey,
+  TResponse = any,
+  TData = TResponse,
+  TError = unknown,
+> = UseStores<TKey, QueryState<TKey, TResponse, TData, TError>>;
+
 const useQueryDefaultDeps = (state: QueryState<any>) => [
   state.data,
   state.error,
@@ -238,14 +245,14 @@ export const createQuery = <
 >(
   queryFn: (key: TKey, state: QueryState<TKey, TResponse, TData, TError>) => Promise<TResponse>,
   options: CreateQueryOptions<TKey, TResponse, TData, TError> = {},
-) => {
+): UseQuery<TKey, TResponse, TData, TError> => {
   const {
     onFirstSubscribe = noop,
     onSubscribe = noop,
     onLastUnsubscribe = noop,
     onBeforeChangeKey = noop,
     defaultDeps = useQueryDefaultDeps,
-    select = identityFn as (response: TResponse) => TData,
+    select = identityFn as NonNullable<typeof options.select>,
     staleTime = DEFAULT_STALE_TIME,
     fetchOnMount = true,
     fetchOnWindowFocus = true,
