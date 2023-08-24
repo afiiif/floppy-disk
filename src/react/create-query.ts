@@ -1,3 +1,5 @@
+import { useState } from 'react';
+
 import { hashStoreKey, identityFn, noop } from '../utils';
 import { createStores, CreateStoresOptions, StoreKey, UseStores } from './create-stores';
 
@@ -69,12 +71,6 @@ export type QueryState<
   fetchNextPage: () => void;
   markAsStale: () => void;
   reset: () => void;
-  /**
-   * Set query response & data.
-   */
-  setResponse: (
-    responseSetter: TResponse | ((state: QueryState<TKey, TResponse, TData, TError>) => TResponse),
-  ) => void;
   helpers: {
     /**
      * Fetch all active queries.
@@ -228,7 +224,16 @@ export type UseQuery<
   TResponse = any,
   TData = TResponse,
   TError = unknown,
-> = UseStores<TKey, QueryState<TKey, TResponse, TData, TError>>;
+> = UseStores<TKey, QueryState<TKey, TResponse, TData, TError>> & {
+  /**
+   * Set query's initial response.
+   *
+   * This is used for server-side rendered page or static page.
+   *
+   * IMPORTANT NOTE: Put this on the root component or parent component, before any component subscribed!
+   */
+  setInitialResponse: (options: { key?: TKey; response: TResponse }) => void;
+};
 
 const useQueryDefaultDeps = (state: QueryState<any>) => [
   state.data,
@@ -439,30 +444,6 @@ export const createQuery = <
           });
       };
 
-      const setResponse = (
-        responseSetter:
-          | TResponse
-          | ((state: QueryState<TKey, TResponse, TData, TError>) => TResponse),
-      ) => {
-        if (responseSetter === undefined) return;
-        const store = useQuery.get(key);
-        const response: TResponse =
-          typeof responseSetter === 'function'
-            ? (responseSetter as (state: QueryState<TKey, TResponse, TData, TError>) => TResponse)(
-                store,
-              )
-            : responseSetter;
-        useQuery.set(key, {
-          status: 'success',
-          isLoading: false,
-          isSuccess: true,
-          isError: false,
-          response,
-          responseUpdatedAt: Date.now(),
-          data: select(response, { key, data: store.data }),
-        });
-      };
-
       const fetchAllActiveQueries = () => {
         useQuery.getAllWithSubscriber().forEach((state) => {
           state.fetch();
@@ -489,7 +470,6 @@ export const createQuery = <
         fetchNextPage,
         markAsStale: () => set({ responseUpdatedAt: null }),
         reset: () => set(INITIAL_QUERY_STATE),
-        setResponse,
         helpers: {
           fetchAllActiveQueries,
           forceFetchAllActiveQueries,
@@ -556,7 +536,27 @@ export const createQuery = <
         },
       };
     })(),
-  );
+  ) as UseQuery<TKey, TResponse, TData, TError>;
+
+  useQuery.setInitialResponse = ({ key, response }) => {
+    // eslint-disable-next-line react-hooks/rules-of-hooks
+    useState(() => {
+      if (response === undefined) return;
+      const newPageParam = getNextPageParam(response, 1);
+      useQuery.set(key, {
+        status: 'success',
+        isLoading: false,
+        isSuccess: true,
+        isError: false,
+        response,
+        responseUpdatedAt: Date.now(),
+        data: select(response, { key: key as TKey, data: null }),
+        pageParam: newPageParam,
+        pageParams: [undefined, newPageParam],
+        hasNextPage: newPageParam !== undefined,
+      });
+    });
+  };
 
   return useQuery;
 };
