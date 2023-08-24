@@ -70,25 +70,10 @@ export type QueryState<
    */
   fetchNextPage: () => void;
   markAsStale: () => void;
+  /**
+   * Set query state (data, error, etc) to initial state.
+   */
   reset: () => void;
-  helpers: {
-    /**
-     * Fetch all active queries.
-     *
-     * Same as `fetch` method, this will only be called if the data is stale or empty.
-     */
-    fetchAllActiveQueries: () => void;
-    /**
-     * Fetch all active queries.
-     *
-     * Same as `fetch` method, this will only be called if the data is stale or empty.
-     */
-    forceFetchAllActiveQueries: () => void;
-    /**
-     * Delete query data for all query keys.
-     */
-    resetAllQueries: () => void;
-  };
   /**
    * Network fetching status.
    */
@@ -446,24 +431,6 @@ export const createQuery = <
           });
       };
 
-      const fetchAllActiveQueries = () => {
-        useQuery.getAllWithSubscriber().forEach((state) => {
-          state.fetch();
-        });
-      };
-
-      const forceFetchAllActiveQueries = () => {
-        useQuery.getAllWithSubscriber().forEach((state) => {
-          state.forceFetch();
-        });
-      };
-
-      const resetAllQueries = () => {
-        useQuery.getAll().forEach((state) => {
-          state.reset();
-        });
-      };
-
       return {
         ...INITIAL_QUERY_STATE,
         key,
@@ -472,11 +439,6 @@ export const createQuery = <
         fetchNextPage,
         markAsStale: () => set({ responseUpdatedAt: null }),
         reset: () => set(INITIAL_QUERY_STATE),
-        helpers: {
-          fetchAllActiveQueries,
-          forceFetchAllActiveQueries,
-          resetAllQueries,
-        },
       };
     },
     (() => {
