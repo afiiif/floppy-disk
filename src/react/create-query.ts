@@ -220,7 +220,13 @@ export type UseQuery<
    * IMPORTANT NOTE: Put this on the root component or parent component, before any component subscribed!
    */
   setInitialResponse: (options: { key?: TKey; response: TResponse }) => void;
+  /**
+   * Invalidate query means marking a query as stale, and will refetch only if the query is active (has subscriber)
+   */
   invalidate: () => void;
+  /**
+   * Invalidate query means marking a query as stale, and will refetch only if the query is active (has subscriber)
+   */
   invalidateSpecificKey: (key?: TKey | null) => void;
   /**
    * Optimistic update.
@@ -537,17 +543,16 @@ export const createQuery = <
   };
 
   useQuery.invalidate = () => {
-    useQuery.getAll().forEach(({ key }) => {
-      useQuery.get(key).markAsStale();
-    });
-    useQuery.getAllWithSubscriber().forEach(({ key }) => {
-      useQuery.get(key).forceFetch();
+    useQuery.getStores().forEach((store) => {
+      const { set, getSubscribers } = store;
+      set({ responseUpdatedAt: null });
+      if (getSubscribers().size > 0) store.get().forceFetch();
     });
   };
 
   useQuery.invalidateSpecificKey = (key?: TKey | null) => {
-    useQuery.get(key).markAsStale();
-    const { getSubscribers } = useQuery.getStore(key);
+    const { set, getSubscribers } = useQuery.getStore(key);
+    set({ responseUpdatedAt: null });
     if (getSubscribers().size > 0) useQuery.get(key).forceFetch();
   };
 
