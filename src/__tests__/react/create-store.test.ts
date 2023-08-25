@@ -58,6 +58,32 @@ describe('createStore', () => {
       expect(hook1.result.current.counter).toEqual(6);
       expect(hook2.result.current.counter).toEqual(6);
     });
+
+    it('should be able to set custom reactivity', () => {
+      const useStore2 = createStore(() => ({ a: 1, b: 10 }));
+
+      const hook1 = renderHook(() => useStore2((state) => [state.a]));
+      const hook2 = renderHook(() => useStore2((state) => [state.b]));
+
+      expect(hook1.result.current.a).toEqual(1);
+      expect(hook2.result.current.b).toEqual(10);
+
+      act(() => {
+        useStore2.set({ a: 2 });
+      });
+
+      expect(hook1.result.current.a).toEqual(2);
+      expect(hook2.result.current.a).toEqual(1);
+
+      act(() => {
+        useStore2.set({ b: 20 });
+      });
+
+      expect(hook1.result.current.a).toEqual(2);
+      expect(hook1.result.current.b).toEqual(10);
+      expect(hook2.result.current.a).toEqual(2);
+      expect(hook2.result.current.b).toEqual(20);
+    });
   });
 
   describe('store event', () => {
@@ -86,7 +112,7 @@ describe('createStore', () => {
       );
     });
 
-    it('should subscribe to state changes', () => {
+    it('should trigger the store event', () => {
       const hook1 = renderHook(() => useStore());
       expect(onFirstSubscribeMock).toHaveBeenCalledTimes(1);
       expect(onSubscribeMock).toHaveBeenCalledTimes(1);
