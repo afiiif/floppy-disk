@@ -29,6 +29,7 @@ const INITIAL_QUERY_STATE = {
   isRefetching: false,
   isRefetchError: false,
   isPreviousData: false,
+  isOptimisticData: false,
   data: null,
   response: null,
   responseUpdatedAt: null,
@@ -113,6 +114,7 @@ export type QueryState<
   isRefetching: boolean;
   isRefetchError: boolean;
   isPreviousData: boolean;
+  isOptimisticData: boolean;
   data: TData | null;
   response: TResponse | null;
   responseUpdatedAt: number | null;
@@ -220,6 +222,17 @@ export type UseQuery<
   setInitialResponse: (options: { key?: TKey; response: TResponse }) => void;
   invalidate: () => void;
   invalidateSpecificKey: (key?: TKey | null) => void;
+  /**
+   * Optimistic update.
+   *
+   * @returns function to revert the changes & function to invalidate the query
+   *
+   * IMPORTANT NOTE: This won't work well on infinite query.
+   */
+  optimisticUpdate: (options: {
+    key?: TKey | null;
+    response: TResponse | ((prevState: QueryState<TKey, TResponse, TData, TError>) => TResponse);
+  }) => { revert: () => void; invalidate: () => void };
 };
 
 const useQueryDefaultDeps = (state: QueryState<any>) => [
@@ -312,6 +325,7 @@ export const createQuery = <
                 isRefetching: false,
                 isRefetchError: false,
                 isPreviousData: false,
+                isOptimisticData: false,
                 data: responseAllPages.reduce(
                   (prev, responseCurrentPage) => {
                     return select(responseCurrentPage, { key, data: prev });
@@ -535,6 +549,30 @@ export const createQuery = <
     useQuery.get(key).markAsStale();
     const { getSubscribers } = useQuery.getStore(key);
     if (getSubscribers().size > 0) useQuery.get(key).forceFetch();
+  };
+
+  useQuery.optimisticUpdate = ({ key, response }) => {
+    const prevState = useQuery.get(key);
+    const optimisticResponse =
+      typeof response === 'function'
+        ? (response as (prevState: QueryState<TKey, TResponse, TData, TError>) => TResponse)(
+            prevState,
+          )
+        : response;
+    useQuery.set(key, {
+      isOptimisticData: true,
+      response: optimisticResponse,
+      data: select(optimisticResponse, { key: key as TKey, data: null }),
+    });
+    const revert = () => {
+      useQuery.set(key, {
+        isOptimisticData: false,
+        response: prevState.response,
+        data: prevState.data,
+      });
+    };
+    const invalidate = () => useQuery.invalidateSpecificKey(key);
+    return { revert, invalidate };
   };
 
   return useQuery;
