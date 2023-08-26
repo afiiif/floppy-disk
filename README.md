@@ -32,6 +32,7 @@ import { createQuery, createMutation } from 'floppy-disk'; // 7.5 kB (gzipped: 2
   - [Advanced Concept](#advanced-concept)
 - [Stores](#stores)
 - [Query \& Mutation](#query--mutation)
+  - [Query State \& Network Fetching State](#query-state--network-fetching-state)
   - [Single Query](#single-query)
   - [Single Query with Params](#single-query-with-params)
   - [Paginated Query or Infinite Query](#paginated-query-or-infinite-query)
@@ -366,11 +367,42 @@ function Control({ catId }) {
 
 > Example: [https://codesandbox.io/.../examples/react/stores](https://codesandbox.io/p/sandbox/github/afiiif/floppy-disk/tree/main/examples/react/stores)
 
+<br><br>
+
+<p align="center">
+  — ✨ 💾 ✨ —
+</p>
+<br>
+
 ## Query & Mutation
 
 With the power of `createStores` function and a bit creativity, we can easily create a hook just like `useQuery` and `useInfiniteQuery` in [React-Query](https://tanstack.com/query) using `createQuery` function.
 
 It can dedupe multiple request, handle caching, auto-update stale data, handle retry on error, handle infinite query, and many more. With the flexibility given in `createStores`, you can extend its power according to your needs.
+
+### Query State & Network Fetching State
+
+There are 2 types of state: query (data) state & network fetching state.
+
+`status`, `isLoading`, `isSuccess`, `isError` is a query data state.  
+It has no relation with network fetching state. ⚠️  
+Here is the flow of the query data state:
+
+- Initial state when there is no data fetched.  
+  `{ status: 'loading', isLoading: true, isSuccess: false, isError: false }`
+- After data fetching:
+  - If success
+    `{ status: 'success', isLoading: false, isSuccess: true, isError: false }`
+  - If error
+    `{ status: 'error', isLoading: false, isSuccess: false, isError: true }`
+- After data fetched successfully, you will **always** get this state:  
+  `{ status: 'success', isLoading: false, isSuccess: true, isError: false }`
+  - If a refetch is fired and got error, the state would be:  
+    `{ status: 'success', isLoading: false, isSuccess: true, isError: false, isRefetchError: true }`  
+    The previouse success response will be kept.
+
+For network fetching state, we use `isWaiting`.  
+The value will be `true` if the query is called and still waiting for the response.
 
 ### Single Query
 
@@ -419,7 +451,7 @@ function Actions() {
     <>
       <button onClick={fetch}>Call query if the query data is stale</button>
       <button onClick={forceFetch}>Call query</button>
-      <button onClick={markAsStale}>Invalidate query</button>
+      <button onClick={markAsStale}>Mark as stale</button>
       <button onClick={reset}>Reset query</button>
     </>
   );
