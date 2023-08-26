@@ -363,12 +363,14 @@ export const createQuery = <
                       isWaiting: false,
                       isRefetching: false,
                       isRefetchError: true,
-                      data: responseAllPages.reduce(
-                        (prev, response) => {
-                          return select(response, { key, data: prev });
-                        },
-                        null as TData | null,
-                      ),
+                      data: responseAllPages.length
+                        ? responseAllPages.reduce(
+                            (prev, response) => {
+                              return select(response, { key, data: prev });
+                            },
+                            null as TData | null,
+                          )
+                        : prevState.data,
                       error,
                       errorUpdatedAt,
                       isGoingToRetry: shouldRetry,
