@@ -1,4 +1,4 @@
-import { renderHook } from '@testing-library/react-hooks';
+import { act, renderHook } from '@testing-library/react-hooks';
 
 import { createQuery, UseQuery } from '../../react/create-query';
 
@@ -102,6 +102,7 @@ describe('createQuery', () => {
     it('should retry after failed fetch, with custom retry times & delay', async () => {
       let timesCalled = 0;
       queryFn = jest.fn().mockImplementation(async () => {
+        // Error x3, then success
         return new Promise((resolve, reject) => {
           setTimeout(() => {
             timesCalled++;
@@ -147,6 +148,64 @@ describe('createQuery', () => {
       expect(hook1.result.current.errorUpdatedAt).toBe(null);
 
       expect(hook2.result.current).toBe(hook1.result.current);
+    });
+
+    it('should handle refetch error correctly', async () => {
+      let timesCalled = 0;
+      queryFn = jest.fn().mockImplementation(async () => {
+        // Success, then error
+        return new Promise((resolve, reject) => {
+          setTimeout(() => {
+            timesCalled++;
+            if (timesCalled > 1) {
+              reject(new Error('Test error'));
+            } else {
+              resolve({ id: 1, name: 'test' });
+            }
+          }, 100);
+        });
+      });
+      useQuery = createQuery<Key, Response>(queryFn, { retryDelay: 100 });
+
+      const hook1 = renderHook(() => useQuery());
+      const hook2 = renderHook(() => useQuery());
+
+      await hook1.waitForNextUpdate();
+
+      expect(hook1.result.current.isSuccess).toBe(true);
+
+      act(() => {
+        hook1.result.current.forceFetch();
+      });
+
+      await hook1.waitForNextUpdate();
+      expect(queryFn).toHaveBeenCalledTimes(2);
+
+      const { current } = hook1.result;
+      expect(current.isLoading).toBe(false);
+      expect(current.isSuccess).toBe(true);
+      expect(current.isError).toBe(false);
+      expect(current.isRefetchError).toBe(true);
+      expect(current.data).toEqual({ id: 1, name: 'test' });
+      expect(current.response).toEqual({ id: 1, name: 'test' });
+      expect(current.responseUpdatedAt).not.toBeNull();
+      expect(current.error).toEqual(new Error('Test error'));
+      expect(current.errorUpdatedAt).not.toBeNull();
+
+      expect(hook2.result.current).toBe(current);
+
+      await hook1.waitForNextUpdate();
+      expect(queryFn).toHaveBeenCalledTimes(3);
+
+      expect(current.isLoading).toBe(false);
+      expect(current.isSuccess).toBe(true);
+      expect(current.isError).toBe(false);
+      expect(current.isRefetchError).toBe(true);
+      expect(current.data).toEqual({ id: 1, name: 'test' });
+      expect(current.response).toEqual({ id: 1, name: 'test' });
+      expect(current.responseUpdatedAt).not.toBeNull();
+      expect(current.error).toEqual(new Error('Test error'));
+      expect(current.errorUpdatedAt).not.toBeNull();
     });
   });
 });
