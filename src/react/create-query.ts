@@ -282,6 +282,8 @@ export const createQuery = <
   const retryTimeoutId = new Map<string, number>();
   const retryNextPageTimeoutId = new Map<string, number>();
 
+  const preventReplaceResponse = new Map<string, boolean>(); // Prevent optimistic data to be replaced
+
   const useQuery = createStores<TKey, QueryState<TKey, TResponse, TData, TError>>(
     ({ key: _key, get, set }) => {
       const key = _key as TKey;
@@ -312,8 +314,10 @@ export const createQuery = <
             clearTimeout(retryTimeoutId.get(hashKeyFn(key)));
           }
           const stateBeforeCallQuery = { ...get(), pageParam };
+          preventReplaceResponse.set(hashKeyFn(key), false);
           queryFn(key, stateBeforeCallQuery)
             .then((response) => {
+              if (preventReplaceResponse.get(hashKeyFn(key))) return;
               responseAllPages.push(response);
               const newPageParam = getNextPageParam(response, responseAllPages.length);
               newPageParams.push(newPageParam);
@@ -569,6 +573,7 @@ export const createQuery = <
       response: optimisticResponse,
       data: select(optimisticResponse, { key: key as TKey, data: null }),
     });
+    preventReplaceResponse.set(hashKeyFn(key as TKey), true);
     const revert = () => {
       useQuery.set(key, {
         isOptimisticData: false,
