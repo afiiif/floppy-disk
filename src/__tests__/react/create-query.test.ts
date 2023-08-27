@@ -2,8 +2,8 @@ import { act, renderHook } from '@testing-library/react-hooks';
 
 import { createQuery, UseQuery } from '../../react/create-query';
 
-describe('createQuery', () => {
-  describe('single query', () => {
+describe('createQuery - single query', () => {
+  describe('without param', () => {
     type Key = undefined;
     type Response = { id: number; name: string };
     let useQuery: UseQuery<Key, Response>;
@@ -269,5 +269,119 @@ describe('createQuery', () => {
       expect(hook2.result.current.data).toEqual({ id: 1, name: 'test 2' });
       expect(queryFn).toHaveBeenCalledTimes(3);
     });
+  });
+
+  describe('with param', () => {
+    type Key = { id: number };
+    type Response = { id: number; name: string };
+    let useQuery: UseQuery<Key, Response, any>;
+
+    let queryFn = jest.fn();
+
+    beforeEach(() => {
+      queryFn = jest.fn().mockImplementation(async ({ id }) => {
+        return new Promise((resolve) => {
+          setTimeout(() => {
+            const name = ['', 'A', 'B', 'C', 'D'][id];
+            resolve({ id, name });
+          }, 100);
+        });
+      });
+      useQuery = createQuery<Key, Response>(queryFn);
+    });
+
+    it('should return initial loading state', () => {
+      const { result } = renderHook(() => useQuery({ id: 1 }));
+      expect(result.current.isLoading).toBe(true);
+      expect(result.current.isSuccess).toBe(false);
+      expect(result.current.isError).toBe(false);
+      expect(result.current.response).toBe(null);
+      expect(result.current.responseUpdatedAt).toBe(null);
+      expect(result.current.error).toBe(null);
+      expect(result.current.errorUpdatedAt).toBe(null);
+    });
+
+    it('should dedupe & update state after successful/error fetch', async () => {
+      let timesCalled = 0;
+      queryFn = jest.fn().mockImplementation(async ({ id }) => {
+        return new Promise((resolve, reject) => {
+          setTimeout(() => {
+            const name = ['', 'A', 'B', 'C'][id];
+            if (id === 2) {
+              timesCalled++;
+              if (timesCalled === 1) {
+                reject(new Error('Test error'));
+              }
+            }
+            resolve({ id, name });
+          }, 100);
+        });
+      });
+      useQuery = createQuery<Key, Response, string>(queryFn, {
+        retryDelay: 100,
+        select: (res) => res.name,
+      });
+
+      const hook1 = renderHook((props: { id: number }) => useQuery(props), {
+        initialProps: { id: 1 },
+      });
+      const hook2 = renderHook((props: { id: number }) => useQuery(props), {
+        initialProps: { id: 1 },
+      });
+      expect(queryFn).toHaveBeenCalledTimes(1);
+      expect(queryFn).toHaveBeenCalledWith({ id: 1 }, useQuery.get({ id: 1 }));
+
+      await hook1.waitForNextUpdate();
+
+      expect(hook1.result.current.isLoading).toBe(false);
+      expect(hook1.result.current.isSuccess).toBe(true);
+      expect(hook1.result.current.isError).toBe(false);
+      expect(hook1.result.current.data).toBe('A');
+      expect(hook1.result.current.response).toEqual({ id: 1, name: 'A' });
+      expect(hook1.result.current.responseUpdatedAt).not.toBeNull();
+      expect(hook1.result.current.error).toBe(null);
+      expect(hook1.result.current.errorUpdatedAt).toBe(null);
+
+      expect(hook2.result.current).toBe(hook1.result.current);
+
+      hook2.rerender({ id: 2 });
+      expect(hook2.result.current.isLoading).toBe(true);
+      expect(hook2.result.current.isSuccess).toBe(false);
+      expect(hook2.result.current.isError).toBe(false);
+      expect(queryFn).toHaveBeenCalledTimes(2);
+      expect(queryFn).toHaveBeenCalledWith({ id: 2 }, useQuery.get({ id: 2 }));
+
+      await hook2.waitForNextUpdate();
+
+      expect(hook2.result.current.isLoading).toBe(true);
+      expect(hook2.result.current.isSuccess).toBe(false);
+      expect(hook2.result.current.isError).toBe(true);
+      expect(hook2.result.current.data).toBe(null);
+      expect(hook2.result.current.response).toBe(null);
+      expect(hook2.result.current.responseUpdatedAt).toBe(null);
+      expect(hook2.result.current.error).toEqual(new Error('Test error'));
+      expect(hook2.result.current.errorUpdatedAt).not.toBeNull();
+
+      // Retrying
+
+      await hook2.waitForNextUpdate();
+
+      expect(queryFn).toHaveBeenCalledTimes(3);
+      expect(hook2.result.current.isLoading).toBe(false);
+      expect(hook2.result.current.isSuccess).toBe(true);
+      expect(hook2.result.current.isError).toBe(false);
+      expect(hook2.result.current.data).toBe('B');
+      expect(hook2.result.current.response).toEqual({ id: 2, name: 'B' });
+      expect(hook2.result.current.responseUpdatedAt).not.toBeNull();
+      expect(hook2.result.current.error).toBe(null);
+      expect(hook2.result.current.errorUpdatedAt).toBe(null);
+    });
+  });
+});
+
+describe('createQuery - infinite query', () => {
+  // TODO
+  it('should work', () => {
+    expect(1).toBe(1);
   });
 });
