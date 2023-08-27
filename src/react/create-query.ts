@@ -70,7 +70,6 @@ export type QueryState<
    * You can ignore this if your query is not paginated.
    */
   fetchNextPage: () => void;
-  markAsStale: () => void;
   /**
    * Set query state (data, error, etc) to initial state.
    */
@@ -463,7 +462,6 @@ export const createQuery = <
         fetch,
         forceFetch,
         fetchNextPage,
-        markAsStale: () => set({ responseUpdatedAt: null }),
         reset: () => set(INITIAL_QUERY_STATE),
       };
     },
