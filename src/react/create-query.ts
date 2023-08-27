@@ -220,6 +220,14 @@ export type UseQuery<
    */
   setInitialResponse: (options: { key?: TKey; response: TResponse }) => void;
   /**
+   * Set query state (data, error, etc) to initial state.
+   */
+  reset: () => void;
+  /**
+   * Set query state (data, error, etc) to initial state.
+   */
+  resetSpecificKey: (key?: TKey | null) => void;
+  /**
    * Invalidate query means marking a query as stale, and will refetch only if the query is active (has subscriber)
    */
   invalidate: () => void;
@@ -544,6 +552,17 @@ export const createQuery = <
         hasNextPage: newPageParam !== undefined,
       });
     });
+  };
+
+  useQuery.reset = () => {
+    useQuery.getStores().forEach((store) => {
+      store.set(INITIAL_QUERY_STATE);
+    });
+  };
+
+  useQuery.resetSpecificKey = (key?: TKey | null) => {
+    const store = useQuery.getStore(key);
+    store.set(INITIAL_QUERY_STATE);
   };
 
   useQuery.invalidate = () => {
