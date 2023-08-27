@@ -21,15 +21,27 @@
     "url": "https://github.com/afiiif/floppy-disk/issues"
   },
   "homepage": "https://github.com/afiiif/floppy-disk#readme",
-  "main": "lib/index.js",
-  "module": "esm/index.js",
   "sideEffects": false,
   "files": [
     "lib/",
     "esm/"
   ],
+  "main": "lib/index.js",
+  "module": "esm/index.js",
   "types": "lib/index.d.ts",
   "typings": "lib/index.d.ts",
+  "exports": {
+    "./package.json": "./package.json",
+    ".": {
+      "default": "./lib/index.js",
+      "types": "./lib/index.d.ts",
+      "module": "./esm/index.js",
+      "import": {
+        "default": "./esm/index.js",
+        "types": "./esm/index.d.ts"
+      }
+    }
+  },
   "engines": {
     "node": ">=18"
   },
