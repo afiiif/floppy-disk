@@ -75,6 +75,16 @@ export type QueryState<
    */
   reset: () => void;
   /**
+   * Optimistic update.
+   *
+   * @returns function to revert the changes & function to invalidate the query
+   *
+   * IMPORTANT NOTE: This won't work well on infinite query.
+   */
+  optimisticUpdate: (
+    response: TResponse | ((prevState: QueryState<TKey, TResponse, TData, TError>) => TResponse),
+  ) => { revert: () => void; invalidate: () => void };
+  /**
    * Network fetching status.
    */
   isWaiting: boolean;
@@ -471,6 +481,7 @@ export const createQuery = <
         forceFetch,
         fetchNextPage,
         reset: () => set(INITIAL_QUERY_STATE),
+        optimisticUpdate: (response) => useQuery.optimisticUpdate({ key, response }),
       };
     },
     (() => {
