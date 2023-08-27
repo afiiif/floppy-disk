@@ -663,7 +663,17 @@ const useCartStore = createStore(({ set, get }) => ({
 }));
 ```
 
-You don't need to memoize the reactivity selector.
+Don't use conditional reactivity selector.
+
+```jsx
+function Cat({ isSomething }) {
+  const { age } = useCatStore(isSomething ? (state) => [state.age] : null); // ❌
+  const { age } = useCatStore((state) => (isSomething ? [state.age] : [state.isSleeping])); // ❌
+  return <div>Cat's age: {age}</div>;
+}
+```
+
+No need to memoize the reactivity selector.
 
 ```jsx
 function Cat() {
@@ -673,11 +683,12 @@ function Cat() {
 }
 ```
 
-Don't use conditional reactivity selector.
+No need to memoize the store key / query key.
 
 ```jsx
-function Cat({ isSomething }) {
-  const { age } = useCatStore(isSomething ? (state) => [state.age] : null); // ❌
-  return <div>Cat's age: {age}</div>;
+function PokemonsPage() {
+  const queryKey = useMemo(() => ({ generation: 'ii', sort: 'asc' }), []); // ❌
+  const { isLoading, data } = usePokemonsQuery(queryKey);
+  return <div>...</div>;
 }
 ```
