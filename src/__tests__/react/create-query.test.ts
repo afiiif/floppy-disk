@@ -207,5 +207,67 @@ describe('createQuery', () => {
       expect(current.error).toEqual(new Error('Test error'));
       expect(current.errorUpdatedAt).not.toBeNull();
     });
+
+    it('should handle optimistic update correctly', async () => {
+      let timesCalled = 0;
+      queryFn = jest.fn().mockImplementation(async () => {
+        return new Promise((resolve) => {
+          setTimeout(() => {
+            timesCalled++;
+            if (timesCalled === 1) {
+              resolve({ id: 1, name: 'test' });
+            } else {
+              resolve({ id: 1, name: 'test 2' });
+            }
+          }, 100);
+        });
+      });
+      useQuery = createQuery<Key, Response>(queryFn);
+
+      const hook1 = renderHook(() => useQuery());
+      const hook2 = renderHook(() => useQuery());
+
+      await hook1.waitForNextUpdate();
+
+      expect(hook1.result.current.data).toEqual({ id: 1, name: 'test' });
+
+      act(() => {
+        const { revert } = hook1.result.current.optimisticUpdate({
+          id: 1,
+          name: 'test optmimistic',
+        });
+        setTimeout(() => {
+          revert();
+        }, 500);
+      });
+
+      expect(hook1.result.current.data).toEqual({ id: 1, name: 'test optmimistic' });
+      expect(hook2.result.current.data).toEqual({ id: 1, name: 'test optmimistic' });
+
+      await hook1.waitForNextUpdate();
+      expect(hook1.result.current.data).toEqual({ id: 1, name: 'test' });
+      expect(hook2.result.current.data).toEqual({ id: 1, name: 'test' });
+      expect(queryFn).toHaveBeenCalledTimes(1);
+
+      act(() => {
+        hook1.result.current.forceFetch();
+        const { invalidate } = hook1.result.current.optimisticUpdate({
+          id: 1,
+          name: 'test optmimistic 2',
+        });
+        setTimeout(() => {
+          invalidate();
+        }, 500);
+      });
+
+      expect(hook1.result.current.data).toEqual({ id: 1, name: 'test optmimistic 2' });
+      expect(hook2.result.current.data).toEqual({ id: 1, name: 'test optmimistic 2' });
+      expect(queryFn).toHaveBeenCalledTimes(2);
+
+      await hook1.waitForNextUpdate();
+      expect(hook1.result.current.data).toEqual({ id: 1, name: 'test 2' });
+      expect(hook2.result.current.data).toEqual({ id: 1, name: 'test 2' });
+      expect(queryFn).toHaveBeenCalledTimes(3);
+    });
   });
 });
