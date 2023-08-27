@@ -334,7 +334,10 @@ export const createQuery = <
           preventReplaceResponse.set(hashKeyFn(key), false);
           queryFn(key, stateBeforeCallQuery)
             .then((response) => {
-              if (preventReplaceResponse.get(hashKeyFn(key))) return;
+              if (preventReplaceResponse.get(hashKeyFn(key))) {
+                set({ isWaiting: false });
+                return;
+              }
               responseAllPages.push(response);
               const newPageParam = getNextPageParam(response, responseAllPages.length);
               newPageParams.push(newPageParam);
