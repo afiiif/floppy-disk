@@ -25,8 +25,35 @@ import { createQuery, createMutation } from 'floppy-disk'; // 8.1 kB (gzipped: 2
 - Using Floppy Disk: https://demo-floppy-disk.vercel.app/  
   👉 Total: **284.8 kB** 🎉
 
+## Key Features
+
+- Create store ✅
+  - Yes, it also support middleware & set/get state outside component ✅
+  - Store event (`onSubscribe`, `onUnsubscribe`, etc.) ✅
+  - Use store as local state manager ✅
+- Create stores (yes, it's plural) ✅ \*_controlled with a store key_
+- Create query ✅
+  - Dedupe multiple request ✅
+  - Auto-update stale data (stale-while-revalidate) ✅
+  - Enable/disable query ✅
+  - Auto-fetch or manual (lazy query) ✅
+  - Retry on error (retry count, retry delay) ✅
+  - SSR/SSG's initial query data ✅
+  - Optimistic update ✅
+  - Invalidate query ✅
+  - Reset query ✅
+  - Query with param (query key) ✅
+  - Infinite query ✅
+  - Get query data outside component ✅
+  - Custom reactivity ✅
+  - Fetching mechanisms are agnostically built on promises ✅
+    - Can be used with literally any asynchronous data fetching client, including GraphQL ✅
+- Create mutation ✅
+
 ## Table of Contents
 
+- [Key Features](#key-features)
+- [Table of Contents](#table-of-contents)
 - [Store](#store)
   - [Basic Concept](#basic-concept)
   - [Advanced Concept](#advanced-concept)
@@ -446,12 +473,11 @@ Actions:
 
 ```jsx
 function Actions() {
-  const { fetch, forceFetch, markAsStale, reset } = useGitHubQuery(() => []);
+  const { fetch, forceFetch, reset } = useGitHubQuery(() => []);
   return (
     <>
       <button onClick={fetch}>Call query if the query data is stale</button>
       <button onClick={forceFetch}>Call query</button>
-      <button onClick={markAsStale}>Mark as stale</button>
       <button onClick={reset}>Reset query</button>
     </>
   );
@@ -470,7 +496,7 @@ const useGitHubQuery = createQuery(
   {
     fetchOnMount: false,
     enabled: () => !!useUserQuery.get().data?.user,
-    select: (response) => response.name
+    select: (response) => response.name,
     staleTime: Infinity, // Never stale
     retry: 0, // No retry
     onSuccess: (response) => {},
@@ -478,6 +504,21 @@ const useGitHubQuery = createQuery(
     onSettled: () => {},
   },
 );
+
+function MyComponent() {
+  const { data, response } = useGitHubQuery();
+  /**
+   * Since in option we select the data like this:
+   * select: (response) => response.name
+   *
+   * The return will be:
+   * {
+   *   response: { id: 677863376, name: "floppy-disk", ... },
+   *   data: "floppy-disk",
+   *   ...
+   * }
+   */
+}
 ```
 
 Get data or do something outside component:
@@ -620,19 +661,50 @@ function Login() {
     <div>
       <button
         disabled={isWaiting}
-        onClick={() =>
+        onClick={() => {
           mutate({ email: 'foo@bar.baz', password: 's3cREt' }).then(({ response, error }) => {
             if (error) {
               showToast('Login failed');
             } else {
               showToast('Login success');
             }
-          })
-        }
+          });
+        }}
       >
         Login
       </button>
     </div>
+  );
+}
+```
+
+Optimistic update:
+
+```jsx
+function SaveProduct() {
+  const { mutate, isWaiting } = useEditProductMutation();
+  const { getValues } = useFormContext();
+
+  return (
+    <button
+      disabled={isWaiting}
+      onClick={() => {
+        const payload = getValues();
+
+        const { revert, invalidate } = useProductQuery.optimisticUpdate({
+          key: { id: payload.id },
+        });
+
+        mutate(payload).then(({ response, error }) => {
+          if (error) {
+            revert();
+          }
+          invalidate();
+        });
+      }}
+    >
+      Save
+    </button>
   );
 }
 ```
