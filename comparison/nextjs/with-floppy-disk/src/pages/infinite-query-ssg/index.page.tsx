@@ -24,7 +24,7 @@ const usePokemonsInfQuery = createQuery<{ generation: string }, PokemonsResponse
     ],
     getNextPageParam: (lastPage, i) => {
       const currentOffset = i * 10;
-      if (currentOffset < 100) return currentOffset + 10;
+      if (currentOffset < 100) return currentOffset;
     },
     retry: 0,
     staleTime: 3_000,
@@ -39,17 +39,9 @@ export default function InfiniteQuerySsgPage({
   const [generation, setGeneration] = useState('generation-i');
   const [currentPokemon, setCurrentPokemon] = useState<Pokemon>();
 
-  useState(() => {
-    usePokemonsInfQuery.set(
-      { generation },
-      {
-        response: initialPokemons,
-        data: initialPokemons.data.species.flatMap((species) => species.pokemon),
-        pageParam: 10,
-        pageParams: [10],
-        hasNextPage: true,
-      },
-    );
+  usePokemonsInfQuery.setInitialResponse({
+    key: { generation },
+    response: initialPokemons,
   });
 
   const { data, fetchNextPage, isWaitingNextPage, hasNextPage } = usePokemonsInfQuery({

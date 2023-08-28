@@ -1084,10 +1084,10 @@ flatted@^3.1.0:
   resolved "https://registry.yarnpkg.com/flatted/-/flatted-3.2.7.tgz#609f39207cb614b89d0765b477cb2d437fbf9787"
   integrity sha512-5nqDSxl8nn5BSNxyR3n4I6eDmbolI6WT+QqR547RwxQapgjQBmtktdP+HTBb/a/zLsbzERTONyUB5pefh5TtjQ==
 
-floppy-disk@^1.4.0-beta.2:
-  version "1.4.0-beta.2"
-  resolved "https://registry.yarnpkg.com/floppy-disk/-/floppy-disk-1.4.0-beta.2.tgz#bcaebb5c2ac05a4b9eec989b52b5b3b6d840f5ce"
-  integrity sha512-pnPC1KqClYD4jbG/yjxy6vwLI20OC80lqOEni9cCA3GrAhXbzZ7DrdVFm65nfamCFTCVXZzW4eAPBWhB0uYwDA==
+floppy-disk@^2.0.0-beta.4:
+  version "2.0.0-beta.4"
+  resolved "https://registry.yarnpkg.com/floppy-disk/-/floppy-disk-2.0.0-beta.4.tgz#e712ed9f95ac7e92e641ba46ffb0b2a0b41ab705"
+  integrity sha512-7RwjIXytYlpO2eVECqXXneF/twRx4HJocE4jsVLtaiPLrO+FSMTsB2C30N2qqa9pNfHVlljv6lD+qf7vV5wRlw==
 
 for-each@^0.3.3:
   version "0.3.3"

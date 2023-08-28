@@ -28,7 +28,7 @@ export default function InfiniteQuerySsgPage() {
     queryFn: ({ pageParam }) => fetchPokemons({ generation, offset: pageParam }),
     getNextPageParam: (lastPage, allPages) => {
       const currentOffset = allPages.length * 10;
-      if (currentOffset < 100) return currentOffset + 10;
+      if (currentOffset < 100) return currentOffset;
     },
     retry: 0,
     staleTime: 3_000,
