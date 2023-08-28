@@ -1,6 +1,6 @@
 {
   "name": "floppy-disk",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "description": "FloppyDisk - lightweight, simple, and powerful state management library",
   "keywords": [
     "state",
@@ -9,7 +9,8 @@
     "react",
     "hooks",
     "store",
-    "utilities"
+    "utilities",
+    "query"
   ],
   "author": "Muhammad Afifudin",
   "license": "MIT",
