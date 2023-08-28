@@ -33,22 +33,22 @@
   "exports": {
     "./package.json": "./package.json",
     ".": {
-      "default": "./lib/index.js",
       "types": "./lib/index.d.ts",
-      "module": "./esm/index.js",
       "import": {
-        "default": "./esm/index.js",
-        "types": "./esm/index.d.ts"
-      }
+        "types": "./esm/index.d.ts",
+        "default": "./esm/index.js"
+      },
+      "module": "./esm/index.js",
+      "default": "./lib/index.js"
     },
     "./preact": {
-      "default": "./lib/preact/index.js",
       "types": "./lib/preact/index.d.ts",
-      "module": "./esm/preact/index.js",
       "import": {
-        "default": "./esm/preact/index.js",
-        "types": "./esm/preact/index.d.ts"
-      }
+        "types": "./esm/preact/index.d.ts",
+        "default": "./esm/preact/index.js"
+      },
+      "module": "./esm/preact/index.js",
+      "default": "./lib/preact/index.js"
     }
   },
   "engines": {
