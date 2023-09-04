@@ -399,6 +399,7 @@ export const createQuery = <
                     }
                   : {
                       isWaiting: false,
+                      status: 'error',
                       isError: true,
                       error,
                       errorUpdatedAt,

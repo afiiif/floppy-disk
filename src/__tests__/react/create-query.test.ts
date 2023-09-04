@@ -21,6 +21,7 @@ describe('createQuery - single query', () => {
 
     it('should return initial loading state', () => {
       const { result } = renderHook(() => useQuery());
+      expect(result.current.status).toBe('loading');
       expect(result.current.isLoading).toBe(true);
       expect(result.current.isSuccess).toBe(false);
       expect(result.current.isError).toBe(false);
@@ -39,6 +40,7 @@ describe('createQuery - single query', () => {
       await hook1.waitForNextUpdate();
 
       const { current } = hook1.result;
+      expect(current.status).toBe('success');
       expect(current.isLoading).toBe(false);
       expect(current.isSuccess).toBe(true);
       expect(current.isError).toBe(false);
@@ -65,6 +67,7 @@ describe('createQuery - single query', () => {
       await hook1.waitForNextUpdate();
 
       const { current } = hook1.result;
+      expect(current.status).toBe('error');
       expect(current.isLoading).toBe(true);
       expect(current.isSuccess).toBe(false);
       expect(current.isError).toBe(true);
@@ -119,8 +122,11 @@ describe('createQuery - single query', () => {
       const hook1 = renderHook(() => useQuery());
       const hook2 = renderHook(() => useQuery());
 
+      expect(hook1.result.current.status).toBe('loading');
+
       await hook1.waitForNextUpdate();
 
+      expect(hook1.result.current.status).toBe('error');
       expect(hook1.result.current.isError).toBe(true);
 
       // Retrying
@@ -128,16 +134,19 @@ describe('createQuery - single query', () => {
       await hook1.waitForNextUpdate();
       expect(queryFn).toHaveBeenCalledTimes(2);
 
+      expect(hook1.result.current.status).toBe('error');
       expect(hook1.result.current.isError).toBe(true);
 
       await hook1.waitForNextUpdate();
       expect(queryFn).toHaveBeenCalledTimes(3);
 
+      expect(hook1.result.current.status).toBe('error');
       expect(hook1.result.current.isError).toBe(true);
 
       await hook1.waitForNextUpdate();
       expect(queryFn).toHaveBeenCalledTimes(4);
 
+      expect(hook1.result.current.status).toBe('success');
       expect(hook1.result.current.isLoading).toBe(false);
       expect(hook1.result.current.isSuccess).toBe(true);
       expect(hook1.result.current.isError).toBe(false);
@@ -182,6 +191,7 @@ describe('createQuery - single query', () => {
       expect(queryFn).toHaveBeenCalledTimes(2);
 
       const { current } = hook1.result;
+      expect(hook1.result.current.status).toBe('success');
       expect(current.isLoading).toBe(false);
       expect(current.isSuccess).toBe(true);
       expect(current.isError).toBe(false);
@@ -197,6 +207,7 @@ describe('createQuery - single query', () => {
       await hook1.waitForNextUpdate();
       expect(queryFn).toHaveBeenCalledTimes(3);
 
+      expect(hook1.result.current.status).toBe('success');
       expect(current.isLoading).toBe(false);
       expect(current.isSuccess).toBe(true);
       expect(current.isError).toBe(false);
