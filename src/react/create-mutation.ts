@@ -1,6 +1,6 @@
 import { noop } from '../utils';
 import { InitStoreOptions } from '../vanilla';
-import { createStore } from './create-store';
+import { createStore, UseStore } from './create-store';
 
 export type MutationState<TVar, TResponse = any, TError = unknown> = {
   /**
@@ -20,6 +20,10 @@ export type MutationState<TVar, TResponse = any, TError = unknown> = {
     ? () => Promise<{ response?: TResponse; error?: TError; variables?: TVar }>
     : (variables: TVar) => Promise<{ response?: TResponse; error?: TError; variables?: TVar }>;
 };
+
+export type UseMutation<TVar, TResponse = any, TError = unknown> = UseStore<
+  MutationState<TVar, TResponse, TError>
+>;
 
 export type CreateMutationOptions<TVar, TResponse = any, TError = unknown> = InitStoreOptions<
   MutationState<TVar, TResponse, TError>
@@ -44,7 +48,7 @@ export const createMutation = <TVar, TResponse = any, TError = unknown>(
     state: MutationState<TVar, TResponse, TError>,
   ) => Promise<TResponse>,
   options: CreateMutationOptions<TVar, TResponse, TError> = {},
-) => {
+): UseMutation<TVar, TResponse, TError> => {
   const {
     onMutate = noop,
     onSuccess = noop,
