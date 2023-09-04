@@ -16,35 +16,31 @@ export type MutationState<TVar, TResponse = any, TError = unknown> = {
   /**
    * Mutate function is a promise that will always resolve.
    */
-  mutate: (variables?: TVar) => Promise<{ response?: TResponse; error?: TError; variables?: TVar }>;
+  mutate: TVar extends undefined
+    ? () => Promise<{ response?: TResponse; error?: TError; variables?: TVar }>
+    : (variables: TVar) => Promise<{ response?: TResponse; error?: TError; variables?: TVar }>;
 };
 
 export type CreateMutationOptions<TVar, TResponse = any, TError = unknown> = InitStoreOptions<
   MutationState<TVar, TResponse, TError>
 > & {
-  onMutate?: (
-    variables: TVar | undefined,
-    stateBeforeMutate: MutationState<TVar, TResponse, TError>,
-  ) => void;
+  onMutate?: (variables: TVar, stateBeforeMutate: MutationState<TVar, TResponse, TError>) => void;
   onSuccess?: (
     response: TResponse,
-    variables: TVar | undefined,
+    variables: TVar,
     stateBeforeMutate: MutationState<TVar, TResponse, TError>,
   ) => void;
   onError?: (
     error: TError,
-    variables: TVar | undefined,
+    variables: TVar,
     stateBeforeMutate: MutationState<TVar, TResponse, TError>,
   ) => void;
-  onSettled?: (
-    variables: TVar | undefined,
-    stateBeforeMutate: MutationState<TVar, TResponse, TError>,
-  ) => void;
+  onSettled?: (variables: TVar, stateBeforeMutate: MutationState<TVar, TResponse, TError>) => void;
 };
 
 export const createMutation = <TVar, TResponse = any, TError = unknown>(
   mutationFn: (
-    variables: TVar | undefined,
+    variables: TVar,
     state: MutationState<TVar, TResponse, TError>,
   ) => Promise<TResponse>,
   options: CreateMutationOptions<TVar, TResponse, TError> = {},
@@ -66,7 +62,7 @@ export const createMutation = <TVar, TResponse = any, TError = unknown>(
       responseUpdatedAt: null,
       error: null,
       errorUpdatedAt: null,
-      mutate: (variables) => {
+      mutate: ((variables) => {
         set({ isWaiting: true });
         const stateBeforeMutate = get();
         onMutate(variables, stateBeforeMutate);
@@ -100,7 +96,9 @@ export const createMutation = <TVar, TResponse = any, TError = unknown>(
               onSettled(variables, stateBeforeMutate);
             });
         });
-      },
+      }) as TVar extends undefined
+        ? () => Promise<{ response?: TResponse; error?: TError; variables?: TVar }>
+        : (variables: TVar) => Promise<{ response?: TResponse; error?: TError; variables?: TVar }>,
     }),
     createStoreOptions,
   );
