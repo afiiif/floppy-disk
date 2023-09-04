@@ -17,15 +17,13 @@ const getDecision = <T>(
 
 const DEFAULT_STALE_TIME = 3_000; // 3 seconds
 
-export type QueryStatus = 'loading' | 'success' | 'error';
-
 const INITIAL_QUERY_STATE = {
   isWaiting: false, // Network fetching
   isWaitingNextPage: false,
-  status: 'loading' as QueryStatus,
-  isLoading: true,
-  isSuccess: false,
-  isError: false,
+  status: 'loading' as 'loading',
+  isLoading: true as true,
+  isSuccess: false as false,
+  isError: false as false,
   isRefetching: false,
   isRefetchError: false,
   isPreviousData: false,
@@ -92,41 +90,10 @@ export type QueryState<
    * Network fetching status for fetching next page.
    */
   isWaitingNextPage: boolean;
-  /**
-   * Status of the data.
-   *
-   * `"loading"` = no data.
-   *
-   * `"success"` = has data.
-   *
-   * `"error"` = has error.
-   *
-   * It has no relation with network fetching state.
-   * If you're looking for network fetching state, use `isWaiting` instead.
-   */
-  status: QueryStatus;
-  /**
-   * Data state, will be `true` if the query has no data.
-   *
-   * It has no relation with network fetching state.
-   * If you're looking for network fetching state, use `isWaiting` instead.
-   */
-  isLoading: boolean;
-  /**
-   * Data state, will be `true` if the query has a data.
-   */
-  isSuccess: boolean;
-  /**
-   * Error state, will be `true` after data fetching error.
-   */
-  isError: boolean;
   isRefetching: boolean;
   isRefetchError: boolean;
   isPreviousData: boolean;
   isOptimisticData: boolean;
-  data: TData | null;
-  response: TResponse | null;
-  responseUpdatedAt: number | null;
   error: TError | null;
   errorUpdatedAt: number | null;
   retryCount: number;
@@ -136,7 +103,63 @@ export type QueryState<
   hasNextPage: boolean;
   retryNextPageCount: number;
   isGoingToRetryNextPage: boolean;
-};
+} & (
+  | {
+      /**
+       * Status of the data.
+       *
+       * `"loading"` = no data.
+       *
+       * `"success"` = has data.
+       *
+       * `"error"` = has error.
+       *
+       * It has no relation with network fetching state.
+       * If you're looking for network fetching state, use `isWaiting` instead.
+       */
+      status: 'loading';
+      /**
+       * Data state, will be `true` if the query has no data.
+       *
+       * It has no relation with network fetching state.
+       * If you're looking for network fetching state, use `isWaiting` instead.
+       */
+      isLoading: true;
+      /**
+       * Data state, will be `true` if the query has a data.
+       */
+      isSuccess: false;
+      /**
+       * Error state, will be `true` if the query has no data but has an error.
+       *
+       * This will only happened if an error occured after first fetch.
+       *
+       * If data fetched successfully but then an error occured, `isError` will be `false` but `isRefetchError` will be `true`.
+       */
+      isError: false;
+      data: null;
+      response: null;
+      responseUpdatedAt: null;
+    }
+  | {
+      status: 'success';
+      isLoading: false;
+      isSuccess: true;
+      isError: false;
+      data: TData;
+      response: TResponse;
+      responseUpdatedAt: number;
+    }
+  | {
+      status: 'error';
+      isLoading: false;
+      isSuccess: false;
+      isError: true;
+      data: null;
+      response: null;
+      responseUpdatedAt: null;
+    }
+);
 
 export type CreateQueryOptions<
   TKey extends StoreKey = StoreKey,
@@ -356,12 +379,9 @@ export const createQuery = <
                 isRefetchError: false,
                 isPreviousData: false,
                 isOptimisticData: false,
-                data: responseAllPages.reduce(
-                  (prev, responseCurrentPage) => {
-                    return select(responseCurrentPage, { key, data: prev });
-                  },
-                  null as TData | null,
-                ),
+                data: responseAllPages.reduce((prev, responseCurrentPage) => {
+                  return select(responseCurrentPage, { key, data: prev });
+                }, null as TData),
                 response,
                 responseUpdatedAt: Date.now(),
                 error: null,
@@ -378,18 +398,15 @@ export const createQuery = <
               const errorUpdatedAt = Date.now();
               const { shouldRetry, delay } = getRetryProps(error, prevState.retryCount);
               set(
-                prevState.isSuccess
+                prevState.isSuccess && !prevState.isPreviousData
                   ? {
                       isWaiting: false,
                       isRefetching: false,
                       isRefetchError: true,
                       data: responseAllPages.length
-                        ? responseAllPages.reduce(
-                            (prev, response) => {
-                              return select(response, { key, data: prev });
-                            },
-                            null as TData | null,
-                          )
+                        ? responseAllPages.reduce((prev, response) => {
+                            return select(response, { key, data: prev });
+                          }, null as TData)
                         : prevState.data,
                       error,
                       errorUpdatedAt,
@@ -401,6 +418,7 @@ export const createQuery = <
                       isWaiting: false,
                       status: 'error',
                       isError: true,
+                      data: null,
                       error,
                       errorUpdatedAt,
                       isGoingToRetry: shouldRetry,
@@ -533,9 +551,12 @@ export const createQuery = <
                 useQuery.set(
                   nextKey,
                   {
-                    data: prevData.data,
-                    response: prevData.response,
+                    status: 'success',
                     isLoading: false,
+                    isSuccess: true,
+                    isError: false,
+                    data: prevData.data,
+                    response: prevData.response!,
                     isPreviousData: true,
                   },
                   true,
@@ -611,8 +632,8 @@ export const createQuery = <
     const revert = () => {
       useQuery.set(key, {
         isOptimisticData: false,
-        response: prevState.response,
-        data: prevState.data,
+        response: prevState.response as any,
+        data: prevState.data as any,
       });
     };
     const invalidate = () => useQuery.invalidateSpecificKey(key);
