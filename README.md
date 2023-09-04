@@ -17,13 +17,13 @@ import {
   useInfiniteQuery,
   useMutation,
 } from '@tanstack/react-query'; // 41 kB (gzipped: 11 kB)
-import { createQuery, createMutation } from 'floppy-disk'; // 8.1 kB (gzipped: 2.7 kB) 🎉
+import { createQuery, createMutation } from 'floppy-disk'; // 8.2 kB (gzipped: 2.8 kB) 🎉
 ```
 
 - Using Zustand & React-Query: https://demo-zustand-react-query.vercel.app/  
   👉 Total: **309.21 kB**
 - Using Floppy Disk: https://demo-floppy-disk.vercel.app/  
-  👉 Total: **284.8 kB** 🎉
+  👉 Total: **270.86 kB** 🎉
 
 ## Key Features
 
