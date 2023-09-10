@@ -573,7 +573,7 @@ export const createQuery = <
   useQuery.setInitialResponse = ({ key, response }) => {
     // eslint-disable-next-line react-hooks/rules-of-hooks
     useState(() => {
-      if (response === undefined) return;
+      if (response === undefined || useQuery.get(key).data) return;
       const newPageParam = getNextPageParam(response, 1);
       useQuery.set(key, {
         status: 'success',
