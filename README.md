@@ -2,7 +2,8 @@
 
 A lightweight, simple, and powerful state management library.
 
-This library was highly-inspired by [Zustand](https://www.npmjs.com/package/zustand) and [React-Query](https://tanstack.com/query). Both are awesome state manager, but I want to have something like that with **more power** and **less bundle size**.
+This library was highly-inspired by [Zustand](https://www.npmjs.com/package/zustand) and [TanStack-Query](https://tanstack.com/query).
+Both are awesome state manager. That's why this Floppy Disk library behaves like them, but with small DX improvement, **more power**, and **less bundle size**.
 
 **Bundle Size Comparison:**
 
@@ -23,7 +24,7 @@ import { createQuery, createMutation } from 'floppy-disk'; // 8.2 kB (gzipped: 2
 - Using Zustand & React-Query: https://demo-zustand-react-query.vercel.app/  
   👉 Total: **309.21 kB**
 - Using Floppy Disk: https://demo-floppy-disk.vercel.app/  
-  👉 Total: **270.86 kB** 🎉
+  👉 Total: **270.87 kB** 🎉
 
 ## Key Features
 
@@ -50,6 +51,8 @@ import { createQuery, createMutation } from 'floppy-disk'; // 8.2 kB (gzipped: 2
     - Can be used with literally any asynchronous data fetching client, including GraphQL ✅
 - Create mutation ✅
 
+**View official documentation on [floppy-disk.vercel.app](https://floppy-disk.vercel.app/)**
+
 ## Table of Contents
 
 - [Key Features](#key-features)
@@ -60,6 +63,7 @@ import { createQuery, createMutation } from 'floppy-disk'; // 8.2 kB (gzipped: 2
 - [Stores](#stores)
 - [Query \& Mutation](#query--mutation)
   - [Query State \& Network Fetching State](#query-state--network-fetching-state)
+  - [Inherited from createStores](#inherited-from-createstores)
   - [Single Query](#single-query)
   - [Single Query with Params](#single-query-with-params)
   - [Paginated Query or Infinite Query](#paginated-query-or-infinite-query)
@@ -431,6 +435,35 @@ Here is the flow of the query data state:
 For network fetching state, we use `isWaiting`.  
 The value will be `true` if the query is called and still waiting for the response.
 
+### Inherited from createStores
+
+The `createQuery` function inherits functionality from the `createStores` function, allowing us to perform the same result and actions available in `createStores`.
+
+```tsx
+const useMyQuery = createQuery(myQueryFn, {
+  // 👇 Same as createStores options
+  defaultDeps: undefined,
+  onFirstSubscribe: (state) => console.log('onFirstSubscribe', state),
+  onSubscribe: (state) => console.log('onSubscribe', state),
+  onUnsubscribe: (state) => console.log('onUnsubscribe', state),
+  onLastUnsubscribe: (state) => console.log('onLastUnsubscribe', state),
+  onBeforeChangeKey: (nextKey, prevKey) => console.log('Store key changed', nextKey, prevKey),
+
+  // ... other createQuery options
+});
+```
+
+Custom reactivity (dependency array) also works:
+
+```tsx
+function QueryLoader() {
+  // This component doesn't care whether the query is success or error.
+  // It just listening to network fetching state. 👇
+  const { isWaiting } = useMyQuery((state) => [state.isWaiting]);
+  return <div>Is network fetching? {String(isWaiting)}</div>;
+}
+```
+
 ### Single Query
 
 ```jsx
@@ -458,22 +491,18 @@ function SingleQuery() {
 
 > Example: [https://codesandbox.io/.../examples/react/query](https://codesandbox.io/p/sandbox/github/afiiif/floppy-disk/tree/main/examples/react/query)
 
-Custom reactivity:
-
-```jsx
-// This component doesn't care whether the query is success or error.
-// It just listening to network fetching state. 👇
-function SingleQueryLoader() {
-  const { isWaiting } = useGitHubQuery((state) => [state.isWaiting]);
-  return <div>Is network fetching? {String(isWaiting)}</div>;
-}
-```
-
 Actions:
+
+Normally, we don't need reactivity for the actions.
+Therefore, using `get` method will be better, since it will not re-render the component when a query state changed.
 
 ```jsx
 function Actions() {
-  const { fetch, forceFetch, reset } = useGitHubQuery(() => []);
+  const { fetch, forceFetch, reset } = useGitHubQuery.get();
+
+  // Or like this:
+  // const { isLoading, data, error, fetch, forceFetch, reset } = useGitHubQuery();
+
   return (
     <>
       <button onClick={fetch}>Call query if the query data is stale</button>
@@ -524,22 +553,14 @@ function MyComponent() {
 Get data or do something outside component:
 
 ```jsx
-const getData = () => {
-  console.log(useGitHubQuery.get().data);
-};
+const getData = () => console.log(useGitHubQuery.get().data);
+const resetQuery = () => useGitHubQuery.get().reset();
 
-const resetQuery = () => {
-  useGitHubQuery.get().reset();
-};
-
-function Actions() {
-  return (
-    <>
-      <button onClick={getData}>Get Data</button>
-      <button onClick={resetQuery}>Reset query</button>
-    </>
-  );
-}
+// Works just like createStores
+useMyQuery.get(/* ... */);
+useMyQuery.set(/* ... */);
+useMyQuery.subscribe(/* ... */);
+useMyQuery.getSubscribers(/* ... */);
 ```
 
 ### Single Query with Params
