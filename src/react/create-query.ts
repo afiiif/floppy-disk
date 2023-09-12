@@ -1,6 +1,6 @@
 import { useState } from 'react';
 
-import { hashStoreKey, identityFn, noop } from '../utils';
+import { identityFn, noop } from '../utils';
 import { createStores, CreateStoresOptions, StoreKey, UseStores } from './create-stores';
 
 const getDecision = <T>(
@@ -52,6 +52,10 @@ export type QueryState<
    * Query store key, an object that will be hashed into a string as a query store identifier.
    */
   key: TKey;
+  /**
+   * Query store key hash, a string used as a query store identifier.
+   */
+  keyHash: string;
   /**
    * Will only be called if the data is stale or empty.
    */
@@ -315,7 +319,6 @@ export const createQuery = <
     onSuccess = noop,
     onError = noop,
     onSettled = noop,
-    hashKeyFn = hashStoreKey,
     ...createStoresOptions
   } = options;
 
@@ -325,7 +328,7 @@ export const createQuery = <
   const preventReplaceResponse = new Map<string, boolean>(); // Prevent optimistic data to be replaced
 
   const useQuery = createStores<TKey, QueryState<TKey, TResponse, TData, TError>>(
-    ({ key: _key, get, set }) => {
+    ({ get, set, key: _key, keyHash }) => {
       const key = _key as TKey;
 
       const getRetryProps = (error: TError, retryCount: number) => {
@@ -351,13 +354,13 @@ export const createQuery = <
           if (get().isGoingToRetry) {
             if (isLoading) set({ isGoingToRetry: false, isWaiting: true });
             else set({ isGoingToRetry: false, isWaiting: true, isRefetching: true });
-            clearTimeout(retryTimeoutId.get(hashKeyFn(key)));
+            clearTimeout(retryTimeoutId.get(keyHash));
           }
           const stateBeforeCallQuery = { ...get(), pageParam };
-          preventReplaceResponse.set(hashKeyFn(key), false);
+          preventReplaceResponse.set(keyHash, false);
           queryFn(key, stateBeforeCallQuery)
             .then((response) => {
-              if (preventReplaceResponse.get(hashKeyFn(key))) {
+              if (preventReplaceResponse.get(keyHash)) {
                 set({ isWaiting: false });
                 return;
               }
@@ -428,7 +431,7 @@ export const createQuery = <
               );
               if (shouldRetry) {
                 retryTimeoutId.set(
-                  hashKeyFn(key),
+                  keyHash,
                   window.setTimeout(() => {
                     set({ retryCount: prevState.retryCount + 1 });
                     callQuery();
@@ -460,7 +463,7 @@ export const createQuery = <
         if (isWaitingNextPage || !hasNextPage) return;
 
         set({ isWaitingNextPage: true, isGoingToRetryNextPage: false });
-        clearTimeout(retryNextPageTimeoutId.get(hashKeyFn(key)));
+        clearTimeout(retryNextPageTimeoutId.get(keyHash));
         queryFn(key, { ...state, pageParam })
           .then((response) => {
             const newPageParam = getNextPageParam(response, pageParams.length);
@@ -486,7 +489,7 @@ export const createQuery = <
             });
             if (shouldRetry) {
               retryNextPageTimeoutId.set(
-                hashKeyFn(key),
+                keyHash,
                 window.setTimeout(() => {
                   set({ retryNextPageCount: prevState.retryNextPageCount + 1 });
                   fetchNextPage();
@@ -499,6 +502,7 @@ export const createQuery = <
       return {
         ...INITIAL_QUERY_STATE,
         key,
+        keyHash,
         fetch,
         forceFetch,
         fetchNextPage,
@@ -519,7 +523,6 @@ export const createQuery = <
       return {
         ...createStoresOptions,
         defaultDeps,
-        hashKeyFn,
         onFirstSubscribe: (state) => {
           if (typeof window !== 'undefined' && fetchOnWindowFocus) {
             window.addEventListener('focus', fetchWindowFocusHandler);
@@ -538,8 +541,8 @@ export const createQuery = <
             window.removeEventListener('focus', fetchWindowFocusHandler);
           }
           useQuery.set(state.key, { retryCount: 0, retryNextPageCount: 0 }, true);
-          clearTimeout(retryTimeoutId.get(hashKeyFn(state.key)));
-          clearTimeout(retryNextPageTimeoutId.get(hashKeyFn(state.key)));
+          clearTimeout(retryTimeoutId.get(state.keyHash));
+          clearTimeout(retryNextPageTimeoutId.get(state.keyHash));
           onLastUnsubscribe(state);
         },
         onBeforeChangeKey: (nextKey, prevKey) => {
@@ -628,7 +631,7 @@ export const createQuery = <
       response: optimisticResponse,
       data: select(optimisticResponse, { key: key as TKey, data: null }),
     });
-    preventReplaceResponse.set(hashKeyFn(key as TKey), true);
+    preventReplaceResponse.set(prevState.keyHash, true);
     const revert = () => {
       useQuery.set(key, {
         isOptimisticData: false,
