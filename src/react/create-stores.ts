@@ -20,9 +20,10 @@ export type StoresInitializer<
   TKey extends StoreKey = StoreKey,
   T extends StoreData = StoreData,
 > = (api: {
-  key: TKey;
   get: () => T;
   set: (value: SetStoreData<T>, silent?: boolean) => void;
+  key: TKey;
+  keyHash: string;
 }) => T;
 
 export type UseStores<TKey extends StoreKey = StoreKey, T extends StoreData = StoreData> = {
@@ -72,14 +73,14 @@ export const createStores = <TKey extends StoreKey = StoreKey, T extends StoreDa
 
   const getStore = (_key: Maybe<TKey>) => {
     const key = _key || ({} as TKey);
-    const normalizedKey = hashKeyFn(key);
-    if (!stores.has(normalizedKey)) {
+    const keyHash = hashKeyFn(key);
+    if (!stores.has(keyHash)) {
       stores.set(
-        normalizedKey,
-        initStore((api) => initializer({ key, ...api }), options),
+        keyHash,
+        initStore((api) => initializer({ key, keyHash, ...api }), options),
       );
     }
-    return stores.get(normalizedKey)!;
+    return stores.get(keyHash)!;
   };
 
   /**
@@ -91,10 +92,10 @@ export const createStores = <TKey extends StoreKey = StoreKey, T extends StoreDa
     ) as [TKey, SelectDeps<T>];
     const key = _key || ({} as TKey);
 
-    const normalizedKey = hashKeyFn(key);
+    const keyHash = hashKeyFn(key);
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    const { get, subscribe } = useMemo(() => getStore(key), [normalizedKey]);
+    const { get, subscribe } = useMemo(() => getStore(key), [keyHash]);
 
     const [state, setState] = useState(get);
 
@@ -110,7 +111,7 @@ export const createStores = <TKey extends StoreKey = StoreKey, T extends StoreDa
       const unsubs = subscribe(setState, selectDeps);
       return unsubs;
       // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [normalizedKey]);
+    }, [keyHash]);
 
     return state;
   };
