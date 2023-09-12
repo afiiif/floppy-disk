@@ -15,8 +15,6 @@ const getDecision = <T>(
   }
 };
 
-const DEFAULT_STALE_TIME = 3_000; // 3 seconds
-
 const INITIAL_QUERY_STATE = {
   isWaiting: false, // Network fetching
   isWaitingNextPage: false,
@@ -308,12 +306,12 @@ export const createQuery = <
     onBeforeChangeKey = noop,
     defaultDeps = useQueryDefaultDeps,
     select = identityFn as NonNullable<typeof options.select>,
-    staleTime = DEFAULT_STALE_TIME,
+    staleTime = 3000, // 3 seconds
     fetchOnMount = true,
     fetchOnWindowFocus = true,
     enabled = true,
     retry = 1,
-    retryDelay = 3000,
+    retryDelay = 3000, // 3 seconds
     keepPreviousData,
     getNextPageParam = () => undefined,
     onSuccess = noop,
