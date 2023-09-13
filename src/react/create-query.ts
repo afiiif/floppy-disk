@@ -458,6 +458,10 @@ export const createQuery = <
       };
 
       const fetchNextPage = () => {
+        if (typeof options.getNextPageParam !== 'function') {
+          return console.warn('fetchNextPage with invalid getNextPageParam option');
+        }
+
         const state = get();
         const { isLoading, isWaitingNextPage, data, hasNextPage, pageParam, pageParams } = state;
 
