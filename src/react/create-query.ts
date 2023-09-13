@@ -1,6 +1,6 @@
 import { useState } from 'react';
 
-import { identityFn, noop } from '../utils';
+import { hasValue, identityFn, noop } from '../utils';
 import { createStores, CreateStoresOptions, StoreKey, UseStores } from './create-stores';
 
 const getDecision = <T>(
@@ -365,7 +365,7 @@ export const createQuery = <
               responseAllPages.push(response);
               const newPageParam = getNextPageParam(response, responseAllPages.length);
               newPageParams.push(newPageParam);
-              if (newPageParam !== undefined && newPageParams.length < pageParams.length) {
+              if (hasValue(newPageParam) && newPageParams.length < pageParams.length) {
                 pageParam = newPageParam;
                 callQuery();
                 return;
@@ -390,7 +390,7 @@ export const createQuery = <
                 retryCount: 0,
                 pageParam: newPageParam,
                 pageParams: newPageParams,
-                hasNextPage: newPageParam !== undefined,
+                hasNextPage: hasValue(newPageParam),
               });
               onSuccess(response, stateBeforeCallQuery);
             })
@@ -413,7 +413,7 @@ export const createQuery = <
                       errorUpdatedAt,
                       isGoingToRetry: shouldRetry,
                       pageParam,
-                      hasNextPage: pageParam !== undefined,
+                      hasNextPage: hasValue(pageParam),
                     }
                   : {
                       isWaiting: false,
@@ -424,7 +424,7 @@ export const createQuery = <
                       errorUpdatedAt,
                       isGoingToRetry: shouldRetry,
                       pageParam,
-                      hasNextPage: pageParam !== undefined,
+                      hasNextPage: hasValue(pageParam),
                     },
               );
               if (shouldRetry) {
@@ -472,7 +472,7 @@ export const createQuery = <
               data: select(response, { key, data }),
               pageParam: newPageParam,
               pageParams: pageParams.concat(newPageParam),
-              hasNextPage: newPageParam !== undefined,
+              hasNextPage: hasValue(newPageParam),
             });
           })
           .catch((error: TError) => {
@@ -586,7 +586,7 @@ export const createQuery = <
         data: select(response, { key: key as TKey, data: null }),
         pageParam: newPageParam,
         pageParams: [undefined, newPageParam],
-        hasNextPage: newPageParam !== undefined,
+        hasNextPage: hasValue(newPageParam),
       });
     });
   };
