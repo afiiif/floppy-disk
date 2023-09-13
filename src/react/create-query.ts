@@ -612,16 +612,16 @@ export const createQuery = <
 
   useQuery.invalidate = () => {
     useQuery.getStores().forEach((store) => {
-      const { set, getSubscribers } = store;
+      const { get, set, getSubscribers } = store;
       set({ responseUpdatedAt: null });
-      if (getSubscribers().size > 0) store.get().forceFetch();
+      if (getSubscribers().size > 0) get().forceFetch();
     });
   };
 
   useQuery.invalidateSpecificKey = (key?: TKey | null) => {
-    const { set, getSubscribers } = useQuery.getStore(key);
+    const { get, set, getSubscribers } = useQuery.getStore(key);
     set({ responseUpdatedAt: null });
-    if (getSubscribers().size > 0) useQuery.get(key).forceFetch();
+    if (getSubscribers().size > 0) get().forceFetch();
   };
 
   useQuery.optimisticUpdate = ({ key, response }) => {
