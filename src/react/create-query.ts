@@ -150,7 +150,7 @@ export type QueryState<
       isError: false;
       data: TData;
       response: TResponse;
-      responseUpdatedAt: number;
+      responseUpdatedAt: number | null; // Allow null to make setInitialResponse's data stale, and a revalidation will be triggered
     }
   | {
       status: 'error';
@@ -253,7 +253,11 @@ export type UseQuery<
    *
    * IMPORTANT NOTE: Put this on the root component or parent component, before any component subscribed!
    */
-  setInitialResponse: (options: { key?: TKey; response: TResponse }) => void;
+  setInitialResponse: (options: {
+    key?: TKey;
+    response: TResponse;
+    skipRevalidation?: boolean;
+  }) => void;
   /**
    * Set query state (data, error, etc) to initial state.
    */
@@ -571,7 +575,7 @@ export const createQuery = <
     })(),
   ) as UseQuery<TKey, TResponse, TData, TError>;
 
-  useQuery.setInitialResponse = ({ key, response }) => {
+  useQuery.setInitialResponse = ({ key, response, skipRevalidation }) => {
     // eslint-disable-next-line react-hooks/rules-of-hooks
     useState(() => {
       if (response === undefined || useQuery.get(key).data) return;
@@ -582,7 +586,7 @@ export const createQuery = <
         isSuccess: true,
         isError: false,
         response,
-        responseUpdatedAt: Date.now(),
+        responseUpdatedAt: skipRevalidation ? Date.now() : null,
         data: select(response, { key: key as TKey, data: null }),
         pageParam: newPageParam,
         pageParams: [undefined, newPageParam],
