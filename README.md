@@ -18,13 +18,13 @@ import {
   useInfiniteQuery,
   useMutation,
 } from '@tanstack/react-query'; // 41 kB (gzipped: 11 kB)
-import { createQuery, createMutation } from 'floppy-disk'; // 8.2 kB (gzipped: 2.8 kB) 🎉
+import { createQuery, createMutation } from 'floppy-disk'; // 8.4 kB (gzipped: 2.8 kB) 🎉
 ```
 
 - Using Zustand & React-Query: https://demo-zustand-react-query.vercel.app/  
   👉 Total: **309.21 kB**
 - Using Floppy Disk: https://demo-floppy-disk.vercel.app/  
-  👉 Total: **270.87 kB** 🎉
+  👉 Total: **271.15 kB** 🎉
 
 ## Key Features
 
@@ -51,7 +51,17 @@ import { createQuery, createMutation } from 'floppy-disk'; // 8.2 kB (gzipped: 2
     - Can be used with literally any asynchronous data fetching client, including GraphQL ✅
 - Create mutation ✅
 
-**View official documentation on [floppy-disk.vercel.app](https://floppy-disk.vercel.app/)**
+<br>
+
+---
+
+<p align="center">
+  View official documentation on <a href="https://floppy-disk.vercel.app/">floppy-disk.vercel.app</a>
+</p>
+
+---
+
+<br>
 
 ## Table of Contents
 
