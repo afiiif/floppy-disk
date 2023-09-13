@@ -59,6 +59,10 @@ export type CreateStoresOptions<
   T extends StoreData = StoreData,
 > = InitStoreOptions<T> & {
   onBeforeChangeKey?: (nextKey: TKey, prevKey: TKey) => void;
+  /**
+   * Will be triggered when a single store with a specific key was initialized.
+   */
+  onStoreInitialized?: (key: TKey, keyHash: string) => void;
   defaultDeps?: SelectDeps<T>;
   hashKeyFn?: (obj: TKey) => string;
 };
@@ -67,7 +71,12 @@ export const createStores = <TKey extends StoreKey = StoreKey, T extends StoreDa
   initializer: StoresInitializer<TKey, T>,
   options: CreateStoresOptions<TKey, T> = {},
 ): UseStores<TKey, T> => {
-  const { onBeforeChangeKey = noop, defaultDeps, hashKeyFn = hashStoreKey } = options;
+  const {
+    onBeforeChangeKey = noop,
+    onStoreInitialized = noop,
+    defaultDeps,
+    hashKeyFn = hashStoreKey,
+  } = options;
 
   const stores = new Map<string, InitStoreReturn<T>>();
 
@@ -79,6 +88,7 @@ export const createStores = <TKey extends StoreKey = StoreKey, T extends StoreDa
         keyHash,
         initStore((api) => initializer({ key, keyHash, ...api }), options),
       );
+      onStoreInitialized(key, keyHash);
     }
     return stores.get(keyHash)!;
   };

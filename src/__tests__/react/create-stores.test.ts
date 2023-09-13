@@ -128,12 +128,16 @@ describe('createStores', () => {
     const onSubscribeMock = jest.fn();
     const onUnsubscribeMock = jest.fn();
     const onLastUnsubscribeMock = jest.fn();
+    const onBeforeChangeKeyMock = jest.fn();
+    const onStoreInitializedMock = jest.fn();
 
     const options = {
       onFirstSubscribe: onFirstSubscribeMock,
       onSubscribe: onSubscribeMock,
       onUnsubscribe: onUnsubscribeMock,
       onLastUnsubscribe: onLastUnsubscribeMock,
+      onBeforeChangeKey: onBeforeChangeKeyMock,
+      onStoreInitialized: onStoreInitializedMock,
     };
 
     type Store = { counter: number; increment: () => void };
@@ -154,6 +158,7 @@ describe('createStores', () => {
       const hook1a = renderHook(() => useStores());
       expect(onFirstSubscribeMock).toHaveBeenCalledTimes(1);
       expect(onSubscribeMock).toHaveBeenCalledTimes(1);
+      expect(onStoreInitializedMock).toHaveBeenCalledTimes(1);
 
       const hook2a = renderHook(() => useStores({ id: 2 }));
       expect(onFirstSubscribeMock).toHaveBeenCalledTimes(2);
@@ -162,7 +167,9 @@ describe('createStores', () => {
       const hook1b = renderHook(() => useStores());
       expect(onSubscribeMock).toHaveBeenCalledTimes(3);
 
-      const hook2b = renderHook(() => useStores({ id: 2 }));
+      const hook2b = renderHook((props?: { id: number }) => useStores(props), {
+        initialProps: { id: 2 },
+      });
       expect(onSubscribeMock).toHaveBeenCalledTimes(4);
 
       hook1a.unmount();
@@ -175,9 +182,67 @@ describe('createStores', () => {
       hook2a.unmount();
       expect(onUnsubscribeMock).toHaveBeenCalledTimes(3);
 
-      hook2b.unmount();
+      hook2b.rerender({ id: 3 });
+      expect(onBeforeChangeKeyMock).toHaveBeenCalledTimes(1);
+      expect(onBeforeChangeKeyMock).toHaveBeenCalledWith({ id: 3 }, { id: 2 });
+
       expect(onUnsubscribeMock).toHaveBeenCalledTimes(4);
       expect(onLastUnsubscribeMock).toHaveBeenCalledTimes(2);
+      expect(onFirstSubscribeMock).toHaveBeenCalledTimes(3);
+      expect(onSubscribeMock).toHaveBeenCalledTimes(5);
+
+      hook2b.unmount();
+      expect(onUnsubscribeMock).toHaveBeenCalledTimes(5);
+      expect(onLastUnsubscribeMock).toHaveBeenCalledTimes(3);
+      expect(onStoreInitializedMock).toHaveBeenCalledTimes(3);
+    });
+  });
+
+  describe('store methods', () => {
+    type Store = { counter: number; increment: () => void };
+    type Key = { id?: number };
+    let useStores: UseStores<Key, Store>;
+
+    beforeEach(() => {
+      useStores = createStores<Key, Store>(({ set }) => ({
+        counter: 1,
+        increment: () => set((prev) => ({ counter: prev.counter + 1 })),
+      }));
+    });
+
+    it('should handle store methods correctly', async () => {
+      expect(useStores.getAll().length).toBe(0);
+      expect(useStores.getAllWithSubscriber().length).toBe(0);
+
+      const hook1a = renderHook(() => useStores());
+      const hook1b = renderHook(() => useStores());
+      const hook2a = renderHook(() => useStores({ id: 2 }));
+      const hook2b = renderHook((props?: { id: number }) => useStores(props), {
+        initialProps: { id: 2 },
+      });
+      expect(useStores.getAll().length).toBe(2);
+      expect(useStores.getAllWithSubscriber().length).toBe(2);
+
+      hook1a.unmount();
+      expect(useStores.getAll().length).toBe(2);
+      expect(useStores.getAllWithSubscriber().length).toBe(2);
+      hook1b.unmount();
+      expect(useStores.getAll().length).toBe(2);
+      expect(useStores.getAllWithSubscriber().length).toBe(1);
+
+      hook2a.unmount();
+      expect(useStores.getAll().length).toBe(2);
+      expect(useStores.getAllWithSubscriber().length).toBe(1);
+
+      hook2b.rerender({ id: 3 });
+      expect(useStores.getAll().length).toBe(3);
+      expect(useStores.getAllWithSubscriber().length).toBe(1);
+      expect(useStores.getSubscribers({ id: 2 }).size).toBe(0);
+      expect(useStores.getSubscribers({ id: 3 }).size).toBe(1);
+
+      hook2b.unmount();
+      expect(useStores.getAll().length).toBe(3);
+      expect(useStores.getAllWithSubscriber().length).toBe(0);
     });
   });
 });
