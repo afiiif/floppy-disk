@@ -724,6 +724,7 @@ function SaveProduct() {
 
         const { revert, invalidate } = useProductQuery.optimisticUpdate({
           key: { id: payload.id },
+          response: payload,
         });
 
         mutate(payload).then(({ response, error }) => {
@@ -795,3 +796,11 @@ function PokemonsPage() {
   return <div>...</div>;
 }
 ```
+
+<br>
+
+---
+
+<p align="center">
+  View official documentation on <a href="https://floppy-disk.vercel.app/">floppy-disk.vercel.app</a>
+</p>
