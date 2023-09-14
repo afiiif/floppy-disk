@@ -213,13 +213,17 @@ export type CreateQueryOptions<
    *
    * Defaults to `1`.
    */
-  retry?: number | ((error: TError, key: TKey) => number);
+  retry?:
+    | number
+    | ((error: TError, prevState: QueryState<TKey, TResponse, TData, TError>) => number);
   /**
    * Error retry delay in miliseconds.
    *
    * Defaults to `2000` (2 seconds).
    */
-  retryDelay?: number | ((error: TError, key: TKey) => number);
+  retryDelay?:
+    | number
+    | ((error: TError, prevState: QueryState<TKey, TResponse, TData, TError>) => number);
   /**
    * If set to `true`, previous `data` will be kept when fetching new data because the query key changed.
    *
@@ -338,9 +342,11 @@ export const createQuery = <
       const key = _key as TKey;
 
       const getRetryProps = (error: TError, retryCount: number) => {
-        const maxRetryCount = (typeof retry === 'function' ? retry(error, key) : retry) || 0;
+        const prevState = get();
+        const maxRetryCount = (typeof retry === 'function' ? retry(error, prevState) : retry) || 0;
         const shouldRetry = retryCount < maxRetryCount;
-        const delay = (typeof retryDelay === 'function' ? retryDelay(error, key) : retryDelay) || 0;
+        const delay =
+          (typeof retryDelay === 'function' ? retryDelay(error, prevState) : retryDelay) || 0;
         return { shouldRetry, delay };
       };
 
