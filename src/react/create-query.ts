@@ -190,7 +190,10 @@ export type CreateQueryOptions<
    */
   fetchOnMount?: boolean | 'always' | ((key: TKey) => boolean | 'always');
   /**
-   * Defaults to `true`.
+   * Defaults to follow the value of `fetchOnMount`.
+   *
+   * `fetchOnMount` and `fetchOnWindowFocus` can be set to different values.
+   * However, if `fetchOnWindowFocus` is not explicitly set, it will mimic the value of `fetchOnMount`.
    *
    * - If set to `true`, the query will be called on window focus **if the data is stale**.
    * - If set to `false`, the query won't be called on window focus.
@@ -303,7 +306,7 @@ export const createQuery = <
   queryFn: (key: TKey, state: QueryState<TKey, TResponse, TData, TError>) => Promise<TResponse>,
   options: CreateQueryOptions<TKey, TResponse, TData, TError> = {},
 ): UseQuery<TKey, TResponse, TData, TError> => {
-  const defaultFetchOnWindowFocus = options.fetchOnMount !== false;
+  const defaultFetchOnWindowFocus = options.fetchOnMount ?? true;
   const {
     onFirstSubscribe = noop,
     onSubscribe = noop,
