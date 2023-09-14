@@ -422,6 +422,7 @@ export const createQuery = <
                   : {
                       isWaiting: false,
                       status: 'error',
+                      isLoading: false,
                       isError: true,
                       data: null,
                       error,

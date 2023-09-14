@@ -68,7 +68,7 @@ describe('createQuery - single query', () => {
 
       const { current } = hook1.result;
       expect(current.status).toBe('error');
-      expect(current.isLoading).toBe(true);
+      expect(current.isLoading).toBe(false);
       expect(current.isSuccess).toBe(false);
       expect(current.isError).toBe(true);
       expect(current.data).toBe(null);
@@ -364,7 +364,7 @@ describe('createQuery - single query', () => {
 
       await hook2.waitForNextUpdate();
 
-      expect(hook2.result.current.isLoading).toBe(true);
+      expect(hook2.result.current.isLoading).toBe(false);
       expect(hook2.result.current.isSuccess).toBe(false);
       expect(hook2.result.current.isError).toBe(true);
       expect(hook2.result.current.data).toBe(null);
