@@ -98,7 +98,7 @@ describe('createQuery - single query', () => {
 
       // Retrying
 
-      await hook1.waitForNextUpdate({ timeout: 3500 });
+      await hook1.waitForNextUpdate({ timeout: 2200 });
       expect(queryFn).toHaveBeenCalledTimes(2);
     });
 

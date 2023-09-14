@@ -214,7 +214,7 @@ export type CreateQueryOptions<
   /**
    * Error retry delay in miliseconds.
    *
-   * Defaults to `3000` (3 seconds).
+   * Defaults to `2000` (2 seconds).
    */
   retryDelay?: number | ((error: TError, key: TKey) => number);
   /**
@@ -315,7 +315,7 @@ export const createQuery = <
     fetchOnWindowFocus = true,
     enabled = true,
     retry = 1,
-    retryDelay = 3000, // 3 seconds
+    retryDelay = 2000, // 2 seconds
     keepPreviousData,
     getNextPageParam = () => undefined,
     onSuccess = noop,
