@@ -303,6 +303,7 @@ export const createQuery = <
   queryFn: (key: TKey, state: QueryState<TKey, TResponse, TData, TError>) => Promise<TResponse>,
   options: CreateQueryOptions<TKey, TResponse, TData, TError> = {},
 ): UseQuery<TKey, TResponse, TData, TError> => {
+  const defaultFetchOnWindowFocus = options.fetchOnMount !== false;
   const {
     onFirstSubscribe = noop,
     onSubscribe = noop,
@@ -312,7 +313,7 @@ export const createQuery = <
     select = identityFn as NonNullable<typeof options.select>,
     staleTime = 3000, // 3 seconds
     fetchOnMount = true,
-    fetchOnWindowFocus = true,
+    fetchOnWindowFocus = defaultFetchOnWindowFocus,
     enabled = true,
     retry = 1,
     retryDelay = 2000, // 2 seconds
