@@ -60,8 +60,10 @@ export type QueryState<
   fetch: () => void;
   /**
    * Will be called even if the data is still fresh (not stale).
+   *
+   * @returns Promise that will always get resolved.
    */
-  forceFetch: () => void;
+  forceFetch: () => Promise<QueryState<TKey, TResponse, TData, TError>>;
   /**
    * Fetch next page if has next page.
    *
@@ -350,116 +352,119 @@ export const createQuery = <
         return { shouldRetry, delay };
       };
 
-      const forceFetch = () => {
-        const responseAllPages: TResponse[] = [];
-        const newPageParams: any[] = [undefined];
-        let pageParam: any = undefined;
+      const forceFetch = () =>
+        new Promise<QueryState<TKey, TResponse, TData, TError>>((resolve) => {
+          const responseAllPages: TResponse[] = [];
+          const newPageParams: any[] = [undefined];
+          let pageParam: any = undefined;
 
-        const { isWaiting, isLoading, pageParams } = get();
-        if (isWaiting || enabled === false || (typeof enabled === 'function' && !enabled(key)))
-          return;
+          const { isWaiting, isLoading, pageParams } = get();
+          if (isWaiting || enabled === false || (typeof enabled === 'function' && !enabled(key)))
+            return;
 
-        if (isLoading) set({ isWaiting: true });
-        else set({ isWaiting: true, isRefetching: true });
+          if (isLoading) set({ isWaiting: true });
+          else set({ isWaiting: true, isRefetching: true });
 
-        const callQuery = () => {
-          if (get().isGoingToRetry) {
-            if (isLoading) set({ isGoingToRetry: false, isWaiting: true });
-            else set({ isGoingToRetry: false, isWaiting: true, isRefetching: true });
-            clearTimeout(retryTimeoutId.get(keyHash));
-          }
-          const stateBeforeCallQuery = { ...get(), pageParam };
-          preventReplaceResponse.set(keyHash, false);
-          queryFn(key, stateBeforeCallQuery)
-            .then((response) => {
-              if (preventReplaceResponse.get(keyHash)) {
-                set({ isWaiting: false });
-                return;
-              }
-              responseAllPages.push(response);
-              const newPageParam = getNextPageParam(response, responseAllPages.length);
-              newPageParams.push(newPageParam);
-              if (hasValue(newPageParam) && newPageParams.length < pageParams.length) {
-                pageParam = newPageParam;
-                callQuery();
-                return;
-              }
-              set({
-                isWaiting: false,
-                status: 'success',
-                isLoading: false,
-                isSuccess: true,
-                isError: false,
-                isRefetching: false,
-                isRefetchError: false,
-                isPreviousData: false,
-                isOptimisticData: false,
-                data: responseAllPages.reduce((prev, responseCurrentPage) => {
-                  return select(responseCurrentPage, { key, data: prev });
-                }, null as TData),
-                response,
-                responseUpdatedAt: Date.now(),
-                error: null,
-                errorUpdatedAt: null,
-                retryCount: 0,
-                pageParam: newPageParam,
-                pageParams: newPageParams,
-                hasNextPage: hasValue(newPageParam),
-              });
-              onSuccess(response, stateBeforeCallQuery);
-            })
-            .catch((error: TError) => {
-              const prevState = get();
-              const errorUpdatedAt = Date.now();
-              const { shouldRetry, delay } = getRetryProps(error, prevState.retryCount);
-              set(
-                prevState.isSuccess && !prevState.isPreviousData
-                  ? {
-                      isWaiting: false,
-                      isRefetching: false,
-                      isRefetchError: true,
-                      data: responseAllPages.length
-                        ? responseAllPages.reduce((prev, response) => {
-                            return select(response, { key, data: prev });
-                          }, null as TData)
-                        : prevState.data,
-                      error,
-                      errorUpdatedAt,
-                      isGoingToRetry: shouldRetry,
-                      pageParam,
-                      hasNextPage: hasValue(pageParam),
-                    }
-                  : {
-                      isWaiting: false,
-                      status: 'error',
-                      isLoading: false,
-                      isError: true,
-                      data: null,
-                      error,
-                      errorUpdatedAt,
-                      isGoingToRetry: shouldRetry,
-                      pageParam,
-                      hasNextPage: hasValue(pageParam),
-                    },
-              );
-              if (shouldRetry) {
-                retryTimeoutId.set(
-                  keyHash,
-                  window.setTimeout(() => {
-                    set({ retryCount: prevState.retryCount + 1 });
-                    callQuery();
-                  }, delay),
+          const callQuery = () => {
+            if (get().isGoingToRetry) {
+              if (isLoading) set({ isGoingToRetry: false, isWaiting: true });
+              else set({ isGoingToRetry: false, isWaiting: true, isRefetching: true });
+              clearTimeout(retryTimeoutId.get(keyHash));
+            }
+            const stateBeforeCallQuery = { ...get(), pageParam };
+            preventReplaceResponse.set(keyHash, false);
+            queryFn(key, stateBeforeCallQuery)
+              .then((response) => {
+                if (preventReplaceResponse.get(keyHash)) {
+                  set({ isWaiting: false });
+                  return;
+                }
+                responseAllPages.push(response);
+                const newPageParam = getNextPageParam(response, responseAllPages.length);
+                newPageParams.push(newPageParam);
+                if (hasValue(newPageParam) && newPageParams.length < pageParams.length) {
+                  pageParam = newPageParam;
+                  callQuery();
+                  return;
+                }
+                set({
+                  isWaiting: false,
+                  status: 'success',
+                  isLoading: false,
+                  isSuccess: true,
+                  isError: false,
+                  isRefetching: false,
+                  isRefetchError: false,
+                  isPreviousData: false,
+                  isOptimisticData: false,
+                  data: responseAllPages.reduce((prev, responseCurrentPage) => {
+                    return select(responseCurrentPage, { key, data: prev });
+                  }, null as TData),
+                  response,
+                  responseUpdatedAt: Date.now(),
+                  error: null,
+                  errorUpdatedAt: null,
+                  retryCount: 0,
+                  pageParam: newPageParam,
+                  pageParams: newPageParams,
+                  hasNextPage: hasValue(newPageParam),
+                });
+                onSuccess(response, stateBeforeCallQuery);
+                resolve(get());
+              })
+              .catch((error: TError) => {
+                const prevState = get();
+                const errorUpdatedAt = Date.now();
+                const { shouldRetry, delay } = getRetryProps(error, prevState.retryCount);
+                set(
+                  prevState.isSuccess && !prevState.isPreviousData
+                    ? {
+                        isWaiting: false,
+                        isRefetching: false,
+                        isRefetchError: true,
+                        data: responseAllPages.length
+                          ? responseAllPages.reduce((prev, response) => {
+                              return select(response, { key, data: prev });
+                            }, null as TData)
+                          : prevState.data,
+                        error,
+                        errorUpdatedAt,
+                        isGoingToRetry: shouldRetry,
+                        pageParam,
+                        hasNextPage: hasValue(pageParam),
+                      }
+                    : {
+                        isWaiting: false,
+                        status: 'error',
+                        isLoading: false,
+                        isError: true,
+                        data: null,
+                        error,
+                        errorUpdatedAt,
+                        isGoingToRetry: shouldRetry,
+                        pageParam,
+                        hasNextPage: hasValue(pageParam),
+                      },
                 );
-              }
-              onError(error, stateBeforeCallQuery);
-            })
-            .finally(() => {
-              onSettled(stateBeforeCallQuery);
-            });
-        };
+                if (shouldRetry && typeof window !== 'undefined') {
+                  retryTimeoutId.set(
+                    keyHash,
+                    window.setTimeout(() => {
+                      set({ retryCount: prevState.retryCount + 1 });
+                      callQuery();
+                    }, delay),
+                  );
+                }
+                onError(error, stateBeforeCallQuery);
+                resolve(get());
+              })
+              .finally(() => {
+                onSettled(stateBeforeCallQuery);
+              });
+          };
 
-        callQuery();
-      };
+          callQuery();
+        });
 
       const fetch = () => {
         const { responseUpdatedAt } = get();
