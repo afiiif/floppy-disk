@@ -28,28 +28,39 @@ import { createQuery, createMutation } from 'floppy-disk'; // 8.4 kB (gzipped: 2
 
 ## Key Features
 
-- Create store ✅
-  - Yes, it also support middleware & set/get state outside component ✅
-  - Store event (`onSubscribe`, `onUnsubscribe`, etc.) ✅
-  - Use store as local state manager ✅
-- Create stores (yes, it's plural) ✅ \*_controlled with a store key_
-- Create query ✅
-  - Dedupe multiple request ✅
-  - Auto-update stale data (stale-while-revalidate) ✅
-  - Enable/disable query ✅
-  - Auto-fetch or manual (lazy query) ✅
-  - Retry on error (retry count, retry delay) ✅
-  - SSR/SSG's initial query data ✅
-  - Optimistic update ✅
-  - Invalidate query ✅
-  - Reset query ✅
-  - Query with param (query key) ✅
-  - Infinite query ✅
-  - Get query data outside component ✅
-  - Custom reactivity ✅
-  - Fetching mechanisms are agnostically built on promises ✅
-    - Can be used with literally any asynchronous data fetching client, including GraphQL ✅
-- Create mutation ✅
+- **Create Store**
+  - Get/set store inside/outside component
+  - Custom reactivity (like `useEffect`'s dependency array)
+  - Support middleware
+  - Set state interception
+  - Store event (`onSubscribe`, `onUnsubscribe`, etc.)
+  - Use store as local state manager
+- **Create Stores**
+  - Same as store, but controlled with a store key
+- **Create Query & Mutation**
+  - Backend agnostic (support GraphQL & any async function)
+  - TypeScript ready
+  - SSR/SSG support
+  - Custom reactivity (we choose when to re-render)
+  - **Create query**
+    - Dedupe multiple request
+    - Auto-fetch on mount or manual (lazy query)
+    - Enable/disable query
+    - Serve stale data while revalidating
+    - Retry on error (customizable)
+    - Optimistic update
+    - Invalidate query
+    - Reset query
+    - Query with param (query key)
+    - Paginated/infinite query
+    - Prefetch query
+    - Fetch from inside/outside component
+    - Get query state inside/outside component
+    - Suspense mode
+  - **Create mutation**
+    - Mutate from inside/outside component
+    - Get mutation state inside/outside component
+  - ... and [a lot more](https://floppy-disk.vercel.app/)
 
 <br>
 
