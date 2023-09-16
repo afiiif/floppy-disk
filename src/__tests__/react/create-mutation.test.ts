@@ -178,4 +178,62 @@ describe('createMutation - with param', () => {
 
     expect(hook2.result.current).toBe(hook1.result.current);
   });
+
+  it('should handle mutation event', async () => {
+    const onSuccess = jest.fn();
+    const onError = jest.fn();
+    const onSettled = jest.fn();
+
+    let timesCalled = 0;
+    mutationFn = jest.fn().mockImplementation(async (param) => {
+      // Success, then error
+      return new Promise((resolve, reject) => {
+        setTimeout(() => {
+          timesCalled++;
+          if (timesCalled > 1) {
+            reject(new Error('Test error'));
+          } else {
+            resolve({ status: 'success', id: param.id });
+          }
+        }, 100);
+      });
+    });
+    useMutation = createMutation<Var, Response>(mutationFn, {
+      onSuccess,
+      onError,
+      onSettled,
+    });
+
+    const hook1 = renderHook(() => useMutation());
+    const hook2 = renderHook(() => useMutation());
+
+    let state;
+
+    act(() => {
+      hook1.result.current.mutate({ id: 'a', value: 1 });
+      state = useMutation.get();
+    });
+
+    await hook1.waitForNextUpdate();
+    expect(onSuccess).toHaveBeenCalledTimes(1);
+    expect(onSuccess).toHaveBeenCalledWith(
+      { status: 'success', id: 'a' },
+      { id: 'a', value: 1 },
+      state,
+    );
+    expect(onError).not.toHaveBeenCalled();
+    expect(onSettled).toHaveBeenCalledTimes(1);
+    expect(onSettled).toHaveBeenCalledWith({ id: 'a', value: 1 }, state);
+
+    act(() => {
+      hook2.result.current.mutate({ id: 'b', value: 2 });
+      state = useMutation.get();
+    });
+
+    await hook1.waitForNextUpdate();
+    expect(onSuccess).toHaveBeenCalledTimes(1);
+    expect(onSettled).toHaveBeenCalledTimes(2);
+    expect(onError).toHaveBeenCalledTimes(1);
+    expect(onError).toHaveBeenCalledWith(new Error('Test error'), { id: 'b', value: 2 }, state);
+  });
 });

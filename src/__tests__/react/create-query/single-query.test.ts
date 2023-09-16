@@ -1,6 +1,6 @@
 import { act, renderHook } from '@testing-library/react-hooks';
 
-import { createQuery, UseQuery } from '../../react/create-query';
+import { createQuery, UseQuery } from '../../../react/create-query';
 
 describe('createQuery - single query', () => {
   describe('without param', () => {
@@ -219,6 +219,57 @@ describe('createQuery - single query', () => {
       expect(current.errorUpdatedAt).not.toBeNull();
     });
 
+    it('should handle useQuery methods', async () => {
+      const onSuccess = jest.fn();
+      const onError = jest.fn();
+      const onSettled = jest.fn();
+
+      let timesCalled = 0;
+      queryFn = jest.fn().mockImplementation(async () => {
+        // Success, then error
+        return new Promise((resolve, reject) => {
+          setTimeout(() => {
+            timesCalled++;
+            if (timesCalled > 1) {
+              reject(new Error('Test error'));
+            } else {
+              resolve({ id: 1, name: 'test' });
+            }
+          }, 100);
+        });
+      });
+      useQuery = createQuery<Key, Response>(queryFn, {
+        onSuccess,
+        onError,
+        onSettled,
+      });
+
+      const hook = renderHook(() => useQuery());
+      let state = useQuery.get();
+
+      await hook.waitForNextUpdate();
+      expect(onSuccess).toHaveBeenCalledTimes(1);
+      expect(onSuccess).toHaveBeenCalledWith({ id: 1, name: 'test' }, state);
+      expect(onError).not.toHaveBeenCalled();
+      expect(onSettled).toHaveBeenCalledTimes(1);
+      expect(onSettled).toHaveBeenCalledWith(state);
+
+      act(() => {
+        hook.result.current.fetch();
+        hook.result.current.forceFetch();
+        hook.result.current.fetch();
+        state = useQuery.get();
+      });
+
+      await hook.waitForNextUpdate();
+      expect(onSuccess).toHaveBeenCalledTimes(1);
+      expect(onSettled).toHaveBeenCalledTimes(2);
+      expect(onError).toHaveBeenCalledTimes(1);
+      expect(onError).toHaveBeenCalledWith(new Error('Test error'), state);
+
+      expect(queryFn).toBeCalledTimes(2);
+    });
+
     it('should handle optimistic update correctly', async () => {
       let timesCalled = 0;
       queryFn = jest.fn().mockImplementation(async () => {
@@ -387,12 +438,25 @@ describe('createQuery - single query', () => {
       expect(hook2.result.current.error).toBe(null);
       expect(hook2.result.current.errorUpdatedAt).toBe(null);
     });
-  });
-});
 
-describe('createQuery - infinite query', () => {
-  // TODO
-  it('should work', () => {
-    expect(1).toBe(1);
+    it('should handle keepPreviousData correctly', async () => {
+      useQuery = createQuery<Key, Response>(queryFn, { keepPreviousData: true });
+
+      const hook = renderHook((props: { id: number }) => useQuery(props), {
+        initialProps: { id: 1 },
+      });
+
+      await hook.waitForNextUpdate();
+      expect(hook.result.current.response).toEqual({ id: 1, name: 'A' });
+
+      hook.rerender({ id: 2 });
+      expect(hook.result.current.response).toEqual({ id: 1, name: 'A' });
+
+      await hook.waitForNextUpdate();
+      expect(hook.result.current.response).toEqual({ id: 2, name: 'B' });
+
+      hook.rerender({ id: 1 });
+      expect(hook.result.current.response).toEqual({ id: 1, name: 'A' });
+    });
   });
 });
