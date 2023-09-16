@@ -294,6 +294,10 @@ export type UseQuery<
     key?: TKey | null;
     response: TResponse | ((prevState: QueryState<TKey, TResponse, TData, TError>) => TResponse);
   }) => { revert: () => void; invalidate: () => void };
+  /**
+   * Use query with suspense mode.
+   */
+  suspend: (key?: TKey | null) => QueryState<TKey, TResponse, TData, TError>;
 };
 
 const useQueryDefaultDeps = (state: QueryState<any>) => [
@@ -663,6 +667,14 @@ export const createQuery = <
     };
     const invalidate = () => useQuery.invalidateSpecificKey(key);
     return { revert, invalidate };
+  };
+
+  useQuery.suspend = (key?: TKey | null) => {
+    // eslint-disable-next-line react-hooks/rules-of-hooks
+    const state = useQuery(key);
+    if (state.isLoading) throw state.forceFetch();
+    if (state.isError) throw state.error;
+    return state;
   };
 
   return useQuery;
