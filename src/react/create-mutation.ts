@@ -14,7 +14,9 @@ export type MutationState<TVar, TResponse = any, TError = unknown> = {
   error: TError | null;
   errorUpdatedAt: number | null;
   /**
-   * Mutate function is a promise that will always resolve.
+   * Mutate function.
+   *
+   * @returns Promise that will always get resolved.
    */
   mutate: TVar extends undefined
     ? () => Promise<{ response?: TResponse; error?: TError; variables?: TVar }>

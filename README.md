@@ -661,10 +661,11 @@ function PokemonListPage() {
 **Note:**
 
 - The default stale time is 3 seconds.
-- The default error retry attempt is 1 time, and retry delay is 3 seconds.
-- The default reactivity of a query is `(s) => [s.data, s.error]`.  
-  (For paginated: `(s) => [s.data, s.error, s.isWaitingNextPage, s.hasNextPage]`)
-- You can change the `defaultDeps` on `createQuery` options.
+- The default error retry attempt is 1 time, and retry delay is 2 seconds.
+- The default reactivity of a query is:  
+  `(s) => [s.data, s.error, s.isWaitingNextPage, s.hasNextPage]`
+  - Note that by default, subscribers don't listen to `isWaiting` state.
+  - You can change the `defaultDeps` on `createQuery` options.
 
 ### Mutation
 
