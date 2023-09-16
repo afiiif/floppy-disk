@@ -261,7 +261,7 @@ export type UseQuery<
    * IMPORTANT NOTE: Put this on the root component or parent component, before any component subscribed!
    */
   setInitialResponse: (options: {
-    key?: TKey;
+    key?: TKey | null;
     response: TResponse;
     skipRevalidation?: boolean;
   }) => void;
