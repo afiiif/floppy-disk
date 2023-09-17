@@ -22,7 +22,13 @@ async function copyAndReplace() {
         const data = await readFile(reactFilePath, 'utf8');
 
         // Replace "from 'react'" with "from 'preact/hooks'"
-        const replacedContent = data.replace(/from 'react'/g, "from 'preact/hooks'");
+        const replacedContent = data
+          .replace(
+            "import { createElement, FunctionComponent, useState } from 'react';",
+            `import { h as createElement, FunctionComponent } from 'preact';
+             import { useState } from 'preact/hooks';`,
+          )
+          .replace(/from 'react'/g, "from 'preact/hooks'");
 
         // Write the modified content to the Preact file
         await writeFile(preactFilePath, replacedContent, 'utf8');

@@ -35,3 +35,4 @@ yarn-error.log*
 # others
 /comparison
 /examples
+/src/preact/*.ts
