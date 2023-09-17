@@ -116,7 +116,7 @@ export type QueryState<
        *
        * `"success"` = has data.
        *
-       * `"error"` = has error.
+       * `"error"` = has error and no data.
        *
        * It has no relation with network fetching state.
        * If you're looking for network fetching state, use `isWaiting` instead.
