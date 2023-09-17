@@ -247,6 +247,17 @@ export type CreateQueryOptions<
     stateBeforeCallQuery: QueryState<TKey, TResponse, TData, TError>,
   ) => void;
   onSettled?: (stateBeforeCallQuery: QueryState<TKey, TResponse, TData, TError>) => void;
+  /**
+   * Cache time in miliseconds.
+   *
+   * When a query becomes inactive (no longer have subscribers), it will be reset after this duration,
+   * and the cache data will be garbage collected.
+   *
+   * Set it to `Infinity` to disable garbage collection.
+   *
+   * Defaults to `5 * 60 * 1000` (5 minutes).
+   */
+  cacheTime?: number;
 };
 
 export type UseQuery<
@@ -343,11 +354,13 @@ export const createQuery = <
     onSuccess = noop,
     onError = noop,
     onSettled = noop,
+    cacheTime = 5 * 60 * 1000,
     ...createStoresOptions
   } = options;
 
   const retryTimeoutId = new Map<string, number>();
   const retryNextPageTimeoutId = new Map<string, number>();
+  const resetTimeoutId = new Map<string, number>();
 
   const preventReplaceResponse = new Map<string, boolean>(); // Prevent optimistic data to be replaced
 
@@ -561,6 +574,7 @@ export const createQuery = <
           if (typeof window !== 'undefined' && fetchOnWindowFocus) {
             window.addEventListener('focus', fetchWindowFocusHandler);
           }
+          clearTimeout(resetTimeoutId.get(state.keyHash));
           onFirstSubscribe(state);
         },
         onSubscribe: (state) => {
@@ -577,6 +591,14 @@ export const createQuery = <
           useQuery.set(state.key, { retryCount: 0, retryNextPageCount: 0 }, true);
           clearTimeout(retryTimeoutId.get(state.keyHash));
           clearTimeout(retryNextPageTimeoutId.get(state.keyHash));
+          if (typeof window !== 'undefined' && cacheTime !== Infinity) {
+            resetTimeoutId.set(
+              state.keyHash,
+              window.setTimeout(() => {
+                useQuery.set(state.key, INITIAL_QUERY_STATE);
+              }, cacheTime),
+            );
+          }
           onLastUnsubscribe(state);
         },
         onBeforeChangeKey: (nextKey, prevKey) => {
