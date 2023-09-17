@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { createElement, FunctionComponent, useState } from 'react';
 
 import { hasValue, identityFn, noop } from '../utils';
 import { createStores, CreateStoresOptions, StoreKey, UseStores } from './create-stores';
@@ -298,6 +298,12 @@ export type UseQuery<
    * Use query with suspense mode.
    */
   suspend: (key?: TKey | null) => QueryState<TKey, TResponse, TData, TError>;
+  Render: (props: {
+    queryKey?: TKey | null;
+    loading?: FunctionComponent<TKey>;
+    success?: FunctionComponent<TKey>;
+    error?: FunctionComponent<TKey>;
+  }) => JSX.Element;
 };
 
 const useQueryDefaultDeps = (state: QueryState<any>) => [
@@ -675,6 +681,20 @@ export const createQuery = <
     if (state.isLoading) throw state.forceFetch();
     if (state.isError) throw state.error;
     return state;
+  };
+
+  const defaultElement: FunctionComponent<TKey> = () => null;
+  useQuery.Render = (props) => {
+    const {
+      queryKey,
+      loading = defaultElement,
+      success = defaultElement,
+      error = defaultElement,
+    } = props;
+    // eslint-disable-next-line react-hooks/rules-of-hooks
+    const state = useQuery(queryKey);
+    if (state.data) return createElement<any>(success, state.key);
+    return createElement<any>(state.isLoading ? loading : error, state.key);
   };
 
   return useQuery;
