@@ -297,7 +297,9 @@ export type UseQuery<
   /**
    * Use query with suspense mode.
    */
-  suspend: (key?: TKey | null) => QueryState<TKey, TResponse, TData, TError>;
+  suspend: (
+    key?: TKey | null,
+  ) => Extract<QueryState<TKey, TResponse, TData, TError>, { status: 'success' }>;
   Render: (props: {
     queryKey?: TKey | null;
     loading?: FunctionComponent<TKey>;
