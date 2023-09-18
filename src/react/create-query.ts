@@ -1,19 +1,7 @@
 import { createElement, FunctionComponent, useState } from 'react';
 
-import { hasValue, identityFn, noop } from '../utils';
+import { getValueOrComputedValue, hasValue, identityFn, noop } from '../utils';
 import { createStores, CreateStoresOptions, StoreKey, UseStores } from './create-stores';
-
-const getDecision = <T>(
-  value: boolean | 'always' | ((param: T) => boolean | 'always'),
-  param: T,
-  { ifTrue, ifAlways }: { ifTrue: () => void; ifAlways: () => void },
-) => {
-  if (value === true || (typeof value === 'function' && value(param) === true)) {
-    ifTrue();
-  } else if (value === 'always' || (typeof value === 'function' && value(param) === 'always')) {
-    ifAlways();
-  }
-};
 
 const INITIAL_QUERY_STATE = {
   isWaiting: false, // Network fetching
@@ -370,11 +358,9 @@ export const createQuery = <
 
       const getRetryProps = (error: TError, retryCount: number) => {
         const prevState = get();
-        const maxRetryCount = (typeof retry === 'function' ? retry(error, prevState) : retry) || 0;
-        const shouldRetry = retryCount < maxRetryCount;
-        const delay =
-          (typeof retryDelay === 'function' ? retryDelay(error, prevState) : retryDelay) || 0;
-        return { shouldRetry, delay };
+        const maxRetryCount = getValueOrComputedValue(retry, error, prevState) || 0;
+        const delay = getValueOrComputedValue(retryDelay, error, prevState) || 0;
+        return { shouldRetry: retryCount < maxRetryCount, delay };
       };
 
       const forceFetch = () =>
@@ -560,10 +546,9 @@ export const createQuery = <
     (() => {
       const fetchWindowFocusHandler = () => {
         useQuery.getAllWithSubscriber().forEach((state) => {
-          getDecision(fetchOnWindowFocus, state.key, {
-            ifTrue: state.fetch,
-            ifAlways: state.forceFetch,
-          });
+          const result = getValueOrComputedValue(fetchOnWindowFocus, state.key);
+          if (result === 'always') state.forceFetch();
+          else if (result) state.fetch();
         });
       };
 
@@ -578,10 +563,9 @@ export const createQuery = <
           onFirstSubscribe(state);
         },
         onSubscribe: (state) => {
-          getDecision(fetchOnMount, state.key, {
-            ifTrue: state.fetch,
-            ifAlways: state.forceFetch,
-          });
+          const result = getValueOrComputedValue(fetchOnMount, state.key);
+          if (result === 'always') state.forceFetch();
+          else if (result) state.fetch();
           onSubscribe(state);
         },
         onLastUnsubscribe: (state) => {
