@@ -370,8 +370,7 @@ export const createQuery = <
           let pageParam: any = undefined;
 
           const { isWaiting, isLoading, pageParams } = get();
-          if (isWaiting || enabled === false || (typeof enabled === 'function' && !enabled(key)))
-            return;
+          if (isWaiting || !getValueOrComputedValue(enabled, key)) return resolve(get());
 
           if (isLoading) set({ isWaiting: true });
           else set({ isWaiting: true, isRefetching: true });
