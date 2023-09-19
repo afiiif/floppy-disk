@@ -331,6 +331,70 @@ describe('createQuery - single query', () => {
       expect(hook2.result.current.data).toEqual({ id: 1, name: 'test 2' });
       expect(queryFn).toHaveBeenCalledTimes(3);
     });
+
+    it('should return correct fetchNextPage promise', async () => {
+      let timesCalled = 0;
+      queryFn = jest.fn().mockImplementation(async () => {
+        // Success-error alternating continuously
+        return new Promise((resolve, reject) => {
+          setTimeout(() => {
+            timesCalled++;
+            if (timesCalled % 2) {
+              resolve({ data: timesCalled });
+            } else {
+              reject(new Error('Test error'));
+            }
+          }, 100);
+        });
+      });
+      useQuery = createQuery<Key, Response>(queryFn, { retry: 0, fetchOnMount: false });
+
+      const { result } = renderHook(() => useQuery());
+      await act(async () => {
+        const res1 = await result.current.forceFetch();
+        expect(res1).toEqual(useQuery.get());
+      });
+      await act(async () => {
+        const res2 = await result.current.forceFetch();
+        expect(res2).toEqual(useQuery.get());
+      });
+    });
+
+    it('should handle useQuery methods correctly', async () => {
+      const hook1 = renderHook(() => useQuery());
+      const hook2 = renderHook(() => useQuery());
+
+      await hook1.waitForNextUpdate();
+      expect(queryFn).toHaveBeenCalledTimes(1);
+      const responseUpdatedAt1 = hook1.result.current.responseUpdatedAt;
+      expect(responseUpdatedAt1).not.toBeNull();
+
+      act(() => {
+        useQuery.invalidate();
+      });
+      await hook1.waitForNextUpdate();
+      expect(queryFn).toHaveBeenCalledTimes(2);
+      const responseUpdatedAt2 = hook1.result.current.responseUpdatedAt;
+      expect(responseUpdatedAt2).toBeGreaterThan(responseUpdatedAt1!);
+      expect(responseUpdatedAt2).toBe(hook2.result.current.responseUpdatedAt);
+
+      act(() => {
+        useQuery.reset();
+      });
+      expect(hook1.result.current.data).toBeNull();
+      expect(hook2.result.current.responseUpdatedAt).toBeNull();
+
+      act(() => {
+        hook1.result.current.fetch();
+      });
+      await hook2.waitForNextUpdate();
+      expect(queryFn).toHaveBeenCalledTimes(3);
+
+      hook1.unmount();
+      hook2.unmount();
+      useQuery.invalidate();
+      expect(queryFn).toHaveBeenCalledTimes(3);
+    });
   });
 
   describe('with param', () => {
