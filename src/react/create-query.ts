@@ -542,6 +542,8 @@ export const createQuery = <
 
         set({ isWaitingNextPage: true, isGoingToRetryNextPage: false });
         clearTimeout(retryNextPageTimeoutId.get(keyHash));
+
+        const stateBeforeCallQuery = get();
         queryFn(key, { ...state, pageParam })
           .then((response) => {
             const newPageParam = getNextPageParam(response, pageParams.length);
@@ -554,6 +556,7 @@ export const createQuery = <
               pageParams: pageParams.concat(newPageParam),
               hasNextPage: hasValue(newPageParam),
             });
+            onSuccess(response, stateBeforeCallQuery);
           })
           .catch((error: TError) => {
             const prevState = get();
@@ -574,6 +577,10 @@ export const createQuery = <
                 }, delay),
               );
             }
+            onError(error, stateBeforeCallQuery);
+          })
+          .finally(() => {
+            onSettled(stateBeforeCallQuery);
           });
       };
 
