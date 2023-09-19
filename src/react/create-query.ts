@@ -418,7 +418,7 @@ export const createQuery = <
               .then((response) => {
                 if (preventReplaceResponse.get(keyHash)) {
                   set({ isWaiting: false });
-                  return;
+                  return resolve(get());
                 }
                 responseAllPages.push(response);
                 const newPageParam = getNextPageParam(response, responseAllPages.length);
