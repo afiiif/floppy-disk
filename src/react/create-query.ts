@@ -58,8 +58,10 @@ export type QueryState<
    * If the data is empty, it will just fetch the first page.
    *
    * You can ignore this if your query is not paginated.
+   *
+   * @returns Promise that will always get resolved.
    */
-  fetchNextPage: () => void;
+  fetchNextPage: () => Promise<QueryState<TKey, TResponse, TData, TError>>;
   /**
    * Set query state (data, error, etc) to initial state.
    */
@@ -529,60 +531,63 @@ export const createQuery = <
         forceFetch();
       };
 
-      const fetchNextPage = () => {
-        if (typeof options.getNextPageParam !== 'function') {
-          return console.warn('fetchNextPage with invalid getNextPageParam option');
-        }
+      const fetchNextPage = () =>
+        new Promise<QueryState<TKey, TResponse, TData, TError>>((resolve) => {
+          const state = get();
+          if (typeof options.getNextPageParam !== 'function') {
+            console.warn('fetchNextPage with invalid getNextPageParam option');
+            return resolve(state);
+          }
 
-        const state = get();
-        const { isLoading, isWaitingNextPage, data, hasNextPage, pageParam, pageParams } = state;
+          const { isLoading, isWaitingNextPage, data, hasNextPage, pageParam, pageParams } = state;
+          if (isLoading) return resolve(forceFetch());
+          if (isWaitingNextPage || !hasNextPage) return resolve(state);
 
-        if (isLoading) return forceFetch();
-        if (isWaitingNextPage || !hasNextPage) return;
+          set({ isWaitingNextPage: true, isGoingToRetryNextPage: false });
+          clearTimeout(retryNextPageTimeoutId.get(keyHash));
 
-        set({ isWaitingNextPage: true, isGoingToRetryNextPage: false });
-        clearTimeout(retryNextPageTimeoutId.get(keyHash));
-
-        const stateBeforeCallQuery = get();
-        queryFn(key, { ...state, pageParam })
-          .then((response) => {
-            const newPageParam = getNextPageParam(response, pageParams.length);
-            set({
-              isWaitingNextPage: false,
-              response,
-              responseUpdatedAt: Date.now(),
-              data: select(response, { key, data }),
-              pageParam: newPageParam,
-              pageParams: pageParams.concat(newPageParam),
-              hasNextPage: hasValue(newPageParam),
+          const stateBeforeCallQuery = get();
+          queryFn(key, { ...state, pageParam })
+            .then((response) => {
+              const newPageParam = getNextPageParam(response, pageParams.length);
+              set({
+                isWaitingNextPage: false,
+                response,
+                responseUpdatedAt: Date.now(),
+                data: select(response, { key, data }),
+                pageParam: newPageParam,
+                pageParams: pageParams.concat(newPageParam),
+                hasNextPage: hasValue(newPageParam),
+              });
+              onSuccess(response, stateBeforeCallQuery);
+              resolve(get());
+            })
+            .catch((error: TError) => {
+              const prevState = get();
+              const { shouldRetry, delay } = getRetryProps(error, prevState.retryNextPageCount);
+              set({
+                isWaitingNextPage: false,
+                isError: true,
+                error,
+                errorUpdatedAt: Date.now(),
+                isGoingToRetryNextPage: shouldRetry,
+              });
+              if (shouldRetry) {
+                retryNextPageTimeoutId.set(
+                  keyHash,
+                  window.setTimeout(() => {
+                    set({ retryNextPageCount: prevState.retryNextPageCount + 1 });
+                    fetchNextPage();
+                  }, delay),
+                );
+              }
+              onError(error, stateBeforeCallQuery);
+              resolve(get());
+            })
+            .finally(() => {
+              onSettled(stateBeforeCallQuery);
             });
-            onSuccess(response, stateBeforeCallQuery);
-          })
-          .catch((error: TError) => {
-            const prevState = get();
-            const { shouldRetry, delay } = getRetryProps(error, prevState.retryNextPageCount);
-            set({
-              isWaitingNextPage: false,
-              isError: true,
-              error,
-              errorUpdatedAt: Date.now(),
-              isGoingToRetryNextPage: shouldRetry,
-            });
-            if (shouldRetry) {
-              retryNextPageTimeoutId.set(
-                keyHash,
-                window.setTimeout(() => {
-                  set({ retryNextPageCount: prevState.retryNextPageCount + 1 });
-                  fetchNextPage();
-                }, delay),
-              );
-            }
-            onError(error, stateBeforeCallQuery);
-          })
-          .finally(() => {
-            onSettled(stateBeforeCallQuery);
-          });
-      };
+        });
 
       return {
         ...INITIAL_QUERY_STATE,
