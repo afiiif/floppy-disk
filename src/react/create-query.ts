@@ -252,7 +252,9 @@ export type CreateQueryOptions<
    *
    * Disabled by default.
    *
-   * If the query is on error state, the polling interval will be disabled, and it will use `retry` instead.
+   * If last data fetching is failed, the polling interval will be disabled, and it will use `retry` mechanism instead.
+   *
+   * @see https://floppy-disk.vercel.app/docs/query/polling
    */
   refetchInterval?:
     | number
@@ -326,6 +328,9 @@ const useQueryDefaultDeps = (state: QueryState<any>) => [
   state.hasNextPage,
 ];
 
+/**
+ * @see https://floppy-disk.vercel.app/docs/api#createquery
+ */
 export const createQuery = <
   TKey extends StoreKey = StoreKey,
   TResponse = any,

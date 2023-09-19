@@ -33,6 +33,9 @@ export type UseStore<T extends StoreData> = {
   Watch: (props: WatchProps<T>) => any;
 };
 
+/**
+ * @see https://floppy-disk.vercel.app/docs/api#createstore
+ */
 export const createStore = <T extends StoreData>(
   initializer: StoreInitializer<T>,
   options: InitStoreOptions<T> & {

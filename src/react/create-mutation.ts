@@ -44,6 +44,9 @@ export type CreateMutationOptions<TVar, TResponse = any, TError = unknown> = Ini
   onSettled?: (variables: TVar, stateBeforeMutate: MutationState<TVar, TResponse, TError>) => void;
 };
 
+/**
+ * @see https://floppy-disk.vercel.app/docs/api#createmutation
+ */
 export const createMutation = <TVar, TResponse = any, TError = unknown>(
   mutationFn: (
     variables: TVar,

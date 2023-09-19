@@ -67,6 +67,9 @@ export type CreateStoresOptions<
   hashKeyFn?: (obj: TKey) => string;
 };
 
+/**
+ * @see https://floppy-disk.vercel.app/docs/api#createstores
+ */
 export const createStores = <TKey extends StoreKey = StoreKey, T extends StoreData = StoreData>(
   initializer: StoresInitializer<TKey, T>,
   options: CreateStoresOptions<TKey, T> = {},
