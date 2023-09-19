@@ -254,7 +254,10 @@ export type CreateQueryOptions<
    *
    * If the query is on error state, the polling interval will be disabled, and it will use `retry` instead.
    */
-  refetchInterval?: number | false | (() => number | false);
+  refetchInterval?:
+    | number
+    | false
+    | ((state: QueryState<TKey, TResponse, TData, TError>) => number | false);
 };
 
 export type UseQuery<
@@ -405,6 +408,7 @@ export const createQuery = <
             }
             const stateBeforeCallQuery = { ...get(), pageParam };
             preventReplaceResponse.set(keyHash, false);
+
             queryFn(key, stateBeforeCallQuery)
               .then((response) => {
                 if (preventReplaceResponse.get(keyHash)) {
@@ -419,12 +423,13 @@ export const createQuery = <
                   callQuery();
                   return;
                 }
-                set({
+
+                const nextState = {
                   isWaiting: false,
-                  status: 'success',
-                  isLoading: false,
-                  isSuccess: true,
-                  isError: false,
+                  status: 'success' as 'success',
+                  isLoading: false as false,
+                  isSuccess: true as true,
+                  isError: false as false,
                   isRefetching: false,
                   isRefetchError: false,
                   isPreviousData: false,
@@ -440,10 +445,11 @@ export const createQuery = <
                   pageParam: newPageParam,
                   pageParams: newPageParams,
                   hasNextPage: hasValue(newPageParam),
-                });
+                };
 
                 const refetchIntervalValue =
-                  typeof window !== 'undefined' && getValueOrComputedValue(refetchInterval);
+                  typeof window !== 'undefined' &&
+                  getValueOrComputedValue(refetchInterval, { ...get(), ...nextState });
                 if (refetchIntervalValue) {
                   refetchIntervalTimeoutId.set(
                     keyHash,
@@ -453,6 +459,7 @@ export const createQuery = <
                   );
                 }
 
+                set(nextState);
                 onSuccess(response, stateBeforeCallQuery);
                 resolve(get());
               })
@@ -591,7 +598,7 @@ export const createQuery = <
         onFirstSubscribe: (state) => {
           if (state.isSuccess) {
             const refetchIntervalValue =
-              typeof window !== 'undefined' && getValueOrComputedValue(refetchInterval);
+              typeof window !== 'undefined' && getValueOrComputedValue(refetchInterval, state);
             if (refetchIntervalValue) {
               refetchIntervalTimeoutId.set(
                 state.keyHash,
