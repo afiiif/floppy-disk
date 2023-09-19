@@ -468,7 +468,6 @@ export const createQuery = <
 
                 set(nextState);
                 onSuccess(response, stateBeforeCallQuery);
-                resolve(get());
               })
               .catch((error: TError) => {
                 const prevState = get();
@@ -514,10 +513,10 @@ export const createQuery = <
                   );
                 }
                 onError(error, stateBeforeCallQuery);
-                resolve(get());
               })
               .finally(() => {
                 onSettled(stateBeforeCallQuery);
+                resolve(get());
               });
           };
 
@@ -567,7 +566,6 @@ export const createQuery = <
                 hasNextPage: hasValue(newPageParam),
               });
               onSuccess(response, stateBeforeCallQuery);
-              resolve(get());
             })
             .catch((error: TError) => {
               const prevState = get();
@@ -589,10 +587,10 @@ export const createQuery = <
                 );
               }
               onError(error, stateBeforeCallQuery);
-              resolve(get());
             })
             .finally(() => {
               onSettled(stateBeforeCallQuery);
+              resolve(get());
             });
         });
 
