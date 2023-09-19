@@ -543,6 +543,13 @@ export const createQuery = <
           if (isLoading) return resolve(forceFetch());
           if (isWaitingNextPage || !hasNextPage) return resolve(state);
 
+          let shouldcancel = false;
+          const cancel = () => {
+            shouldcancel = true;
+          };
+          onBeforeFetch(cancel, state);
+          if (shouldcancel) return resolve(state);
+
           set({ isWaitingNextPage: true, isGoingToRetryNextPage: false });
           clearTimeout(retryNextPageTimeoutId.get(keyHash));
 
