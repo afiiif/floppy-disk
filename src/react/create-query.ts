@@ -226,6 +226,7 @@ export type CreateQueryOptions<
    * This function should return a variable that will be used when fetching next page (`pageParam`).
    */
   getNextPageParam?: (lastPage: TResponse, index: number) => any;
+  onBeforeFetch?: (cancel: () => void, state: QueryState<TKey, TResponse, TData, TError>) => void;
   onSuccess?: (
     response: TResponse,
     stateBeforeCallQuery: QueryState<TKey, TResponse, TData, TError>,
@@ -347,6 +348,7 @@ export const createQuery = <
     retryDelay = 2000, // 2 seconds
     keepPreviousData,
     getNextPageParam = () => undefined,
+    onBeforeFetch = noop,
     onSuccess = noop,
     onError = noop,
     onSettled = noop,
@@ -381,8 +383,16 @@ export const createQuery = <
 
           clearTimeout(refetchIntervalTimeoutId.get(keyHash));
 
-          const { isWaiting, isLoading, pageParams } = get();
-          if (isWaiting || !getValueOrComputedValue(enabled, key)) return resolve(get());
+          const state = get();
+          const { isWaiting, isLoading, pageParams } = state;
+          if (isWaiting || !getValueOrComputedValue(enabled, key)) return resolve(state);
+
+          let shouldcancel = false;
+          const cancel = () => {
+            shouldcancel = true;
+          };
+          onBeforeFetch(cancel, state);
+          if (shouldcancel) return resolve(state);
 
           if (isLoading) set({ isWaiting: true });
           else set({ isWaiting: true, isRefetching: true });
