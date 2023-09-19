@@ -246,6 +246,14 @@ export type CreateQueryOptions<
    * Defaults to `5 * 60 * 1000` (5 minutes).
    */
   cacheTime?: number;
+  /**
+   * Polling interval in milliseconds.
+   *
+   * Disabled by default.
+   *
+   * If the query is on error state, the polling interval will be disabled, and it will use `retry` instead.
+   */
+  refetchInterval?: number | false | (() => number | false);
 };
 
 export type UseQuery<
@@ -343,12 +351,14 @@ export const createQuery = <
     onError = noop,
     onSettled = noop,
     cacheTime = 5 * 60 * 1000,
+    refetchInterval = false,
     ...createStoresOptions
   } = options;
 
   const retryTimeoutId = new Map<string, number>();
   const retryNextPageTimeoutId = new Map<string, number>();
   const resetTimeoutId = new Map<string, number>();
+  const refetchIntervalTimeoutId = new Map<string, number>();
 
   const preventReplaceResponse = new Map<string, boolean>(); // Prevent optimistic data to be replaced
 
@@ -368,6 +378,8 @@ export const createQuery = <
           const responseAllPages: TResponse[] = [];
           const newPageParams: any[] = [undefined];
           let pageParam: any = undefined;
+
+          clearTimeout(refetchIntervalTimeoutId.get(keyHash));
 
           const { isWaiting, isLoading, pageParams } = get();
           if (isWaiting || !getValueOrComputedValue(enabled, key)) return resolve(get());
@@ -419,6 +431,18 @@ export const createQuery = <
                   pageParams: newPageParams,
                   hasNextPage: hasValue(newPageParam),
                 });
+
+                const refetchIntervalValue =
+                  typeof window !== 'undefined' && getValueOrComputedValue(refetchInterval);
+                if (refetchIntervalValue) {
+                  refetchIntervalTimeoutId.set(
+                    keyHash,
+                    window.setTimeout(() => {
+                      forceFetch();
+                    }, refetchIntervalValue),
+                  );
+                }
+
                 onSuccess(response, stateBeforeCallQuery);
                 resolve(get());
               })
@@ -555,6 +579,18 @@ export const createQuery = <
         ...createStoresOptions,
         defaultDeps,
         onFirstSubscribe: (state) => {
+          if (state.isSuccess) {
+            const refetchIntervalValue =
+              typeof window !== 'undefined' && getValueOrComputedValue(refetchInterval);
+            if (refetchIntervalValue) {
+              refetchIntervalTimeoutId.set(
+                state.keyHash,
+                window.setTimeout(() => {
+                  state.forceFetch();
+                }, refetchIntervalValue),
+              );
+            }
+          }
           if (typeof window !== 'undefined' && fetchOnWindowFocus) {
             window.addEventListener('focus', fetchWindowFocusHandler);
           }
@@ -574,6 +610,7 @@ export const createQuery = <
           useQuery.set(state.key, { retryCount: 0, retryNextPageCount: 0 }, true);
           clearTimeout(retryTimeoutId.get(state.keyHash));
           clearTimeout(retryNextPageTimeoutId.get(state.keyHash));
+          clearTimeout(refetchIntervalTimeoutId.get(state.keyHash));
           if (typeof window !== 'undefined' && cacheTime !== Infinity) {
             resetTimeoutId.set(
               state.keyHash,
