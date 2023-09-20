@@ -18,7 +18,7 @@ import {
   useInfiniteQuery,
   useMutation,
 } from '@tanstack/react-query'; // 41 kB (gzipped: 11 kB)
-import { createQuery, createMutation } from 'floppy-disk'; // 8.4 kB (gzipped: 2.8 kB) 🎉
+import { createQuery, createMutation } from 'floppy-disk'; // 9.2 kB (gzipped: 3.1 kB) 🎉
 ```
 
 - Using Zustand & React-Query: https://demo-zustand-react-query.vercel.app/  
@@ -641,7 +641,7 @@ const usePokemonsInfQuery = createQuery(
     throw res;
   },
   {
-    select: (response, { data }) => [...(data || []), ...response.results],
+    select: (response, { data = [] }) => [...data, ...response.results],
     getNextPageParam: (lastPageResponse, i) => {
       if (i > 5) return undefined; // Return undefined means you have reached the end of the pages
       return i * 10;
@@ -650,11 +650,11 @@ const usePokemonsInfQuery = createQuery(
 );
 
 function PokemonListPage() {
-  const { data, fetchNextPage, hasNextPage, isWaitingNextPage } = usePokemonsInfQuery();
+  const { data = [], fetchNextPage, hasNextPage, isWaitingNextPage } = usePokemonsInfQuery();
 
   return (
     <div>
-      {data?.map((pokemon) => (
+      {data.map((pokemon) => (
         <div key={pokemon.name}>{pokemon.name}</div>
       ))}
       {isWaitingNextPage ? (
