@@ -16,9 +16,9 @@ const INITIAL_QUERY_STATE = {
   isOptimisticData: false,
   data: undefined,
   response: undefined,
-  responseUpdatedAt: null,
+  responseUpdatedAt: undefined,
   error: undefined,
-  errorUpdatedAt: null,
+  errorUpdatedAt: undefined,
   retryCount: 0,
   isGoingToRetry: false,
   pageParam: undefined,
@@ -89,7 +89,7 @@ export type QueryState<
   isPreviousData: boolean;
   isOptimisticData: boolean;
   error: TError | undefined;
-  errorUpdatedAt: number | null;
+  errorUpdatedAt: number | undefined;
   retryCount: number;
   isGoingToRetry: boolean;
   pageParam: any;
@@ -133,7 +133,7 @@ export type QueryState<
       isError: false;
       data: undefined;
       response: undefined;
-      responseUpdatedAt: null;
+      responseUpdatedAt: undefined;
     }
   | {
       status: 'success';
@@ -142,7 +142,7 @@ export type QueryState<
       isError: false;
       data: TData;
       response: TResponse;
-      responseUpdatedAt: number | null; // Allow null to make setInitialResponse's data stale, and a revalidation will be triggered
+      responseUpdatedAt: number | undefined; // Allow undefined to make setInitialResponse's data stale, and a revalidation will be triggered
     }
   | {
       status: 'error';
@@ -151,7 +151,7 @@ export type QueryState<
       isError: true;
       data: undefined;
       response: undefined;
-      responseUpdatedAt: null;
+      responseUpdatedAt: undefined;
     }
 );
 
@@ -447,7 +447,7 @@ export const createQuery = <
                   response,
                   responseUpdatedAt: Date.now(),
                   error: undefined,
-                  errorUpdatedAt: null,
+                  errorUpdatedAt: undefined,
                   retryCount: 0,
                   pageParam: newPageParam,
                   pageParams: newPageParams,
@@ -525,7 +525,7 @@ export const createQuery = <
 
       const fetch = () => {
         const { responseUpdatedAt } = get();
-        const isStale = Date.now() > Number(responseUpdatedAt) + staleTime;
+        const isStale = Date.now() > (responseUpdatedAt || 0) + staleTime;
         if (!isStale) return;
         forceFetch();
       };
@@ -699,7 +699,7 @@ export const createQuery = <
         isSuccess: true,
         isError: false,
         response,
-        responseUpdatedAt: skipRevalidation ? Date.now() : null,
+        responseUpdatedAt: skipRevalidation ? Date.now() : undefined,
         data: select(response, { key: key as TKey, data: undefined }),
         pageParam: newPageParam,
         pageParams: [undefined, newPageParam],
@@ -722,14 +722,14 @@ export const createQuery = <
   useQuery.invalidate = () => {
     useQuery.getStores().forEach((store) => {
       const { get, set, getSubscribers } = store;
-      set({ responseUpdatedAt: null });
+      set({ responseUpdatedAt: undefined });
       if (getSubscribers().size > 0) get().forceFetch();
     });
   };
 
   useQuery.invalidateSpecificKey = (key?: Maybe<TKey>) => {
     const { get, set, getSubscribers } = useQuery.getStore(key);
-    set({ responseUpdatedAt: null });
+    set({ responseUpdatedAt: undefined });
     if (getSubscribers().size > 0) get().forceFetch();
   };
 

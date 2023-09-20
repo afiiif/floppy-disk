@@ -25,9 +25,9 @@ describe('createMutation - without param', () => {
     expect(result.current.isSuccess).toBe(false);
     expect(result.current.isError).toBe(false);
     expect(result.current.response).toBe(undefined);
-    expect(result.current.responseUpdatedAt).toBe(null);
+    expect(result.current.responseUpdatedAt).toBe(undefined);
     expect(result.current.error).toBe(undefined);
-    expect(result.current.errorUpdatedAt).toBe(null);
+    expect(result.current.errorUpdatedAt).toBe(undefined);
   });
 
   it('should update state after successful mutation', async () => {
@@ -49,9 +49,10 @@ describe('createMutation - without param', () => {
     expect(current.isSuccess).toBe(true);
     expect(current.isError).toBe(false);
     expect(current.response).toEqual({ status: 'success' });
-    expect(current.responseUpdatedAt).not.toBe(null);
+    expect(current.responseUpdatedAt).not.toBe(undefined);
+    expect(typeof current.responseUpdatedAt).toBe('number');
     expect(current.error).toBe(undefined);
-    expect(current.errorUpdatedAt).toBe(null);
+    expect(current.errorUpdatedAt).toBe(undefined);
 
     expect(hook2.result.current).toBe(current);
   });
@@ -91,9 +92,10 @@ describe('createMutation - with param', () => {
     expect(hook1.result.current.isSuccess).toBe(true);
     expect(hook1.result.current.isError).toBe(false);
     expect(hook1.result.current.response).toEqual({ status: 'success', id: 'a' });
-    expect(hook1.result.current.responseUpdatedAt).not.toBe(null);
+    expect(hook1.result.current.responseUpdatedAt).not.toBe(undefined);
+    expect(typeof hook1.result.current.responseUpdatedAt).toBe('number');
     expect(hook1.result.current.error).toBe(undefined);
-    expect(hook1.result.current.errorUpdatedAt).toBe(null);
+    expect(hook1.result.current.errorUpdatedAt).toBe(undefined);
 
     expect(hook2.result.current).toBe(hook1.result.current);
 
@@ -111,9 +113,10 @@ describe('createMutation - with param', () => {
     expect(hook1.result.current.isSuccess).toBe(true);
     expect(hook1.result.current.isError).toBe(false);
     expect(hook1.result.current.response).toEqual({ status: 'success', id: 'b' });
-    expect(hook1.result.current.responseUpdatedAt).not.toBe(null);
+    expect(hook1.result.current.responseUpdatedAt).not.toBe(undefined);
+    expect(typeof hook1.result.current.responseUpdatedAt).toBe('number');
     expect(hook1.result.current.error).toBe(undefined);
-    expect(hook1.result.current.errorUpdatedAt).toBe(null);
+    expect(hook1.result.current.errorUpdatedAt).toBe(undefined);
 
     expect(hook2.result.current).toBe(hook1.result.current);
   });
@@ -152,9 +155,10 @@ describe('createMutation - with param', () => {
     expect(hook1.result.current.isSuccess).toBe(true);
     expect(hook1.result.current.isError).toBe(false);
     expect(hook1.result.current.response).toEqual({ status: 'success', id: 'a' });
-    expect(hook1.result.current.responseUpdatedAt).not.toBe(null);
+    expect(hook1.result.current.responseUpdatedAt).not.toBe(undefined);
+    expect(typeof hook1.result.current.responseUpdatedAt).toBe('number');
     expect(hook1.result.current.error).toBe(undefined);
-    expect(hook1.result.current.errorUpdatedAt).toBe(null);
+    expect(hook1.result.current.errorUpdatedAt).toBe(undefined);
 
     expect(hook2.result.current).toBe(hook1.result.current);
 
@@ -172,9 +176,11 @@ describe('createMutation - with param', () => {
     expect(hook1.result.current.isSuccess).toBe(false);
     expect(hook1.result.current.isError).toBe(true);
     expect(hook1.result.current.response).toEqual({ status: 'success', id: 'a' });
-    expect(hook1.result.current.responseUpdatedAt).not.toBe(null);
+    expect(hook1.result.current.responseUpdatedAt).not.toBe(undefined);
+    expect(typeof hook1.result.current.responseUpdatedAt).toBe('number');
     expect(hook1.result.current.error).toEqual(new Error('Test error'));
-    expect(hook1.result.current.errorUpdatedAt).not.toBe(null);
+    expect(hook1.result.current.errorUpdatedAt).not.toBe(undefined);
+    expect(typeof hook1.result.current.errorUpdatedAt).toBe('number');
 
     expect(hook2.result.current).toBe(hook1.result.current);
   });
