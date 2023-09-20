@@ -25,9 +25,10 @@ describe('createQuery - single query', () => {
       expect(result.current.isLoading).toBe(true);
       expect(result.current.isSuccess).toBe(false);
       expect(result.current.isError).toBe(false);
-      expect(result.current.response).toBe(null);
+      expect(result.current.data).toBe(undefined);
+      expect(result.current.response).toBe(undefined);
       expect(result.current.responseUpdatedAt).toBe(null);
-      expect(result.current.error).toBe(null);
+      expect(result.current.error).toBe(undefined);
       expect(result.current.errorUpdatedAt).toBe(null);
     });
 
@@ -47,7 +48,7 @@ describe('createQuery - single query', () => {
       expect(current.data).toEqual({ id: 1, name: 'test' });
       expect(current.response).toEqual({ id: 1, name: 'test' });
       expect(current.responseUpdatedAt).not.toBe(null);
-      expect(current.error).toBe(null);
+      expect(current.error).toBe(undefined);
       expect(current.errorUpdatedAt).toBe(null);
 
       expect(hook2.result.current).toBe(current);
@@ -71,8 +72,8 @@ describe('createQuery - single query', () => {
       expect(current.isLoading).toBe(false);
       expect(current.isSuccess).toBe(false);
       expect(current.isError).toBe(true);
-      expect(current.data).toBe(null);
-      expect(current.response).toBe(null);
+      expect(current.data).toBe(undefined);
+      expect(current.response).toBe(undefined);
       expect(current.responseUpdatedAt).toBe(null);
       expect(current.error).toEqual(new Error('Test error'));
       expect(current.errorUpdatedAt).not.toBe(null);
@@ -153,7 +154,7 @@ describe('createQuery - single query', () => {
       expect(hook1.result.current.data).toEqual({ id: 1, name: 'test' });
       expect(hook1.result.current.response).toEqual({ id: 1, name: 'test' });
       expect(hook1.result.current.responseUpdatedAt).not.toBe(null);
-      expect(hook1.result.current.error).toBe(null);
+      expect(hook1.result.current.error).toBe(undefined);
       expect(hook1.result.current.errorUpdatedAt).toBe(null);
 
       expect(hook2.result.current).toBe(hook1.result.current);
@@ -381,7 +382,7 @@ describe('createQuery - single query', () => {
       act(() => {
         useQuery.reset();
       });
-      expect(hook1.result.current.data).toBe(null);
+      expect(hook1.result.current.data).toBe(undefined);
       expect(hook2.result.current.responseUpdatedAt).toBe(null);
 
       act(() => {
@@ -421,9 +422,9 @@ describe('createQuery - single query', () => {
       expect(result.current.isLoading).toBe(true);
       expect(result.current.isSuccess).toBe(false);
       expect(result.current.isError).toBe(false);
-      expect(result.current.response).toBe(null);
+      expect(result.current.response).toBe(undefined);
       expect(result.current.responseUpdatedAt).toBe(null);
-      expect(result.current.error).toBe(null);
+      expect(result.current.error).toBe(undefined);
       expect(result.current.errorUpdatedAt).toBe(null);
     });
 
@@ -465,7 +466,7 @@ describe('createQuery - single query', () => {
       expect(hook1.result.current.data).toBe('A');
       expect(hook1.result.current.response).toEqual({ id: 1, name: 'A' });
       expect(hook1.result.current.responseUpdatedAt).not.toBe(null);
-      expect(hook1.result.current.error).toBe(null);
+      expect(hook1.result.current.error).toBe(undefined);
       expect(hook1.result.current.errorUpdatedAt).toBe(null);
 
       expect(hook2.result.current).toBe(hook1.result.current);
@@ -482,8 +483,8 @@ describe('createQuery - single query', () => {
       expect(hook2.result.current.isLoading).toBe(false);
       expect(hook2.result.current.isSuccess).toBe(false);
       expect(hook2.result.current.isError).toBe(true);
-      expect(hook2.result.current.data).toBe(null);
-      expect(hook2.result.current.response).toBe(null);
+      expect(hook2.result.current.data).toBe(undefined);
+      expect(hook2.result.current.response).toBe(undefined);
       expect(hook2.result.current.responseUpdatedAt).toBe(null);
       expect(hook2.result.current.error).toEqual(new Error('Test error'));
       expect(hook2.result.current.errorUpdatedAt).not.toBe(null);
@@ -499,7 +500,7 @@ describe('createQuery - single query', () => {
       expect(hook2.result.current.data).toBe('B');
       expect(hook2.result.current.response).toEqual({ id: 2, name: 'B' });
       expect(hook2.result.current.responseUpdatedAt).not.toBe(null);
-      expect(hook2.result.current.error).toBe(null);
+      expect(hook2.result.current.error).toBe(undefined);
       expect(hook2.result.current.errorUpdatedAt).toBe(null);
     });
 

@@ -9,9 +9,9 @@ export type MutationState<TVar, TResponse = any, TError = unknown> = {
   isWaiting: boolean;
   isSuccess: boolean;
   isError: boolean;
-  response: TResponse | null;
+  response: TResponse | undefined;
   responseUpdatedAt: number | null;
-  error: TError | null;
+  error: TError | undefined;
   errorUpdatedAt: number | null;
   /**
    * Mutate function.
@@ -67,9 +67,9 @@ export const createMutation = <TVar, TResponse = any, TError = unknown>(
       isWaiting: false,
       isSuccess: false,
       isError: false,
-      response: null,
+      response: undefined,
       responseUpdatedAt: null,
-      error: null,
+      error: undefined,
       errorUpdatedAt: null,
       mutate: ((variables) => {
         set({ isWaiting: true });
@@ -84,7 +84,7 @@ export const createMutation = <TVar, TResponse = any, TError = unknown>(
                 isError: false,
                 response,
                 responseUpdatedAt: Date.now(),
-                error: null,
+                error: undefined,
                 errorUpdatedAt: null,
               });
               onSuccess(response, variables, stateBeforeMutate);

@@ -14,10 +14,10 @@ const INITIAL_QUERY_STATE = {
   isRefetchError: false,
   isPreviousData: false,
   isOptimisticData: false,
-  data: null,
-  response: null,
+  data: undefined,
+  response: undefined,
   responseUpdatedAt: null,
-  error: null,
+  error: undefined,
   errorUpdatedAt: null,
   retryCount: 0,
   isGoingToRetry: false,
@@ -88,7 +88,7 @@ export type QueryState<
   isRefetchError: boolean;
   isPreviousData: boolean;
   isOptimisticData: boolean;
-  error: TError | null;
+  error: TError | undefined;
   errorUpdatedAt: number | null;
   retryCount: number;
   isGoingToRetry: boolean;
@@ -131,8 +131,8 @@ export type QueryState<
        * If data fetched successfully but then an error occured, `isError` will be `false` but `isRefetchError` will be `true`.
        */
       isError: false;
-      data: null;
-      response: null;
+      data: undefined;
+      response: undefined;
       responseUpdatedAt: null;
     }
   | {
@@ -149,8 +149,8 @@ export type QueryState<
       isLoading: false;
       isSuccess: false;
       isError: true;
-      data: null;
-      response: null;
+      data: undefined;
+      response: undefined;
       responseUpdatedAt: null;
     }
 );
@@ -443,10 +443,10 @@ export const createQuery = <
                   isOptimisticData: false,
                   data: responseAllPages.reduce((prev, responseCurrentPage) => {
                     return select(responseCurrentPage, { key, data: prev });
-                  }, null as TData),
+                  }, undefined as TData),
                   response,
                   responseUpdatedAt: Date.now(),
-                  error: null,
+                  error: undefined,
                   errorUpdatedAt: null,
                   retryCount: 0,
                   pageParam: newPageParam,
@@ -482,7 +482,7 @@ export const createQuery = <
                         data: responseAllPages.length
                           ? responseAllPages.reduce((prev, response) => {
                               return select(response, { key, data: prev });
-                            }, null as TData)
+                            }, undefined as TData)
                           : prevState.data,
                         error,
                         errorUpdatedAt,
@@ -495,7 +495,7 @@ export const createQuery = <
                         status: 'error',
                         isLoading: false,
                         isError: true,
-                        data: null,
+                        data: undefined,
                         error,
                         errorUpdatedAt,
                         isGoingToRetry: shouldRetry,
@@ -700,7 +700,7 @@ export const createQuery = <
         isError: false,
         response,
         responseUpdatedAt: skipRevalidation ? Date.now() : null,
-        data: select(response, { key: key as TKey, data: null }),
+        data: select(response, { key: key as TKey, data: undefined }),
         pageParam: newPageParam,
         pageParams: [undefined, newPageParam],
         hasNextPage: hasValue(newPageParam),
@@ -744,7 +744,7 @@ export const createQuery = <
     useQuery.set(key, {
       isOptimisticData: true,
       response: optimisticResponse,
-      data: select(optimisticResponse, { key: key as TKey, data: null }),
+      data: select(optimisticResponse, { key: key as TKey, data: undefined }),
     });
     preventReplaceResponse.set(prevState.keyHash, true);
     const revert = () => {

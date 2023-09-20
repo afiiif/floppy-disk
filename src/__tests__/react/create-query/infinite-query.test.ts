@@ -42,8 +42,8 @@ describe('createQuery - infinite query', () => {
   it('should handle fetchNextPage correctly', async () => {
     const { result, waitForNextUpdate } = renderHook(() => useQuery());
 
-    expect(result.current.response).toBe(null);
-    expect(result.current.data).toBe(null);
+    expect(result.current.response).toBe(undefined);
+    expect(result.current.data).toBe(undefined);
     expect(result.current.pageParam).toBe(undefined);
     expect(result.current.pageParams).toEqual([undefined]);
 
