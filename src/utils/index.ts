@@ -13,3 +13,5 @@ export const getValueOrComputedValue = <T, P extends any[]>(
   }
   return valueOrComputeValueFn;
 };
+
+export type Maybe<T> = T | null | undefined;

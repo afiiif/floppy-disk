@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 
-import { hashStoreKey, noop } from '../utils';
+import { hashStoreKey, Maybe, noop } from '../utils';
 import {
   initStore,
   InitStoreOptions,
@@ -11,8 +11,6 @@ import {
   Subscribers,
 } from '../vanilla';
 import { WatchProps } from './create-store';
-
-type Maybe<T> = T | null | undefined;
 
 export type StoreKey = Record<string, any> | undefined;
 

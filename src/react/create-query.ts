@@ -1,6 +1,6 @@
 import { createElement, FunctionComponent, useState } from 'react';
 
-import { getValueOrComputedValue, hasValue, identityFn, noop } from '../utils';
+import { getValueOrComputedValue, hasValue, identityFn, Maybe, noop } from '../utils';
 import { createStores, CreateStoresOptions, StoreKey, UseStores } from './create-stores';
 
 const INITIAL_QUERY_STATE = {
@@ -278,7 +278,7 @@ export type UseQuery<
    * IMPORTANT NOTE: Put this on the root component or parent component, before any component subscribed!
    */
   setInitialResponse: (options: {
-    key?: TKey | null;
+    key?: Maybe<TKey>;
     response: TResponse;
     skipRevalidation?: boolean;
   }) => void;
@@ -289,7 +289,7 @@ export type UseQuery<
   /**
    * Set query state (data, error, etc) to initial state.
    */
-  resetSpecificKey: (key?: TKey | null) => void;
+  resetSpecificKey: (key?: Maybe<TKey>) => void;
   /**
    * Invalidate query means marking a query as stale, and will refetch only if the query is active (has subscriber)
    */
@@ -297,7 +297,7 @@ export type UseQuery<
   /**
    * Invalidate query means marking a query as stale, and will refetch only if the query is active (has subscriber)
    */
-  invalidateSpecificKey: (key?: TKey | null) => void;
+  invalidateSpecificKey: (key?: Maybe<TKey>) => void;
   /**
    * Optimistic update.
    *
@@ -306,17 +306,17 @@ export type UseQuery<
    * IMPORTANT NOTE: This won't work well on infinite query.
    */
   optimisticUpdate: (options: {
-    key?: TKey | null;
+    key?: Maybe<TKey>;
     response: TResponse | ((prevState: QueryState<TKey, TResponse, TData, TError>) => TResponse);
   }) => { revert: () => void; invalidate: () => void };
   /**
    * Use query with suspense mode.
    */
   suspend: (
-    key?: TKey | null,
+    key?: Maybe<TKey>,
   ) => Extract<QueryState<TKey, TResponse, TData, TError>, { status: 'success' }>;
   Render: (props: {
-    queryKey?: TKey | null;
+    queryKey?: Maybe<TKey>;
     loading?: FunctionComponent<TKey>;
     success?: FunctionComponent<TKey>;
     error?: FunctionComponent<TKey>;
@@ -714,7 +714,7 @@ export const createQuery = <
     });
   };
 
-  useQuery.resetSpecificKey = (key?: TKey | null) => {
+  useQuery.resetSpecificKey = (key?: Maybe<TKey>) => {
     const store = useQuery.getStore(key);
     store.set(INITIAL_QUERY_STATE);
   };
@@ -727,7 +727,7 @@ export const createQuery = <
     });
   };
 
-  useQuery.invalidateSpecificKey = (key?: TKey | null) => {
+  useQuery.invalidateSpecificKey = (key?: Maybe<TKey>) => {
     const { get, set, getSubscribers } = useQuery.getStore(key);
     set({ responseUpdatedAt: null });
     if (getSubscribers().size > 0) get().forceFetch();
@@ -758,7 +758,7 @@ export const createQuery = <
     return { revert, invalidate };
   };
 
-  useQuery.suspend = (key?: TKey | null) => {
+  useQuery.suspend = (key?: Maybe<TKey>) => {
     // eslint-disable-next-line react-hooks/rules-of-hooks
     const state = useQuery(key);
     if (state.isLoading) throw state.forceFetch();
