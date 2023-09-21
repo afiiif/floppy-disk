@@ -33,6 +33,7 @@ export type QueryState<
   TResponse = any,
   TData = TResponse,
   TError = unknown,
+  TPageParam = any,
 > = {
   /**
    * Query store key, an object that will be hashed into a string as a query store identifier.
@@ -51,7 +52,7 @@ export type QueryState<
    *
    * @returns Promise that will always get resolved.
    */
-  forceFetch: () => Promise<QueryState<TKey, TResponse, TData, TError>>;
+  forceFetch: () => Promise<QueryState<TKey, TResponse, TData, TError, TPageParam>>;
   /**
    * Fetch next page if has next page.
    *
@@ -61,7 +62,7 @@ export type QueryState<
    *
    * @returns Promise that will always get resolved.
    */
-  fetchNextPage: () => Promise<QueryState<TKey, TResponse, TData, TError>>;
+  fetchNextPage: () => Promise<QueryState<TKey, TResponse, TData, TError, TPageParam>>;
   /**
    * Set query state (data, error, etc) to initial state.
    */
@@ -74,7 +75,9 @@ export type QueryState<
    * IMPORTANT NOTE: This won't work well on infinite query.
    */
   optimisticUpdate: (
-    response: TResponse | ((prevState: QueryState<TKey, TResponse, TData, TError>) => TResponse),
+    response:
+      | TResponse
+      | ((prevState: QueryState<TKey, TResponse, TData, TError, TPageParam>) => TResponse),
   ) => { revert: () => void; invalidate: () => void };
   /**
    * Network fetching status.
@@ -92,8 +95,8 @@ export type QueryState<
   errorUpdatedAt: number | undefined;
   retryCount: number;
   isGoingToRetry: boolean;
-  pageParam: any;
-  pageParams: any[];
+  pageParam: Maybe<TPageParam>;
+  pageParams: Maybe<TPageParam>[];
   hasNextPage: boolean;
   retryNextPageCount: number;
   isGoingToRetryNextPage: boolean;
@@ -160,10 +163,11 @@ export type CreateQueryOptions<
   TResponse = any,
   TData = TResponse,
   TError = unknown,
-> = CreateStoresOptions<TKey, QueryState<TKey, TResponse, TData, TError>> & {
+  TPageParam = any,
+> = CreateStoresOptions<TKey, QueryState<TKey, TResponse, TData, TError, TPageParam>> & {
   select?: (
     response: TResponse,
-    state: Pick<QueryState<TKey, TResponse, TData, TError>, 'data' | 'key'>,
+    state: Pick<QueryState<TKey, TResponse, TData, TError, TPageParam>, 'data' | 'key'>,
   ) => TData;
   /**
    * Stale time in miliseconds.
@@ -207,7 +211,10 @@ export type CreateQueryOptions<
    */
   retry?:
     | number
-    | ((error: TError, prevState: QueryState<TKey, TResponse, TData, TError>) => number);
+    | ((
+        error: TError,
+        prevState: QueryState<TKey, TResponse, TData, TError, TPageParam>,
+      ) => number);
   /**
    * Error retry delay in miliseconds.
    *
@@ -215,7 +222,10 @@ export type CreateQueryOptions<
    */
   retryDelay?:
     | number
-    | ((error: TError, prevState: QueryState<TKey, TResponse, TData, TError>) => number);
+    | ((
+        error: TError,
+        prevState: QueryState<TKey, TResponse, TData, TError, TPageParam>,
+      ) => number);
   /**
    * If set to `true`, previous `data` will be kept when fetching new data because the query key changed.
    *
@@ -227,17 +237,22 @@ export type CreateQueryOptions<
    *
    * This function should return a variable that will be used when fetching next page (`pageParam`).
    */
-  getNextPageParam?: (lastPage: TResponse, index: number) => any;
-  onBeforeFetch?: (cancel: () => void, state: QueryState<TKey, TResponse, TData, TError>) => void;
+  getNextPageParam?: (lastPage: TResponse, index: number) => Maybe<TPageParam>;
+  onBeforeFetch?: (
+    cancel: () => void,
+    state: QueryState<TKey, TResponse, TData, TError, TPageParam>,
+  ) => void;
   onSuccess?: (
     response: TResponse,
-    stateBeforeCallQuery: QueryState<TKey, TResponse, TData, TError>,
+    stateBeforeCallQuery: QueryState<TKey, TResponse, TData, TError, TPageParam>,
   ) => void;
   onError?: (
     error: TError,
-    stateBeforeCallQuery: QueryState<TKey, TResponse, TData, TError>,
+    stateBeforeCallQuery: QueryState<TKey, TResponse, TData, TError, TPageParam>,
   ) => void;
-  onSettled?: (stateBeforeCallQuery: QueryState<TKey, TResponse, TData, TError>) => void;
+  onSettled?: (
+    stateBeforeCallQuery: QueryState<TKey, TResponse, TData, TError, TPageParam>,
+  ) => void;
   /**
    * Cache time in miliseconds.
    *
@@ -261,7 +276,7 @@ export type CreateQueryOptions<
   refetchInterval?:
     | number
     | false
-    | ((state: QueryState<TKey, TResponse, TData, TError>) => number | false);
+    | ((state: QueryState<TKey, TResponse, TData, TError, TPageParam>) => number | false);
 };
 
 export type UseQuery<
@@ -269,7 +284,8 @@ export type UseQuery<
   TResponse = any,
   TData = TResponse,
   TError = unknown,
-> = UseStores<TKey, QueryState<TKey, TResponse, TData, TError>> & {
+  TPageParam = any,
+> = UseStores<TKey, QueryState<TKey, TResponse, TData, TError, TPageParam>> & {
   /**
    * Set query's initial response.
    *
@@ -307,14 +323,16 @@ export type UseQuery<
    */
   optimisticUpdate: (options: {
     key?: Maybe<TKey>;
-    response: TResponse | ((prevState: QueryState<TKey, TResponse, TData, TError>) => TResponse);
+    response:
+      | TResponse
+      | ((prevState: QueryState<TKey, TResponse, TData, TError, TPageParam>) => TResponse);
   }) => { revert: () => void; invalidate: () => void };
   /**
    * Use query with suspense mode.
    */
   suspend: (
     key?: Maybe<TKey>,
-  ) => Extract<QueryState<TKey, TResponse, TData, TError>, { status: 'success' }>;
+  ) => Extract<QueryState<TKey, TResponse, TData, TError, TPageParam>, { status: 'success' }>;
   Render: (props: {
     queryKey?: Maybe<TKey>;
     loading?: FunctionComponent<TKey>;
@@ -338,10 +356,14 @@ export const createQuery = <
   TResponse = any,
   TData = TResponse,
   TError = unknown,
+  TPageParam = any,
 >(
-  queryFn: (key: TKey, state: QueryState<TKey, TResponse, TData, TError>) => Promise<TResponse>,
-  options: CreateQueryOptions<TKey, TResponse, TData, TError> = {},
-): UseQuery<TKey, TResponse, TData, TError> => {
+  queryFn: (
+    key: TKey,
+    state: QueryState<TKey, TResponse, TData, TError, TPageParam>,
+  ) => Promise<TResponse>,
+  options: CreateQueryOptions<TKey, TResponse, TData, TError, TPageParam> = {},
+): UseQuery<TKey, TResponse, TData, TError, TPageParam> => {
   const defaultFetchOnWindowFocus = options.fetchOnMount ?? true;
   const {
     onFirstSubscribe = noop,
@@ -374,7 +396,7 @@ export const createQuery = <
 
   const preventReplaceResponse = new Map<string, boolean>(); // Prevent optimistic data to be replaced
 
-  const useQuery = createStores<TKey, QueryState<TKey, TResponse, TData, TError>>(
+  const useQuery = createStores<TKey, QueryState<TKey, TResponse, TData, TError, TPageParam>>(
     ({ get, set, key: _key, keyHash }) => {
       const key = _key as TKey;
 
@@ -386,7 +408,7 @@ export const createQuery = <
       };
 
       const forceFetch = () =>
-        new Promise<QueryState<TKey, TResponse, TData, TError>>((resolve) => {
+        new Promise<QueryState<TKey, TResponse, TData, TError, TPageParam>>((resolve) => {
           const state = get();
 
           const responseAllPages: TResponse[] = [];
@@ -532,7 +554,7 @@ export const createQuery = <
       };
 
       const fetchNextPage = () =>
-        new Promise<QueryState<TKey, TResponse, TData, TError>>((resolve) => {
+        new Promise<QueryState<TKey, TResponse, TData, TError, TPageParam>>((resolve) => {
           const state = get();
           if (typeof options.getNextPageParam !== 'function') {
             console.warn('fetchNextPage with invalid getNextPageParam option');
@@ -687,7 +709,7 @@ export const createQuery = <
         },
       };
     })(),
-  ) as UseQuery<TKey, TResponse, TData, TError>;
+  ) as UseQuery<TKey, TResponse, TData, TError, TPageParam>;
 
   useQuery.setInitialResponse = ({ key, response, skipRevalidation }) => {
     // eslint-disable-next-line react-hooks/rules-of-hooks
@@ -738,9 +760,11 @@ export const createQuery = <
     const prevState = useQuery.get(key);
     const optimisticResponse =
       typeof response === 'function'
-        ? (response as (prevState: QueryState<TKey, TResponse, TData, TError>) => TResponse)(
-            prevState,
-          )
+        ? (
+            response as (
+              prevState: QueryState<TKey, TResponse, TData, TError, TPageParam>,
+            ) => TResponse
+          )(prevState)
         : response;
     useQuery.set(key, {
       isOptimisticData: true,
