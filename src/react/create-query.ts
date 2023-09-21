@@ -58,7 +58,7 @@ export type QueryState<
    *
    * If the data is empty, it will just fetch the first page.
    *
-   * You can ignore this if your query is not paginated.
+   * You can ignore this if your query is not an infinite query.
    *
    * @returns Promise that will always get resolved.
    */
@@ -89,6 +89,11 @@ export type QueryState<
   isWaitingNextPage: boolean;
   isRefetching: boolean;
   isRefetchError: boolean;
+  /**
+   * Will be `true` if the response/data comes from the previous query key.
+   *
+   * @see `keepPreviousData` option
+   */
   isPreviousData: boolean;
   isOptimisticData: boolean;
   error: TError | undefined;
@@ -113,6 +118,8 @@ export type QueryState<
        *
        * It has no relation with network fetching state.
        * If you're looking for network fetching state, use `isWaiting` instead.
+       *
+       * @see https://floppy-disk.vercel.app/docs/query/introduction#query-state--network-fetching-state
        */
       status: 'loading';
       /**
@@ -120,6 +127,8 @@ export type QueryState<
        *
        * It has no relation with network fetching state.
        * If you're looking for network fetching state, use `isWaiting` instead.
+       *
+       * @see https://floppy-disk.vercel.app/docs/query/introduction#query-state--network-fetching-state
        */
       isLoading: true;
       /**
@@ -227,15 +236,17 @@ export type CreateQueryOptions<
         prevState: QueryState<TKey, TResponse, TData, TError, TPageParam>,
       ) => number);
   /**
-   * If set to `true`, previous `data` will be kept when fetching new data because the query key changed.
+   * Used for lagged query.
    *
-   * This will only happened if there is no `data` in the next query.
+   * If set to `true`, then:
+   * when the query key changed and there is no `data` in the next query key cache,
+   * the previous query key cache `data` will be used while fetching new data.
    */
   keepPreviousData?: boolean;
   /**
    * Only set this if you have an infinite query.
    *
-   * This function should return a variable that will be used when fetching next page (`pageParam`).
+   * This function should return a variable that will be stored as `pageParam` that can be used when fetching next page.
    */
   getNextPageParam?: (lastPage: TResponse, index: number) => Maybe<TPageParam>;
   onBeforeFetch?: (
