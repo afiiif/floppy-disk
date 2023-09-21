@@ -13,7 +13,7 @@ const usePokemonsInfQuery = createQuery(
     throw resJson;
   },
   {
-    select: (response, { data }) => [...(data || []), ...response.results],
+    select: (response, { data = [] }) => [...data, ...response.results],
     getNextPageParam: (lastPageResponse, i) => {
       if (i > 5) return undefined; // Return undefined means you have reached the end of the pages
       return i * 10;
