@@ -421,14 +421,14 @@ export const createQuery = <
       const forceFetch = () =>
         new Promise<QueryState<TKey, TResponse, TData, TError, TPageParam>>((resolve) => {
           const state = get();
+          const { isWaiting, isLoading, pageParams } = state;
 
           const responseAllPages: TResponse[] = [];
-          const newPageParams: any[] = [state.pageParams[0]];
-          let pageParam: any = state.pageParams[0];
+          const newPageParams: any[] = [pageParams[0]];
+          let pageParam: any = pageParams[0];
 
           clearTimeout(refetchIntervalTimeoutId.get(keyHash));
 
-          const { isWaiting, isLoading, pageParams } = state;
           if (isWaiting || !getValueOrComputedValue(enabled, key)) return resolve(state);
 
           let shouldcancel = false;
