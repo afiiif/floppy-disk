@@ -248,7 +248,11 @@ export type CreateQueryOptions<
    *
    * This function should return a variable that will be stored as `pageParam` that can be used when fetching next page.
    */
-  getNextPageParam?: (lastPage: TResponse, index: number) => Maybe<TPageParam>;
+  getNextPageParam?: (
+    lastPage: TResponse,
+    index: number,
+    stateBeforeCallQuery: QueryState<TKey, TResponse, TData, TError, TPageParam>,
+  ) => Maybe<TPageParam>;
   onBeforeFetch?: (
     cancel: () => void,
     state: QueryState<TKey, TResponse, TData, TError, TPageParam>,
@@ -447,9 +451,9 @@ export const createQuery = <
               else set({ isGoingToRetry: false, isWaiting: true, isRefetching: true });
               clearTimeout(retryTimeoutId.get(keyHash));
             }
-            const stateBeforeCallQuery = { ...get(), pageParam };
             preventReplaceResponse.set(keyHash, false);
 
+            const stateBeforeCallQuery = { ...get(), pageParam };
             queryFn(key, stateBeforeCallQuery)
               .then((response) => {
                 if (preventReplaceResponse.get(keyHash)) {
@@ -457,7 +461,11 @@ export const createQuery = <
                   return resolve(get());
                 }
                 responseAllPages.push(response);
-                const newPageParam = getNextPageParam(response, responseAllPages.length);
+                const newPageParam = getNextPageParam(
+                  response,
+                  responseAllPages.length,
+                  stateBeforeCallQuery,
+                );
                 newPageParams.push(newPageParam);
                 if (hasValue(newPageParam) && newPageParams.length < pageParams.length) {
                   pageParam = newPageParam;
@@ -589,7 +597,11 @@ export const createQuery = <
           const stateBeforeCallQuery = get();
           queryFn(key, { ...state, pageParam })
             .then((response) => {
-              const newPageParam = getNextPageParam(response, pageParams.length);
+              const newPageParam = getNextPageParam(
+                response,
+                pageParams.length,
+                stateBeforeCallQuery,
+              );
               set({
                 isWaitingNextPage: false,
                 response,
@@ -725,8 +737,9 @@ export const createQuery = <
   useQuery.setInitialResponse = ({ key, response, skipRevalidation }) => {
     // eslint-disable-next-line react-hooks/rules-of-hooks
     useState(() => {
-      if (response === undefined || useQuery.get(key).data) return;
-      const newPageParam = getNextPageParam(response, 1);
+      const state = useQuery.get(key);
+      if (response === undefined || state.isSuccess) return;
+      const newPageParam = getNextPageParam(response, 1, state);
       useQuery.set(key, {
         status: 'success',
         isLoading: false,
