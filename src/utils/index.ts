@@ -15,3 +15,5 @@ export const getValueOrComputedValue = <T, P extends any[]>(
 };
 
 export type Maybe<T> = T | null | undefined;
+
+export const isClient = typeof window !== 'undefined' && !('Deno' in window);

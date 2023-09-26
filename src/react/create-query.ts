@@ -1,6 +1,6 @@
 import { createElement, FunctionComponent, useState } from 'react';
 
-import { getValueOrComputedValue, hasValue, identityFn, Maybe, noop } from '../utils';
+import { getValueOrComputedValue, hasValue, identityFn, isClient, Maybe, noop } from '../utils';
 import { createStores, CreateStoresOptions, StoreKey, UseStores } from './create-stores';
 
 const INITIAL_QUERY_STATE = {
@@ -497,8 +497,7 @@ export const createQuery = <
                 };
 
                 const refetchIntervalValue =
-                  typeof window !== 'undefined' &&
-                  getValueOrComputedValue(refetchInterval, { ...get(), ...nextState });
+                  isClient && getValueOrComputedValue(refetchInterval, { ...get(), ...nextState });
                 if (refetchIntervalValue) {
                   refetchIntervalTimeoutId.set(
                     keyHash,
@@ -545,7 +544,7 @@ export const createQuery = <
                         hasNextPage: hasValue(pageParam),
                       },
                 );
-                if (shouldRetry && typeof window !== 'undefined') {
+                if (shouldRetry && isClient) {
                   retryTimeoutId.set(
                     keyHash,
                     window.setTimeout(() => {
@@ -666,7 +665,7 @@ export const createQuery = <
         onFirstSubscribe: (state) => {
           if (state.isSuccess) {
             const refetchIntervalValue =
-              typeof window !== 'undefined' && getValueOrComputedValue(refetchInterval, state);
+              isClient && getValueOrComputedValue(refetchInterval, state);
             if (refetchIntervalValue) {
               refetchIntervalTimeoutId.set(
                 state.keyHash,
@@ -676,7 +675,7 @@ export const createQuery = <
               );
             }
           }
-          if (typeof window !== 'undefined' && fetchOnWindowFocus) {
+          if (isClient && fetchOnWindowFocus) {
             window.addEventListener('focus', fetchWindowFocusHandler);
           }
           clearTimeout(resetTimeoutId.get(state.keyHash));
@@ -689,14 +688,14 @@ export const createQuery = <
           onSubscribe(state);
         },
         onLastUnsubscribe: (state) => {
-          if (typeof window !== 'undefined' && fetchOnWindowFocus) {
+          if (isClient && fetchOnWindowFocus) {
             window.removeEventListener('focus', fetchWindowFocusHandler);
           }
           useQuery.set(state.key, { retryCount: 0, retryNextPageCount: 0 }, true);
           clearTimeout(retryTimeoutId.get(state.keyHash));
           clearTimeout(retryNextPageTimeoutId.get(state.keyHash));
           clearTimeout(refetchIntervalTimeoutId.get(state.keyHash));
-          if (typeof window !== 'undefined' && cacheTime !== Infinity) {
+          if (isClient && cacheTime !== Infinity) {
             resetTimeoutId.set(
               state.keyHash,
               window.setTimeout(() => {
