@@ -1,4 +1,5 @@
 import { render } from 'preact';
+import { useState } from 'preact/hooks';
 
 import { createStore } from 'floppy-disk';
 
