@@ -30,7 +30,7 @@ function App() {
     <main>
       <h1>💾 Floppy Disk - Query with Param</h1>
 
-      <div style={{ display: 'flex', gap: 8 }}>
+      <div style={{ display: 'flex', gap: 8, marginBottom: '1.75rem' }}>
         <button onClick={() => setPokemonName('bulbasaur')}>bulbasaur</button>
         <button onClick={() => setPokemonName('charmander')}>charmander</button>
         <button onClick={() => setPokemonName('squirtle')}>squirtle</button>
