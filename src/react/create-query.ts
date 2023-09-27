@@ -206,6 +206,17 @@ export type CreateQueryOptions<
    */
   fetchOnWindowFocus?: boolean | 'always' | ((key: TKey) => boolean | 'always');
   /**
+   * Defaults to follow the value of `fetchOnMount`.
+   *
+   * `fetchOnMount` and `fetchOnReconnect` can be set to different values.
+   * However, if `fetchOnReconnect` is not explicitly set, it will mimic the value of `fetchOnMount`.
+   *
+   * - If set to `true`, the query will be called on window focus **if the data is stale**.
+   * - If set to `false`, the query won't be called on window focus.
+   * - If set to `"always"`, the query will be called on window focus.
+   */
+  fetchOnReconnect?: boolean | 'always' | ((key: TKey) => boolean | 'always');
+  /**
    * If set to `false` or return `false`, the query won't be called in any condition.
    * Auto fetch on mount will be disabled.
    * Manually trigger `fetch` method (returned from `createQuery`) won't work too.
@@ -380,6 +391,7 @@ export const createQuery = <
   options: CreateQueryOptions<TKey, TResponse, TData, TError, TPageParam> = {},
 ): UseQuery<TKey, TResponse, TData, TError, TPageParam> => {
   const defaultFetchOnWindowFocus = options.fetchOnMount ?? true;
+  const defaultFetchOnReconnect = options.fetchOnMount ?? true;
   const {
     onFirstSubscribe = noop,
     onSubscribe = noop,
@@ -390,6 +402,7 @@ export const createQuery = <
     staleTime = 3000, // 3 seconds
     fetchOnMount = true,
     fetchOnWindowFocus = defaultFetchOnWindowFocus,
+    fetchOnReconnect = defaultFetchOnReconnect,
     enabled = true,
     retry = 1,
     retryDelay = 2000, // 2 seconds
@@ -651,9 +664,17 @@ export const createQuery = <
       };
     },
     (() => {
-      const fetchWindowFocusHandler = () => {
+      const windowFocusHandler = () => {
         useQuery.getAllWithSubscriber().forEach((state) => {
           const result = getValueOrComputedValue(fetchOnWindowFocus, state.key);
+          if (result === 'always') state.forceFetch();
+          else if (result) state.fetch();
+        });
+      };
+
+      const reconnectHandler = () => {
+        useQuery.getAllWithSubscriber().forEach((state) => {
+          const result = getValueOrComputedValue(fetchOnReconnect, state.key);
           if (result === 'always') state.forceFetch();
           else if (result) state.fetch();
         });
@@ -675,8 +696,9 @@ export const createQuery = <
               );
             }
           }
-          if (isClient && fetchOnWindowFocus) {
-            window.addEventListener('focus', fetchWindowFocusHandler);
+          if (isClient) {
+            if (fetchOnWindowFocus) window.addEventListener('focus', windowFocusHandler);
+            if (fetchOnReconnect) window.addEventListener('online', reconnectHandler);
           }
           clearTimeout(resetTimeoutId.get(state.keyHash));
           onFirstSubscribe(state);
@@ -689,8 +711,9 @@ export const createQuery = <
         },
         onLastUnsubscribe: (state) => {
           const totalSubs = useQuery.getAllWithSubscriber().length;
-          if (isClient && fetchOnWindowFocus && totalSubs === 0) {
-            window.removeEventListener('focus', fetchWindowFocusHandler);
+          if (isClient && totalSubs === 0) {
+            if (fetchOnWindowFocus) window.removeEventListener('focus', windowFocusHandler);
+            if (fetchOnReconnect) window.removeEventListener('online', reconnectHandler);
           }
           useQuery.set(state.key, { retryCount: 0, retryNextPageCount: 0 }, true);
           clearTimeout(retryTimeoutId.get(state.keyHash));
