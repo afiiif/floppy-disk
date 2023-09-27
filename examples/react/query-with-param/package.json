@@ -9,7 +9,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "floppy-disk": "^2.6.0",
+    "floppy-disk": "^2.7.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0"
   },

@@ -9,7 +9,7 @@ Both are awesome state manager. That's why this Floppy Disk library behaves like
 
 ```js
 import { create } from 'zustand'; // 3.3 kB (gzipped: 1.5 kB)
-import { createStore } from 'floppy-disk'; // 1.3 kB (gzipped: 702 B) 🎉
+import { createStore } from 'floppy-disk'; // 1.4 kB (gzipped: 714 B) 🎉
 
 import {
   QueryClient,
@@ -18,13 +18,13 @@ import {
   useInfiniteQuery,
   useMutation,
 } from '@tanstack/react-query'; // 41 kB (gzipped: 11 kB)
-import { createQuery, createMutation } from 'floppy-disk'; // 9.2 kB (gzipped: 3.1 kB) 🎉
+import { createQuery, createMutation } from 'floppy-disk'; // 9.5 kB (gzipped: 3.2 kB) 🎉
 ```
 
 - Using Zustand & React-Query: https://demo-zustand-react-query.vercel.app/  
   👉 Total: **309.21 kB**
 - Using Floppy Disk: https://demo-floppy-disk.vercel.app/  
-  👉 Total: **271.15 kB** 🎉
+  👉 Total: **272.63 kB** 🎉
 
 ## Key Features
 
