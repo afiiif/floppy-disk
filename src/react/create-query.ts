@@ -688,7 +688,8 @@ export const createQuery = <
           onSubscribe(state);
         },
         onLastUnsubscribe: (state) => {
-          if (isClient && fetchOnWindowFocus) {
+          const totalSubs = useQuery.getAllWithSubscriber().length;
+          if (isClient && fetchOnWindowFocus && totalSubs === 0) {
             window.removeEventListener('focus', fetchWindowFocusHandler);
           }
           useQuery.set(state.key, { retryCount: 0, retryNextPageCount: 0 }, true);
