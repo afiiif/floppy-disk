@@ -594,7 +594,8 @@ export const createQuery = <
 
           const { isLoading, isWaitingNextPage, data, hasNextPage, pageParam, pageParams } = state;
           if (isLoading) return resolve(forceFetch());
-          if (isWaitingNextPage || !hasNextPage) return resolve(state);
+          if (isWaitingNextPage || !hasNextPage || !getValueOrComputedValue(enabled, key))
+            return resolve(state);
 
           let shouldcancel = false;
           const cancel = () => {
