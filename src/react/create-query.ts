@@ -133,6 +133,8 @@ export type QueryState<
       isLoading: true;
       /**
        * Data state, will be `true` if the query has a data.
+       *
+       * @see https://floppy-disk.vercel.app/docs/query/introduction#query-state--network-fetching-state
        */
       isSuccess: false;
       /**
@@ -141,6 +143,8 @@ export type QueryState<
        * This will only happened if an error occured after first fetch.
        *
        * If data fetched successfully but then an error occured, `isError` will be `false` but `isRefetchError` will be `true`.
+       *
+       * @see https://floppy-disk.vercel.app/docs/query/introduction#query-state--network-fetching-state
        */
       isError: false;
       data: undefined;

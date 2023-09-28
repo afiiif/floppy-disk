@@ -122,7 +122,7 @@ function Control() {
 }
 ```
 
-> Example: [https://codesandbox.io/.../examples/react/basic](https://codesandbox.io/p/sandbox/github/afiiif/floppy-disk/tree/main/examples/react/basic)
+> Example: [https://codesandbox.io/.../examples/react/basic](https://codesandbox.io/p/sandbox/github/afiiif/floppy-disk-site/tree/main/examples/react/basic)
 
 Control the reactivity. The concept is same as useEffect dependency array.
 
@@ -153,7 +153,7 @@ function Cat() {
 }
 ```
 
-> Example: [https://codesandbox.io/.../examples/react/custom-reactivity](https://codesandbox.io/p/sandbox/github/afiiif/floppy-disk/tree/main/examples/react/custom-reactivity)
+> Example: [https://codesandbox.io/.../examples/react/custom-reactivity](https://codesandbox.io/p/sandbox/github/afiiif/floppy-disk-site/tree/main/examples/react/custom-reactivity)
 
 Reading/writing state and reacting to changes outside of components.
 
@@ -227,8 +227,8 @@ const useCatStore = createStore(
 ```
 
 > Example:  
-> [https://codesandbox.io/.../examples/react/store-event](https://codesandbox.io/p/sandbox/github/afiiif/floppy-disk/tree/main/examples/react/store-event)  
-> [https://codesandbox.io/.../examples/react/intercept](https://codesandbox.io/p/sandbox/github/afiiif/floppy-disk/tree/main/examples/react/intercept)
+> [https://codesandbox.io/.../examples/react/store-event](https://codesandbox.io/p/sandbox/github/afiiif/floppy-disk-site/tree/main/examples/react/store-event)  
+> [https://codesandbox.io/.../examples/react/intercept](https://codesandbox.io/p/sandbox/github/afiiif/floppy-disk-site/tree/main/examples/react/intercept)
 
 Let's go wild using IIFE.
 
@@ -287,7 +287,7 @@ function CatPageOptimized() {
 }
 ```
 
-> Example: [https://codesandbox.io/.../examples/react/watch-component](https://codesandbox.io/p/sandbox/github/afiiif/floppy-disk/tree/main/examples/react/watch-component)
+> Example: [https://codesandbox.io/.../examples/react/watch-component](https://codesandbox.io/p/sandbox/github/afiiif/floppy-disk-site/tree/main/examples/react/watch-component)
 
 Want a local state instead of global state?  
 Or, want to set the initial state inside component?
@@ -342,7 +342,7 @@ function CatIsSleeping() {
 }
 ```
 
-> Example: [https://codesandbox.io/.../examples/react/local-state](https://codesandbox.io/p/sandbox/github/afiiif/floppy-disk/tree/main/examples/react/local-state)
+> Example: [https://codesandbox.io/.../examples/react/local-state](https://codesandbox.io/p/sandbox/github/afiiif/floppy-disk-site/tree/main/examples/react/local-state)
 
 Set default reactivity.
 
@@ -417,7 +417,7 @@ function Control({ catId }) {
 }
 ```
 
-> Example: [https://codesandbox.io/.../examples/react/stores](https://codesandbox.io/p/sandbox/github/afiiif/floppy-disk/tree/main/examples/react/stores)
+> Example: [https://codesandbox.io/.../examples/react/stores](https://codesandbox.io/p/sandbox/github/afiiif/floppy-disk-site/tree/main/examples/react/stores)
 
 <br><br>
 
@@ -510,7 +510,7 @@ function SingleQuery() {
 }
 ```
 
-> Example: [https://codesandbox.io/.../examples/react/query](https://codesandbox.io/p/sandbox/github/afiiif/floppy-disk/tree/main/examples/react/query)
+> Example: [https://codesandbox.io/.../examples/react/query](https://codesandbox.io/p/sandbox/github/afiiif/floppy-disk-site/tree/main/examples/react/query)
 
 Actions:
 
@@ -608,7 +608,7 @@ function PokemonPage() {
 }
 ```
 
-> Example: [https://codesandbox.io/.../examples/react/query-with-param](https://codesandbox.io/p/sandbox/github/afiiif/floppy-disk/tree/main/examples/react/query-with-param)
+> Example: [https://codesandbox.io/.../examples/react/query-with-param](https://codesandbox.io/p/sandbox/github/afiiif/floppy-disk-site/tree/main/examples/react/query-with-param)
 
 Get data or do something outside component:
 
@@ -667,7 +667,7 @@ function PokemonListPage() {
 }
 ```
 
-> Example: [https://codesandbox.io/.../examples/react/infinite-query](https://codesandbox.io/p/sandbox/github/afiiif/floppy-disk/tree/main/examples/react/infinite-query)
+> Example: [https://codesandbox.io/.../examples/react/infinite-query](https://codesandbox.io/p/sandbox/github/afiiif/floppy-disk-site/tree/main/examples/react/infinite-query)
 
 **Note:**
 
@@ -753,7 +753,7 @@ function SaveProduct() {
 }
 ```
 
-> Example: [https://codesandbox.io/.../examples/react/mutation](https://codesandbox.io/p/sandbox/github/afiiif/floppy-disk/tree/main/examples/react/mutation)
+> Example: [https://codesandbox.io/.../examples/react/mutation](https://codesandbox.io/p/sandbox/github/afiiif/floppy-disk-site/tree/main/examples/react/mutation)
 
 <br><br>
 
