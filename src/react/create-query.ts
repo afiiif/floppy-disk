@@ -264,10 +264,6 @@ export type CreateQueryOptions<
     index: number,
     stateBeforeCallQuery: QueryState<TKey, TResponse, TData, TError, TPageParam>,
   ) => Maybe<TPageParam>;
-  onBeforeFetch?: (
-    cancel: () => void,
-    state: QueryState<TKey, TResponse, TData, TError, TPageParam>,
-  ) => void;
   onSuccess?: (
     response: TResponse,
     stateBeforeCallQuery: QueryState<TKey, TResponse, TData, TError, TPageParam>,
@@ -408,7 +404,6 @@ export const createQuery = <
     retryDelay = 2000, // 2 seconds
     keepPreviousData,
     getNextPageParam = () => undefined,
-    onBeforeFetch = noop,
     onSuccess = noop,
     onError = noop,
     onSettled = noop,
@@ -447,13 +442,6 @@ export const createQuery = <
           clearTimeout(refetchIntervalTimeoutId.get(keyHash));
 
           if (isWaiting || !getValueOrComputedValue(enabled, key)) return resolve(state);
-
-          let shouldcancel = false;
-          const cancel = () => {
-            shouldcancel = true;
-          };
-          onBeforeFetch(cancel, state);
-          if (shouldcancel) return resolve(state);
 
           if (isLoading) set({ isWaiting: true });
           else set({ isWaiting: true, isRefetching: true });
@@ -596,13 +584,6 @@ export const createQuery = <
           if (isLoading) return resolve(forceFetch());
           if (isWaitingNextPage || !hasNextPage || !getValueOrComputedValue(enabled, key))
             return resolve(state);
-
-          let shouldcancel = false;
-          const cancel = () => {
-            shouldcancel = true;
-          };
-          onBeforeFetch(cancel, state);
-          if (shouldcancel) return resolve(state);
 
           set({ isWaitingNextPage: true, isGoingToRetryNextPage: false });
           clearTimeout(retryNextPageTimeoutId.get(keyHash));
