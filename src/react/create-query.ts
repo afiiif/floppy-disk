@@ -791,14 +791,7 @@ export const createQuery = <
 
   useQuery.optimisticUpdate = ({ key, response }) => {
     const prevState = useQuery.get(key);
-    const optimisticResponse =
-      typeof response === 'function'
-        ? (
-            response as (
-              prevState: QueryState<TKey, TResponse, TData, TError, TPageParam>,
-            ) => TResponse
-          )(prevState)
-        : response;
+    const optimisticResponse = getValueOrComputedValue(response, prevState);
     useQuery.set(key, {
       isOptimisticData: true,
       response: optimisticResponse,
