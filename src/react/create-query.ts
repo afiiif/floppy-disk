@@ -595,6 +595,10 @@ export const createQuery = <
           const stateBeforeCallQuery = get();
           queryFn(key, { ...state, pageParam })
             .then((response) => {
+              if (preventReplaceResponse.get(keyHash)) {
+                set({ isWaitingNextPage: false });
+                return resolve(get());
+              }
               const newPageParam = getNextPageParam(
                 response,
                 pageParams.length,
