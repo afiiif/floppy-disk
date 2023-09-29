@@ -645,7 +645,10 @@ export const createQuery = <
         fetch,
         forceFetch,
         fetchNextPage,
-        reset: () => set(INITIAL_QUERY_STATE),
+        reset: () => {
+          preventReplaceResponse.set(keyHash, true);
+          set(INITIAL_QUERY_STATE);
+        },
         optimisticUpdate: (response) => useQuery.optimisticUpdate({ key, response }),
       };
     },
@@ -765,15 +768,13 @@ export const createQuery = <
   };
 
   useQuery.reset = () => {
-    useQuery.getStores().forEach((store) => {
+    useQuery.getStores().forEach((store, keyHash) => {
+      preventReplaceResponse.set(keyHash, true);
       store.set(INITIAL_QUERY_STATE);
     });
   };
 
-  useQuery.resetSpecificKey = (key?: Maybe<TKey>) => {
-    const store = useQuery.getStore(key);
-    store.set(INITIAL_QUERY_STATE);
-  };
+  useQuery.resetSpecificKey = (key?: Maybe<TKey>) => useQuery.get(key).reset();
 
   useQuery.invalidate = () => {
     useQuery.getStores().forEach((store) => {
