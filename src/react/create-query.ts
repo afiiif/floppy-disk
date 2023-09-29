@@ -462,7 +462,7 @@ export const createQuery = <
             queryFn(key, stateBeforeCallQuery)
               .then((response) => {
                 if (preventReplaceResponse.get(keyHash)) {
-                  set({ isWaiting: false });
+                  set({ isWaiting: false, isRefetching: false });
                   return resolve(get());
                 }
                 responseAllPages.push(response);
