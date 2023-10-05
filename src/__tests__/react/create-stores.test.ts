@@ -121,6 +121,67 @@ describe('createStores', () => {
       expect(hook2.result.current.a).toEqual(2);
       expect(hook2.result.current.b).toEqual(20);
     });
+
+    it('should be able to subscribe state outside the component', () => {
+      const useStores2 = createStores<Key, Store & { anotherCounter: number }>(({ set }) => ({
+        counter: 1,
+        anotherCounter: 1,
+        increment: () => set((prev) => ({ counter: prev.counter + 1 })),
+      }));
+
+      const subscriber1a = jest.fn();
+      const subscriber1b = jest.fn();
+      const subscriber2a = jest.fn();
+      const subscriber2b = jest.fn();
+
+      useStores2.subscribe({ id: 1 }, subscriber1a);
+      useStores2.subscribe({ id: 1 }, subscriber1b);
+      useStores2.subscribe({ id: 2 }, subscriber2a);
+      useStores2.subscribe({ id: 2 }, subscriber2b, (state) => [state.anotherCounter]);
+
+      useStores2.set({ id: 1 }, { counter: 2 });
+      expect(subscriber1a).toHaveBeenCalledWith(useStores2.get({ id: 1 }));
+      expect(subscriber1b).toHaveBeenCalledWith(useStores2.get({ id: 1 }));
+      expect(subscriber2a).not.toHaveBeenCalled();
+      expect(subscriber2b).not.toHaveBeenCalled();
+
+      useStores2.set({ id: 2 }, { counter: 3 });
+      expect(subscriber1a).toHaveBeenCalledTimes(1);
+      expect(subscriber1b).toHaveBeenCalledTimes(1);
+      expect(subscriber2a).toHaveBeenCalledWith(useStores2.get({ id: 2 }));
+      expect(subscriber2b).not.toHaveBeenCalled();
+
+      useStores2.set(null, { counter: 4 });
+      expect(subscriber1a).toHaveBeenCalledTimes(1);
+      expect(subscriber1b).toHaveBeenCalledTimes(1);
+      expect(subscriber2a).toHaveBeenCalledTimes(1);
+      expect(subscriber2b).toHaveBeenCalledTimes(0);
+
+      useStores2.setAll({ counter: 9 });
+      expect(subscriber1a).toHaveBeenCalledTimes(2);
+      expect(subscriber1b).toHaveBeenCalledTimes(2);
+      expect(subscriber2a).toHaveBeenCalledTimes(2);
+      expect(subscriber2b).toHaveBeenCalledTimes(0);
+
+      useStores2.setAll({ anotherCounter: 99 });
+      const state = useStores2.get({ id: 2 });
+      expect(state.counter).toEqual(9);
+      expect(state.anotherCounter).toEqual(99);
+      expect(subscriber2b).toHaveBeenCalledWith(state);
+    });
+
+    it('should be able to set default values', () => {
+      renderHook(() => {
+        useStores.setDefaultValues({ id: 1 }, { counter: 2 });
+      });
+      const hook0 = renderHook(() => useStores());
+      const hook1 = renderHook(() => useStores({ id: 1 }));
+      const hook2 = renderHook(() => useStores({ id: 2 }));
+
+      expect(hook0.result.current.counter).toEqual(1);
+      expect(hook1.result.current.counter).toEqual(2);
+      expect(hook2.result.current.counter).toEqual(1);
+    });
   });
 
   describe('store event', () => {

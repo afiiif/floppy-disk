@@ -84,6 +84,21 @@ describe('createStore', () => {
       expect(hook2.result.current.a).toEqual(2);
       expect(hook2.result.current.b).toEqual(20);
     });
+
+    it('should be able to set default values', () => {
+      renderHook(() => {
+        useStore.setDefaultValues({ counter: 9 });
+      });
+      const hook1 = renderHook(() => useStore());
+      expect(hook1.result.current.counter).toEqual(9);
+
+      renderHook(() => {
+        useStore.setDefaultValues({ counter: 99 });
+      });
+      const hook2 = renderHook(() => useStore());
+      expect(hook2.result.current.counter).toEqual(99);
+      expect(hook1.result.current.counter).toEqual(99);
+    });
   });
 
   describe('store event', () => {
