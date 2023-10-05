@@ -1,3 +1,4 @@
+import { fireEvent } from '@testing-library/react';
 import { act, renderHook } from '@testing-library/react-hooks';
 
 import { createQuery, UseQuery } from '../../../react/create-query';
@@ -55,8 +56,9 @@ describe('createQuery - single query', () => {
       expect(hook2.result.current).toBe(current);
     });
 
-    it('should update state after failed fetch', async () => {
+    it('should update state after failed fetch, and should retry after failed fetch', async () => {
       queryFn = jest.fn().mockImplementation(async () => {
+        // Always error
         return new Promise((_resolve, reject) => {
           setTimeout(() => reject(new Error('Test error')), 100);
         });
@@ -81,23 +83,6 @@ describe('createQuery - single query', () => {
       expect(typeof current.errorUpdatedAt).toBe('number');
 
       expect(hook2.result.current).toBe(current);
-    });
-
-    it('should retry after failed fetch', async () => {
-      queryFn = jest.fn().mockImplementation(async () => {
-        return new Promise((_resolve, reject) => {
-          setTimeout(() => reject(new Error('Test error')), 100);
-        });
-      });
-      useQuery = createQuery<Key, Response>(queryFn);
-
-      const hook1 = renderHook(() => useQuery());
-      const hook2 = renderHook(() => useQuery());
-
-      await hook1.waitForNextUpdate();
-
-      expect(hook1.result.current.isError).toBe(true);
-      expect(hook2.result.current.isError).toBe(true);
 
       // Retrying
 
@@ -166,7 +151,7 @@ describe('createQuery - single query', () => {
     it('should handle refetch error correctly', async () => {
       let timesCalled = 0;
       queryFn = jest.fn().mockImplementation(async () => {
-        // Success, then error
+        // Success 1x, then error
         return new Promise((resolve, reject) => {
           setTimeout(() => {
             timesCalled++;
@@ -227,7 +212,7 @@ describe('createQuery - single query', () => {
       expect(typeof current.errorUpdatedAt).toBe('number');
     });
 
-    it('should handle useQuery methods', async () => {
+    it('should handle useQuery events correctly', async () => {
       const onSuccess = jest.fn();
       const onError = jest.fn();
       const onSettled = jest.fn();
@@ -340,34 +325,6 @@ describe('createQuery - single query', () => {
       expect(queryFn).toHaveBeenCalledTimes(3);
     });
 
-    it('should return correct fetchNextPage promise', async () => {
-      let timesCalled = 0;
-      queryFn = jest.fn().mockImplementation(async () => {
-        // Success-error alternating continuously
-        return new Promise((resolve, reject) => {
-          setTimeout(() => {
-            timesCalled++;
-            if (timesCalled % 2) {
-              resolve({ data: timesCalled });
-            } else {
-              reject(new Error('Test error'));
-            }
-          }, 100);
-        });
-      });
-      useQuery = createQuery<Key, Response>(queryFn, { retry: 0, fetchOnMount: false });
-
-      const { result } = renderHook(() => useQuery());
-      await act(async () => {
-        const res1 = await result.current.forceFetch();
-        expect(res1).toEqual(useQuery.get());
-      });
-      await act(async () => {
-        const res2 = await result.current.forceFetch();
-        expect(res2).toEqual(useQuery.get());
-      });
-    });
-
     it('should handle useQuery methods correctly', async () => {
       const hook1 = renderHook(() => useQuery());
       const hook2 = renderHook(() => useQuery());
@@ -387,7 +344,7 @@ describe('createQuery - single query', () => {
       expect(responseUpdatedAt2).toBe(hook2.result.current.responseUpdatedAt);
 
       act(() => {
-        useQuery.reset();
+        hook2.result.current.reset();
       });
       expect(hook1.result.current.data).toBe(undefined);
       expect(hook2.result.current.responseUpdatedAt).toBe(undefined);
@@ -402,6 +359,23 @@ describe('createQuery - single query', () => {
       hook2.unmount();
       useQuery.invalidate();
       expect(queryFn).toHaveBeenCalledTimes(3);
+
+      expect(useQuery.get().isSuccess).toEqual(true);
+      renderHook(() => {
+        useQuery.setInitialResponse({
+          response: { id: 3, name: 'test-initial-response' },
+        });
+      });
+      expect(useQuery.get().data).toEqual({ id: 1, name: 'test' });
+
+      useQuery.reset();
+      expect(useQuery.get().isSuccess).toEqual(false);
+      renderHook(() => {
+        useQuery.setInitialResponse({
+          response: { id: 3, name: 'test-initial-response-again' },
+        });
+      });
+      expect(useQuery.get().data).toEqual({ id: 3, name: 'test-initial-response-again' });
     });
   });
 
@@ -532,6 +506,61 @@ describe('createQuery - single query', () => {
 
       hook.rerender({ id: 1 });
       expect(hook.result.current.response).toEqual({ id: 1, name: 'A' });
+    });
+
+    it('should handle window focus & online event correctly', async () => {
+      useQuery = createQuery<Key, Response, string>(queryFn, { staleTime: 0 });
+
+      const queryFn2 = jest.fn().mockImplementation(async ({ id }) => {
+        return new Promise((resolve) => {
+          setTimeout(() => resolve({ id, name: 'test' }), 100);
+        });
+      });
+
+      const useQuery2 = createQuery<Key, Response, string>(queryFn2, {
+        fetchOnWindowFocus: 'always',
+        fetchOnReconnect: 'always',
+      });
+
+      const hook1 = renderHook((props: { id: number }) => useQuery(props), {
+        initialProps: { id: 1 },
+      });
+      const hook2 = renderHook((props: { id: number }) => useQuery2(props), {
+        initialProps: { id: 11 },
+      });
+
+      await hook1.waitForNextUpdate();
+
+      expect(queryFn).toHaveBeenCalledTimes(1);
+      expect(queryFn2).toHaveBeenCalledTimes(1);
+
+      await act(async () => {
+        await new Promise((r) => setTimeout(r, 100));
+        fireEvent(window, new Event('focus'));
+      });
+      await hook2.waitForNextUpdate();
+      expect(queryFn).toHaveBeenCalledTimes(2);
+      expect(queryFn2).toHaveBeenCalledTimes(2);
+
+      hook2.unmount();
+      await act(async () => {
+        await new Promise((r) => setTimeout(r, 100));
+        fireEvent(window, new Event('focus'));
+      });
+      await hook1.waitForNextUpdate();
+      expect(queryFn).toHaveBeenCalledTimes(3);
+      expect(queryFn2).toHaveBeenCalledTimes(2);
+
+      hook1.rerender({ id: 2 });
+      const hook3 = renderHook(() => useQuery2());
+      await hook3.waitForNextUpdate();
+
+      act(() => {
+        fireEvent(window, new Event('online'));
+      });
+      await hook3.waitForNextUpdate();
+      expect(queryFn).toHaveBeenCalledTimes(5);
+      expect(queryFn2).toHaveBeenCalledTimes(4);
     });
   });
 });
