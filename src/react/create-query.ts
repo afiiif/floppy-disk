@@ -651,6 +651,8 @@ export const createQuery = <
         fetchNextPage,
         reset: () => {
           preventReplaceResponse.set(keyHash, true);
+          clearTimeout(retryTimeoutId.get(keyHash));
+          clearTimeout(retryNextPageTimeoutId.get(keyHash));
           set(INITIAL_QUERY_STATE);
         },
         optimisticUpdate: (response) => useQuery.optimisticUpdate({ key, response }),
@@ -774,6 +776,8 @@ export const createQuery = <
   useQuery.reset = () => {
     useQuery.getStores().forEach((store, keyHash) => {
       preventReplaceResponse.set(keyHash, true);
+      clearTimeout(retryTimeoutId.get(keyHash));
+      clearTimeout(retryNextPageTimeoutId.get(keyHash));
       store.set(INITIAL_QUERY_STATE);
     });
   };
