@@ -69,6 +69,7 @@
     "@commitlint/cli": "^17.8.0",
     "@commitlint/config-conventional": "^17.8.0",
     "@next/bundle-analyzer": "^13.5.4",
+    "@tabler/icons-react": "^2.39.0",
     "@testing-library/react": "^14.0.0",
     "@testing-library/react-hooks": "^8.0.1",
     "@types/jest": "^29.5.5",
