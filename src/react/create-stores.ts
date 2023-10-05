@@ -157,7 +157,11 @@ export const createStores = <TKey extends StoreKey = StoreKey, T extends StoreDa
     });
   };
 
-  useStores.subscribe = (key: Maybe<TKey>, fn: (state: T) => void, selectDeps?: SelectDeps<T>) => {
+  useStores.subscribe = (
+    key: Maybe<TKey>,
+    fn: (state: T) => void,
+    selectDeps: SelectDeps<T> = defaultDeps,
+  ) => {
     const store = getStore(key);
     return store.subscribe(fn, selectDeps);
   };
