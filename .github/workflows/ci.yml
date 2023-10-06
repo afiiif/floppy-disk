@@ -18,7 +18,7 @@ jobs:
       - name: Install dependencies
         uses: bahmutov/npm-install@v1
       - name: Lint files
-        run: yarn lint
+        run: pnpm lint
 
   type-check:
     name: Type check
@@ -31,7 +31,7 @@ jobs:
       - name: Install dependencies
         uses: bahmutov/npm-install@v1
       - name: Perform type checking
-        run: yarn lint:types
+        run: pnpm lint:types
 
   test:
     name: Unit test
@@ -44,7 +44,7 @@ jobs:
       - name: Install dependencies
         uses: bahmutov/npm-install@v1
       - name: Perform unit test
-        run: yarn test
+        run: pnpm test
 
   publish:
     name: Publish to NPM
@@ -63,9 +63,9 @@ jobs:
           npm pkg delete 'engines'
           npm pkg delete 'devDependencies'
       - name: Build package
-        run: yarn build
+        run: pnpm build
       - name: Release package
-        run: yarn semantic-release
+        run: pnpm semantic-release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}

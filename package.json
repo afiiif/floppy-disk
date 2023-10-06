@@ -59,7 +59,7 @@
     "prepare": "husky install",
     "build:cjs": "tsc -p tsconfig.prod.json",
     "build:es": "tsc -p tsconfig.prod.json -m esNext --outDir esm",
-    "build": "yarn clean && yarn build:cjs && yarn build:es",
+    "build": "pnpm clean && pnpm build:cjs && pnpm build:es",
     "prebuild": "ts-node ./scripts/preact.ts",
     "clean": "rimraf lib esm",
     "format": "prettier --check .",
