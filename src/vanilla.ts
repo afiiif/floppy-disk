@@ -2,7 +2,7 @@ import { getValueOrComputedValue, noop } from './utils';
 
 export type StoreData = Record<string, any>;
 export type SetStoreData<T> = Partial<T> | ((prevState: T) => Partial<T>);
-export type SelectDeps<T> = ((state: T) => any[]) | undefined;
+export type SelectDeps<T> = ((state: T) => any[]) | undefined | null;
 export type Subscribers<T> = Map<(state: T) => void, SelectDeps<T>>;
 
 export type StoreInitializer<T> = (api: {
