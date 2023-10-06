@@ -49,7 +49,7 @@ jobs:
   publish:
     name: Publish to NPM
     needs: [lint, type-check, test]
-    if: github.repository == 'afiiif/floppy-disk' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/alpha' || github.ref == 'refs/heads/beta')
+    if: github.repository == 'afiiif/floppy-disk' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/beta')
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
