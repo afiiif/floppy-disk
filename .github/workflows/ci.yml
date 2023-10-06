@@ -15,8 +15,12 @@ jobs:
       - uses: actions/setup-node@v3
         with:
           node-version: 18
+      - name: Install pnpm v8
+        uses: pnpm/action-setup@v2
+        with:
+          version: 8
       - name: Install dependencies
-        uses: bahmutov/npm-install@v1
+        run: pnpm i
       - name: Lint files
         run: pnpm lint
 
@@ -28,8 +32,12 @@ jobs:
       - uses: actions/setup-node@v3
         with:
           node-version: 18
+      - name: Install pnpm v8
+        uses: pnpm/action-setup@v2
+        with:
+          version: 8
       - name: Install dependencies
-        uses: bahmutov/npm-install@v1
+        run: pnpm i
       - name: Perform type checking
         run: pnpm lint:types
 
@@ -41,8 +49,12 @@ jobs:
       - uses: actions/setup-node@v3
         with:
           node-version: 18
+      - name: Install pnpm v8
+        uses: pnpm/action-setup@v2
+        with:
+          version: 8
       - name: Install dependencies
-        uses: bahmutov/npm-install@v1
+        run: pnpm i
       - name: Perform unit test
         run: pnpm test
 
@@ -56,8 +68,12 @@ jobs:
       - uses: actions/setup-node@v3
         with:
           node-version: 18
+      - name: Install pnpm v8
+        uses: pnpm/action-setup@v2
+        with:
+          version: 8
       - name: Install dependencies
-        uses: bahmutov/npm-install@v1
+        run: pnpm i
       - name: Update package.json
         run: |
           npm pkg delete 'engines'
