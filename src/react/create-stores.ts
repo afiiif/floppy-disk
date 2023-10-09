@@ -185,7 +185,11 @@ export const createStores = <TKey extends StoreKey = StoreKey, T extends StoreDa
     });
   };
 
-  const Watch = ({ storeKey, selectDeps, render }: WatchProps<T> & { storeKey?: Maybe<TKey> }) => {
+  const Watch = ({
+    storeKey,
+    selectDeps = defaultDeps,
+    render,
+  }: WatchProps<T> & { storeKey?: Maybe<TKey> }) => {
     const store = useStores(storeKey, selectDeps);
     return render(store);
   };

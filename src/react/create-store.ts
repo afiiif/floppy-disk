@@ -75,7 +75,7 @@ export const createStore = <T extends StoreData>(
     });
   };
 
-  const Watch = ({ selectDeps, render }: WatchProps<T>) => {
+  const Watch = ({ selectDeps = defaultDeps, render }: WatchProps<T>) => {
     const store = useStore(selectDeps);
     return render(store);
   };
