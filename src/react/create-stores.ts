@@ -102,29 +102,27 @@ export const createStores = <TKey extends StoreKey = StoreKey, T extends StoreDa
       typeof args[0] === 'function' ? [{}, args[0]] : args
     ) as [TKey, SelectDeps<T>];
     const key = _key || ({} as TKey);
-
     const keyHash = hashKeyFn(key);
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
     const { get, subscribe } = useMemo(() => getStore(key), [keyHash]);
 
-    const [state, setState] = useState(get);
+    const [, setState] = useState(get);
 
-    const isFirstRender = useRef(true);
     const prevKey = useRef(key);
+    const prevKeyHash = useRef(keyHash);
+
     useEffect(() => {
-      if (!isFirstRender.current) {
-        onBeforeChangeKey(key, prevKey.current);
-        setState(get);
-      }
-      isFirstRender.current = false;
       prevKey.current = key;
+      prevKeyHash.current = keyHash;
       const unsubs = subscribe(setState, selectDeps);
       return unsubs;
       // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [keyHash]);
 
-    return state;
+    if (keyHash !== prevKeyHash.current) onBeforeChangeKey(key, prevKey.current);
+
+    return get();
   };
 
   useStores.get = (key?: Maybe<TKey>) => {
