@@ -40,7 +40,14 @@ export default function InfiniteQueryPage() {
         error: {(error as any)?.status || '-'} {(error as any)?.statusText}
       </div>
 
-      <button className="btn" onClick={() => fetchNextPage()}>
+      <button
+        className="btn"
+        onClick={() => {
+          fetchNextPage().then((state) => {
+            console.log('Yay', state);
+          });
+        }}
+      >
         Fetch Next Page
       </button>
     </>

@@ -1,3 +1,5 @@
+import { useState } from 'react';
+
 import { createQuery } from '../../src';
 import { fetchFloppyDiskRepo } from './api';
 
@@ -12,7 +14,10 @@ export default function WithoutParam() {
 }
 
 function WithoutParamContent() {
-  const { data } = useFloppyDiskRepoQuery();
+  const { data, forceFetch } = useFloppyDiskRepoQuery();
+  const [count, setCount] = useState(0);
+
+  console.log('Rendered...');
 
   return (
     <div>
@@ -26,6 +31,19 @@ function WithoutParamContent() {
       >
         {data!.html_url}
       </a>
+      <div>
+        <button
+          className="btn mt-4"
+          onClick={() => {
+            forceFetch().then((state) => {
+              console.info('Success refetch', state);
+              setCount((p) => p + 1);
+            });
+          }}
+        >
+          Refetch {count}
+        </button>
+      </div>
     </div>
   );
 }

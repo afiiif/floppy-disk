@@ -11,14 +11,14 @@ export const fetchFloppyDiskRepo = async (): Promise<RepoDetailResponse> => {
   throw res;
 };
 
-export type Pokemon = {
-  id: number;
+export type BundlephobiaApiResponse = {
   name: string;
-  height: number;
-  weight: number;
+  size: number;
+  gzip: number;
+  dependencySizes: { name: string; approximateSize: number }[];
 };
-export const getPokemon = async (pokemonName: string): Promise<Pokemon> => {
-  const res = await fetch(`https://pokeapi.co/api/v2/pokemon/${pokemonName}`);
+export const fetchBundlephobia = async (packageName: string): Promise<BundlephobiaApiResponse> => {
+  const res = await fetch(`https://bundlephobia.com/api/size?package=${packageName}`);
   if (res.ok) return res.json();
   throw res;
 };
