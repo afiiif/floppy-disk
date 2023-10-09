@@ -361,9 +361,15 @@ export type UseQuery<
   ) => Extract<QueryState<TKey, TResponse, TData, TError, TPageParam>, { status: 'success' }>;
   Render: (props: {
     queryKey?: Maybe<TKey>;
-    loading?: FunctionComponent<TKey>;
-    success?: FunctionComponent<TKey>;
-    error?: FunctionComponent<TKey>;
+    loading?: FunctionComponent<
+      Extract<QueryState<TKey, TResponse, TData, TError, TPageParam>, { status: 'loading' }>
+    >;
+    success?: FunctionComponent<
+      Extract<QueryState<TKey, TResponse, TData, TError, TPageParam>, { status: 'success' }>
+    >;
+    error?: FunctionComponent<
+      Extract<QueryState<TKey, TResponse, TData, TError, TPageParam>, { status: 'error' }>
+    >;
   }) => JSX.Element;
 };
 
@@ -373,6 +379,8 @@ const useQueryDefaultDeps = (state: QueryState<any>) => [
   state.isWaitingNextPage,
   state.hasNextPage,
 ];
+
+const defaultElement: FunctionComponent<QueryState> = () => null;
 
 /**
  * @see https://floppy-disk.vercel.app/docs/api#createquery
@@ -826,7 +834,6 @@ export const createQuery = <
     return state;
   };
 
-  const defaultElement: FunctionComponent<TKey> = () => null;
   useQuery.Render = (props) => {
     const {
       queryKey,
@@ -836,8 +843,8 @@ export const createQuery = <
     } = props;
     // eslint-disable-next-line react-hooks/rules-of-hooks
     const state = useQuery(queryKey);
-    if (state.data) return createElement<any>(success, state.key);
-    return createElement<any>(state.isLoading ? loading : error, state.key);
+    if (state.data) return createElement<any>(success, state);
+    return createElement<any>(state.isLoading ? loading : error, state);
   };
 
   return useQuery;
