@@ -105,8 +105,11 @@ describe('createQuery - infinite query', () => {
     act(() => {
       result.current.forceFetch();
     });
-    await waitForNextUpdate();
-    expect(queryFn).toBeCalledTimes(9);
+
+    const fetchingAndRetryDelay = 100 + 1000;
+    await waitForNextUpdate({ timeout: 2 * fetchingAndRetryDelay + 300 });
+
+    expect(queryFn).toBeCalledTimes(10);
     expect(result.current.isRefetchError).toBe(true);
     expect(result.current.data).toEqual(['B', 'C', 'D', 'E', 'F']);
     expect(result.current.pageParam).toBe(3);

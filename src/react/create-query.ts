@@ -458,7 +458,7 @@ export const createQuery = <
           if (isLoading) set({ isWaiting: true });
           else set({ isWaiting: true, isRefetching: true });
 
-          const callQuery = () => {
+          const callQuery = (innerResolve = resolve) => {
             if (get().isGoingToRetry) {
               if (isLoading) set({ isGoingToRetry: false, isWaiting: true });
               else set({ isGoingToRetry: false, isWaiting: true, isRefetching: true });
@@ -471,7 +471,7 @@ export const createQuery = <
               .then((response) => {
                 if (preventReplaceResponse.get(keyHash)) {
                   set({ isWaiting: false, isRefetching: false });
-                  return resolve(get());
+                  return innerResolve(get());
                 }
                 responseAllPages.push(response);
                 const newPageParam = getNextPageParam(
@@ -522,11 +522,29 @@ export const createQuery = <
 
                 set(nextState);
                 onSuccess(response, stateBeforeCallQuery);
+                onSettled(stateBeforeCallQuery);
+                innerResolve(get());
               })
               .catch((error: TError) => {
                 const prevState = get();
                 const errorUpdatedAt = Date.now();
                 const { shouldRetry, delay } = getRetryProps(error, prevState.retryCount);
+                if (shouldRetry) {
+                  set({
+                    isWaiting: false,
+                    isGoingToRetry: true,
+                  });
+                  if (isClient) {
+                    retryTimeoutId.set(
+                      keyHash,
+                      window.setTimeout(() => {
+                        set({ retryCount: prevState.retryCount + 1 });
+                        callQuery(innerResolve);
+                      }, delay),
+                    );
+                  }
+                  return;
+                }
                 set(
                   prevState.isSuccess && !prevState.isPreviousData
                     ? {
@@ -540,7 +558,6 @@ export const createQuery = <
                           : prevState.data,
                         error,
                         errorUpdatedAt,
-                        isGoingToRetry: shouldRetry,
                         pageParam,
                         hasNextPage: hasValue(pageParam),
                       }
@@ -552,25 +569,13 @@ export const createQuery = <
                         data: undefined,
                         error,
                         errorUpdatedAt,
-                        isGoingToRetry: shouldRetry,
                         pageParam,
                         hasNextPage: hasValue(pageParam),
                       },
                 );
-                if (shouldRetry && isClient) {
-                  retryTimeoutId.set(
-                    keyHash,
-                    window.setTimeout(() => {
-                      set({ retryCount: prevState.retryCount + 1 });
-                      callQuery();
-                    }, delay),
-                  );
-                }
                 onError(error, stateBeforeCallQuery);
-              })
-              .finally(() => {
                 onSettled(stateBeforeCallQuery);
-                resolve(get());
+                innerResolve(get());
               });
           };
 
@@ -622,29 +627,33 @@ export const createQuery = <
                 hasNextPage: hasValue(newPageParam),
               });
               onSuccess(response, stateBeforeCallQuery);
+              onSettled(stateBeforeCallQuery);
+              resolve(get());
             })
             .catch((error: TError) => {
               const prevState = get();
               const { shouldRetry, delay } = getRetryProps(error, prevState.retryNextPageCount);
+              if (shouldRetry) {
+                set({
+                  isWaitingNextPage: false,
+                  isGoingToRetryNextPage: true,
+                });
+                retryNextPageTimeoutId.set(
+                  keyHash,
+                  window.setTimeout(() => {
+                    set({ retryNextPageCount: prevState.retryNextPageCount + 1 });
+                    resolve(fetchNextPage());
+                  }, delay),
+                );
+                return;
+              }
               set({
                 isWaitingNextPage: false,
                 isError: true,
                 error,
                 errorUpdatedAt: Date.now(),
-                isGoingToRetryNextPage: shouldRetry,
               });
-              if (shouldRetry) {
-                retryNextPageTimeoutId.set(
-                  keyHash,
-                  window.setTimeout(() => {
-                    set({ retryNextPageCount: prevState.retryNextPageCount + 1 });
-                    fetchNextPage();
-                  }, delay),
-                );
-              }
               onError(error, stateBeforeCallQuery);
-            })
-            .finally(() => {
               onSettled(stateBeforeCallQuery);
               resolve(get());
             });

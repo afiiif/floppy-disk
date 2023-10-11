@@ -68,7 +68,8 @@ describe('createQuery - single query', () => {
       const hook1 = renderHook(() => useQuery());
       const hook2 = renderHook(() => useQuery());
 
-      await hook1.waitForNextUpdate();
+      const fetchingAndRetryDelay = 100 + 1000;
+      await hook1.waitForNextUpdate({ timeout: 2 * fetchingAndRetryDelay + 300 });
 
       const { current } = hook1.result;
       expect(current.status).toBe('error');
@@ -84,9 +85,6 @@ describe('createQuery - single query', () => {
 
       expect(hook2.result.current).toBe(current);
 
-      // Retrying
-
-      await hook1.waitForNextUpdate({ timeout: 2200 });
       expect(queryFn).toHaveBeenCalledTimes(2);
     });
 
@@ -114,26 +112,6 @@ describe('createQuery - single query', () => {
 
       await hook1.waitForNextUpdate();
 
-      expect(hook1.result.current.status).toBe('error');
-      expect(hook1.result.current.isError).toBe(true);
-
-      // Retrying
-
-      await hook1.waitForNextUpdate();
-      expect(queryFn).toHaveBeenCalledTimes(2);
-
-      expect(hook1.result.current.status).toBe('error');
-      expect(hook1.result.current.isError).toBe(true);
-
-      await hook1.waitForNextUpdate();
-      expect(queryFn).toHaveBeenCalledTimes(3);
-
-      expect(hook1.result.current.status).toBe('error');
-      expect(hook1.result.current.isError).toBe(true);
-
-      await hook1.waitForNextUpdate();
-      expect(queryFn).toHaveBeenCalledTimes(4);
-
       expect(hook1.result.current.status).toBe('success');
       expect(hook1.result.current.isLoading).toBe(false);
       expect(hook1.result.current.isSuccess).toBe(true);
@@ -146,6 +124,8 @@ describe('createQuery - single query', () => {
       expect(hook1.result.current.errorUpdatedAt).toBe(undefined);
 
       expect(hook2.result.current).toBe(hook1.result.current);
+
+      expect(queryFn).toHaveBeenCalledTimes(4);
     });
 
     it('should handle refetch error correctly', async () => {
@@ -177,9 +157,9 @@ describe('createQuery - single query', () => {
       });
 
       await hook1.waitForNextUpdate();
-      expect(queryFn).toHaveBeenCalledTimes(2);
 
       const { current } = hook1.result;
+
       expect(hook1.result.current.status).toBe('success');
       expect(current.isLoading).toBe(false);
       expect(current.isSuccess).toBe(true);
@@ -195,21 +175,7 @@ describe('createQuery - single query', () => {
 
       expect(hook2.result.current).toBe(current);
 
-      await hook1.waitForNextUpdate();
       expect(queryFn).toHaveBeenCalledTimes(3);
-
-      expect(hook1.result.current.status).toBe('success');
-      expect(current.isLoading).toBe(false);
-      expect(current.isSuccess).toBe(true);
-      expect(current.isError).toBe(false);
-      expect(current.isRefetchError).toBe(true);
-      expect(current.data).toEqual({ id: 1, name: 'test' });
-      expect(current.response).toEqual({ id: 1, name: 'test' });
-      expect(current.responseUpdatedAt).not.toBe(undefined);
-      expect(typeof current.responseUpdatedAt).toBe('number');
-      expect(current.error).toEqual(new Error('Test error'));
-      expect(current.errorUpdatedAt).not.toBe(undefined);
-      expect(typeof current.errorUpdatedAt).toBe('number');
     });
 
     it('should handle useQuery events correctly', async () => {
@@ -235,6 +201,7 @@ describe('createQuery - single query', () => {
         onSuccess,
         onError,
         onSettled,
+        retryDelay: 100,
       });
 
       const hook = renderHook(() => useQuery());
@@ -258,9 +225,9 @@ describe('createQuery - single query', () => {
       expect(onSuccess).toHaveBeenCalledTimes(1);
       expect(onSettled).toHaveBeenCalledTimes(2);
       expect(onError).toHaveBeenCalledTimes(1);
-      expect(onError).toHaveBeenCalledWith(new Error('Test error'), state);
+      expect(onError).toHaveBeenCalledWith(new Error('Test error'), { ...state, retryCount: 1 });
 
-      expect(queryFn).toBeCalledTimes(2);
+      expect(queryFn).toBeCalledTimes(3);
     });
 
     it('should handle optimistic update correctly', async () => {
@@ -459,20 +426,6 @@ describe('createQuery - single query', () => {
       expect(hook2.result.current.isError).toBe(false);
       expect(queryFn).toHaveBeenCalledTimes(2);
       expect(queryFn).toHaveBeenCalledWith({ id: 2 }, useQuery.get({ id: 2 }));
-
-      await hook2.waitForNextUpdate();
-
-      expect(hook2.result.current.isLoading).toBe(false);
-      expect(hook2.result.current.isSuccess).toBe(false);
-      expect(hook2.result.current.isError).toBe(true);
-      expect(hook2.result.current.data).toBe(undefined);
-      expect(hook2.result.current.response).toBe(undefined);
-      expect(hook2.result.current.responseUpdatedAt).toBe(undefined);
-      expect(hook2.result.current.error).toEqual(new Error('Test error'));
-      expect(hook2.result.current.errorUpdatedAt).not.toBe(undefined);
-      expect(typeof hook2.result.current.errorUpdatedAt).toBe('number');
-
-      // Retrying
 
       await hook2.waitForNextUpdate();
 
