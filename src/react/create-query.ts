@@ -380,7 +380,7 @@ const useQueryDefaultDeps = (state: QueryState<any>) => [
   state.hasNextPage,
 ];
 
-const defaultElement: FunctionComponent<QueryState> = () => null;
+const fallbackComponent: FunctionComponent<QueryState> = () => null;
 
 /**
  * @see https://floppy-disk.vercel.app/docs/api#createquery
@@ -837,9 +837,9 @@ export const createQuery = <
   useQuery.Render = (props) => {
     const {
       queryKey,
-      loading = defaultElement,
-      success = defaultElement,
-      error = defaultElement,
+      loading = fallbackComponent,
+      success = fallbackComponent,
+      error = fallbackComponent,
     } = props;
     // eslint-disable-next-line react-hooks/rules-of-hooks
     const state = useQuery(queryKey);
