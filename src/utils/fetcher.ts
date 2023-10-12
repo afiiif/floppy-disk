@@ -1,5 +1,5 @@
 /* eslint-disable no-throw-literal */
-import { getValueOrComputedValue } from '.';
+import { getValueOrComputedValue, identityFn } from '.';
 
 const encodeParams = (params: Record<string, string | number | boolean>) =>
   Object.entries(params)
@@ -11,13 +11,18 @@ type FetcherOptions<TResponse = any> = {
   query?: string;
   params?: Record<string, string | number | boolean> | null;
   payload?: any;
-  validate?: (response: TResponse) => void | Promise<void>;
+  interceptRequest?: (
+    requestOptions: RequestInit & { url: string },
+  ) => (RequestInit & { url: string }) | Promise<RequestInit & { url: string }>;
+  interceptResponse?: (response: TResponse) => TResponse | Promise<TResponse>;
 } & RequestInit;
 
 /**
- * Experimental fetcher - a query/mutation function creator.
+ * Experimental fetcher - abstraction layer for query/mutation function creator.
  *
  * Can be used for REST or GraphQL.
+ *
+ * @see https://floppy-disk.vercel.app/docs/experimental
  *
  * @returns A function to fetch data
  */
@@ -26,10 +31,16 @@ export const fetcher =
     options: FetcherOptions<TResponse> | ((...args: TInput) => FetcherOptions<TResponse>),
   ) =>
   async (...args: TInput) => {
-    const { url, query, params, payload, headers, validate, ...rest } = getValueOrComputedValue(
-      options,
-      ...args,
-    );
+    const {
+      url,
+      query,
+      params,
+      payload,
+      headers,
+      interceptRequest = identityFn,
+      interceptResponse,
+      ...rest
+    } = getValueOrComputedValue(options, ...args);
 
     let autoOptions: RequestInit = {};
     let searchParams = params;
@@ -50,13 +61,15 @@ export const fetcher =
       if (typeof options === 'object' && params === undefined) searchParams = args[0];
     }
 
-    const fetchUrl = searchParams ? [url, encodeParams(searchParams)].join('?') : url;
-
-    const res = await fetch(fetchUrl, {
+    const interceptedOptions = await interceptRequest({
+      url: searchParams ? [url, encodeParams(searchParams)].join('?') : url,
       headers: { 'Content-Type': 'application/json', ...headers },
       ...autoOptions,
       ...rest,
     });
+
+    const { url: finalUrl, ...finalOptions } = interceptedOptions;
+    const res = await fetch(finalUrl, finalOptions);
 
     const contentType = res.headers.get('content-type');
     if (contentType && contentType.includes('application/json')) {
@@ -66,15 +79,16 @@ export const fetcher =
           throw { status: res.status, statusText: res.statusText, response: resJson };
         }
         if (res.ok) {
-          if (validate) {
+          if (interceptResponse) {
             try {
-              await validate(resJson);
-            } catch (err) {
+              const finalResponse = await interceptResponse(resJson);
+              return finalResponse;
+            } catch (error) {
               throw {
                 status: res.status,
                 statusText: res.statusText,
                 response: resJson,
-                validationError: err,
+                error,
               };
             }
           }
