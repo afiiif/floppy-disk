@@ -73,29 +73,30 @@ export const fetcher =
 
     const contentType = res.headers.get('content-type');
     if (contentType && contentType.includes('application/json')) {
-      const resJson = await res.json().catch(() => undefined);
-      if (resJson !== undefined) {
-        if (query && resJson.errors) {
+      let resJson = await res.json();
+      if (query) {
+        if (resJson.errors) {
           throw { status: res.status, statusText: res.statusText, response: resJson };
         }
-        if (res.ok) {
-          if (interceptResponse) {
-            try {
-              const finalResponse = await interceptResponse(resJson);
-              return finalResponse;
-            } catch (error) {
-              throw {
-                status: res.status,
-                statusText: res.statusText,
-                response: resJson,
-                error,
-              };
-            }
-          }
-          return resJson as TResponse;
-        }
-        throw { status: res.status, statusText: res.statusText, response: resJson };
+        resJson = resJson.data;
       }
+      if (res.ok) {
+        if (interceptResponse) {
+          try {
+            const finalResponse = await interceptResponse(resJson);
+            return finalResponse;
+          } catch (error) {
+            throw {
+              status: res.status,
+              statusText: res.statusText,
+              response: resJson,
+              error,
+            };
+          }
+        }
+        return resJson as TResponse;
+      }
+      throw { status: res.status, statusText: res.statusText, response: resJson };
     }
 
     const resText = await res.text().catch(() => undefined);
