@@ -17,3 +17,8 @@ export const getValueOrComputedValue = <T, P extends any[]>(
 export type Maybe<T> = T | null | undefined;
 
 export const isClient = typeof window !== 'undefined' && !('Deno' in window);
+
+export const createError = (message: string, props: Record<string, any>) => {
+  const error = Object.assign(new Error(message), props);
+  return error;
+};

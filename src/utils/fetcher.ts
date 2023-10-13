@@ -1,5 +1,4 @@
-/* eslint-disable no-throw-literal */
-import { getValueOrComputedValue, identityFn } from '.';
+import { createError, getValueOrComputedValue, identityFn } from '.';
 
 const encodeParams = (params: Record<string, string | number | boolean>) =>
   Object.entries(params)
@@ -21,6 +20,8 @@ type FetcherOptions<TResponse = any> = {
  * Experimental fetcher - abstraction layer for query/mutation function creator.
  *
  * Can be used for REST or GraphQL.
+ *
+ * Only work for JSON response only.
  *
  * @see https://floppy-disk.vercel.app/docs/experimental
  *
@@ -76,7 +77,12 @@ export const fetcher =
       let resJson = await res.json();
       if (query) {
         if (resJson.errors) {
-          throw { status: res.status, statusText: res.statusText, response: resJson };
+          throw createError('Error GraphQL response', {
+            status: res.status,
+            statusText: res.statusText,
+            response: resJson.errors,
+            request: interceptedOptions,
+          });
         }
         resJson = resJson.data;
       }
@@ -86,19 +92,31 @@ export const fetcher =
             const finalResponse = await interceptResponse(resJson);
             return finalResponse;
           } catch (error) {
-            throw {
+            throw createError('Error intercept response', {
               status: res.status,
               statusText: res.statusText,
               response: resJson,
               error,
-            };
+              request: interceptedOptions,
+            });
           }
         }
         return resJson as TResponse;
       }
-      throw { status: res.status, statusText: res.statusText, response: resJson };
+      throw createError('Fetch error', {
+        status: res.status,
+        statusText: res.statusText,
+        response: resJson,
+        request: interceptedOptions,
+      });
     }
 
     const resText = await res.text().catch(() => undefined);
-    throw { status: res.status, statusText: res.statusText, response: resText };
+    throw createError('Response type is not JSON', {
+      status: res.status,
+      statusText: res.statusText,
+      response: resText,
+      contentType,
+      request: interceptedOptions,
+    });
   };
