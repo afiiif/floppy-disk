@@ -2,6 +2,7 @@ import { createError, getValueOrComputedValue, identityFn } from '.';
 
 const encodeParams = (params: Record<string, string | number | boolean>) =>
   Object.entries(params)
+    .filter(([, value]) => value !== undefined && value !== null)
     .map((kv) => kv.map(encodeURIComponent).join('='))
     .join('&');
 
