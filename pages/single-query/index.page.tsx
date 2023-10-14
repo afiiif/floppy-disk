@@ -2,7 +2,7 @@ import Head from 'next/head';
 import { useState } from 'react';
 
 import WithoutParam from './WithoutParam';
-import WithParam from './WithParam';
+import WithParam, { usePokemonQuery } from './WithParam';
 
 export default function SingleQueryPage() {
   return (
@@ -24,6 +24,7 @@ export default function SingleQueryPage() {
 
 function Pokemon() {
   const [pokemonName, setPokemonName] = useState('');
+  const { forceFetch, reset } = usePokemonQuery.get({ pokemonName });
 
   return (
     <>
@@ -38,7 +39,19 @@ function Pokemon() {
         <button onClick={() => setPokemonName('squirtle')} className="btn">
           squirtle
         </button>
+        <button onClick={() => setPokemonName('xyz')} className="btn">
+          xyz
+        </button>
       </div>
+      <button
+        onClick={() => {
+          reset();
+          forceFetch().then((x) => console.info({ x }));
+        }}
+        className="btn"
+      >
+        Force Fetch
+      </button>
       <WithParam pokemonName={pokemonName} />
     </>
   );

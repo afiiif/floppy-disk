@@ -1,8 +1,8 @@
-import { createQuery } from '../../src';
-import { getPokemon, Pokemon } from './api';
+import { createQuery, fetcher } from '../../src';
+import { Pokemon } from './api';
 
-const usePokemonQuery = createQuery<{ pokemonName: string }, Pokemon>(
-  ({ pokemonName }) => getPokemon(pokemonName),
+export const usePokemonQuery = createQuery<{ pokemonName: string }, Pokemon>(
+  fetcher(({ pokemonName }) => ({ url: `https://pokeapi.co/api/v2/pokemon/${pokemonName}` })),
   {
     // keepPreviousData: true,
     enabled: ({ pokemonName }) => !!pokemonName,
@@ -13,7 +13,8 @@ const usePokemonQuery = createQuery<{ pokemonName: string }, Pokemon>(
 );
 
 export default function WithParam({ pokemonName }: { pokemonName: string }) {
-  const { isLoading, data } = usePokemonQuery({ pokemonName });
+  const { isLoading, data, error } = usePokemonQuery({ pokemonName });
+  console.log(error);
 
   if (!pokemonName) return <div>Select a pokemon 👆</div>;
   if (isLoading) return <div>Loading...</div>;

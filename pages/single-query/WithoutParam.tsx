@@ -1,9 +1,11 @@
 import { useState } from 'react';
 
-import { createQuery } from '../../src';
-import { fetchFloppyDiskRepo } from './api';
+import { createQuery, fetcher } from '../../src';
+import { RepoDetailResponse } from './api';
 
-const useFloppyDiskRepoQuery = createQuery(fetchFloppyDiskRepo);
+const useFloppyDiskRepoQuery = createQuery<{}, RepoDetailResponse>(
+  fetcher({ url: 'https://api.github.com/repos/afiiif/floppy-disk' }),
+);
 
 export default function WithoutParam() {
   const { isLoading, data } = useFloppyDiskRepoQuery();

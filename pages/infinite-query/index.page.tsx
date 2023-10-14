@@ -1,7 +1,7 @@
 import Head from 'next/head';
 
-import { createQuery } from '../../src';
-import { fetchRepos, SearchRepoResponse } from './api';
+import { createQuery, fetcher } from '../../src';
+import { SearchRepoResponse } from './api';
 
 const keyword = 'chocobo language:javascript';
 
@@ -9,16 +9,23 @@ const useRepositoriesInfQuery = createQuery<
   undefined,
   SearchRepoResponse,
   { id: number; name: string; full_name: string; description: string; html_url: string }[]
->((_, { pageParam = 1 }) => fetchRepos({ q: keyword, page: pageParam }), {
-  select: (response, { data }) => [...(data || []), ...response.items],
-  getNextPageParam: (lastPageResponse, i) => {
-    const totalPages = Math.ceil(lastPageResponse.total_count / 10);
-    if (i < totalPages) return i + 1;
+>(
+  fetcher((_, { pageParam = 1 }) => ({
+    url: 'https://api.github.com/search/repositories',
+    params: { q: keyword, page: pageParam, per_page: 10 },
+  })),
+  {
+    select: (response, { data }) => [...(data || []), ...response.items],
+    getNextPageParam: (lastPageResponse, i) => {
+      const totalPages = Math.ceil(lastPageResponse.total_count / 10);
+      if (i < totalPages) return i + 1;
+    },
   },
-});
+);
 
 export default function InfiniteQueryPage() {
   const { data, fetchNextPage, isWaitingNextPage, hasNextPage, error } = useRepositoriesInfQuery();
+  console.info(error);
 
   return (
     <>
