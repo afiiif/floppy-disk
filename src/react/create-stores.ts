@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 
-import { hashStoreKey, Maybe, noop } from '../utils';
+import { getValue, hashStoreKey, Maybe, noop } from '../utils';
 import {
   initStore,
   InitStoreOptions,
@@ -14,15 +14,14 @@ import { WatchProps } from './create-store';
 
 export type StoreKey = Record<string, any> | undefined;
 
-export type StoresInitializer<
-  TKey extends StoreKey = StoreKey,
-  T extends StoreData = StoreData,
-> = (api: {
-  get: () => T;
-  set: (value: SetStoreData<T>, silent?: boolean) => void;
-  key: TKey;
-  keyHash: string;
-}) => T;
+export type StoresInitializer<TKey extends StoreKey = StoreKey, T extends StoreData = StoreData> =
+  | T
+  | ((api: {
+      get: () => T;
+      set: (value: SetStoreData<T>, silent?: boolean) => void;
+      key: TKey;
+      keyHash: string;
+    }) => T);
 
 export type UseStores<TKey extends StoreKey = StoreKey, T extends StoreData = StoreData> = {
   /**
@@ -87,7 +86,7 @@ export const createStores = <TKey extends StoreKey = StoreKey, T extends StoreDa
     if (!stores.has(keyHash)) {
       stores.set(
         keyHash,
-        initStore((api) => initializer({ key, keyHash, ...api }), options),
+        initStore((api) => getValue(initializer, { key, keyHash, ...api }), options),
       );
       onStoreInitialized(key, keyHash);
     }
