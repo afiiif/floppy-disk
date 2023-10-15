@@ -15,14 +15,10 @@ jobs:
       - uses: actions/setup-node@v3
         with:
           node-version: 18
-      - name: Install pnpm v8
-        uses: pnpm/action-setup@v2
-        with:
-          version: 8
       - name: Install dependencies
-        run: pnpm i
+        uses: bahmutov/npm-install@v1
       - name: Lint files
-        run: pnpm lint
+        run: yarn lint
 
   type-check:
     name: Type check
@@ -32,14 +28,10 @@ jobs:
       - uses: actions/setup-node@v3
         with:
           node-version: 18
-      - name: Install pnpm v8
-        uses: pnpm/action-setup@v2
-        with:
-          version: 8
       - name: Install dependencies
-        run: pnpm i
+        uses: bahmutov/npm-install@v1
       - name: Perform type checking
-        run: pnpm lint:types
+        run: yarn lint:types
 
   test:
     name: Unit test
@@ -49,39 +41,31 @@ jobs:
       - uses: actions/setup-node@v3
         with:
           node-version: 18
-      - name: Install pnpm v8
-        uses: pnpm/action-setup@v2
-        with:
-          version: 8
       - name: Install dependencies
-        run: pnpm i
+        uses: bahmutov/npm-install@v1
       - name: Perform unit test
-        run: pnpm test
+        run: yarn test
 
   publish:
     name: Publish to NPM
     needs: [lint, type-check, test]
-    if: github.repository == 'afiiif/floppy-disk' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/beta')
+    if: github.repository == 'afiiif/floppy-disk' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/alpha' || github.ref == 'refs/heads/beta')
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-node@v3
         with:
           node-version: 18
-      - name: Install pnpm v8
-        uses: pnpm/action-setup@v2
-        with:
-          version: 8
       - name: Install dependencies
-        run: pnpm i
+        uses: bahmutov/npm-install@v1
       - name: Update package.json
         run: |
           npm pkg delete 'engines'
           npm pkg delete 'devDependencies'
       - name: Build package
-        run: pnpm build
+        run: yarn build
       - name: Release package
-        run: pnpm semantic-release
+        run: yarn semantic-release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
