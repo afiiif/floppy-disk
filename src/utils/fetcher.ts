@@ -1,4 +1,4 @@
-import { createError, getValueOrComputedValue, identityFn } from '.';
+import { createError, getValue, identityFn } from '.';
 
 const encodeParams = (params: Record<string, string | number | boolean>) =>
   Object.entries(params)
@@ -42,7 +42,7 @@ export const fetcher =
       interceptRequest = identityFn,
       interceptResponse,
       ...rest
-    } = getValueOrComputedValue(options, ...args);
+    } = getValue(options, ...args);
 
     let autoOptions: RequestInit = {};
     let searchParams = params;

@@ -1,6 +1,6 @@
 import { createElement, FunctionComponent, useState } from 'react';
 
-import { getValueOrComputedValue, hasValue, identityFn, isClient, Maybe, noop } from '../utils';
+import { getValue, hasValue, identityFn, isClient, Maybe, noop } from '../utils';
 import { createStores, CreateStoresOptions, StoreKey, UseStores } from './create-stores';
 
 const INITIAL_QUERY_STATE = {
@@ -437,8 +437,8 @@ export const createQuery = <
 
       const getRetryProps = (error: TError, retryCount: number) => {
         const prevState = get();
-        const maxRetryCount = getValueOrComputedValue(retry, error, prevState) || 0;
-        const delay = getValueOrComputedValue(retryDelay, error, prevState) || 0;
+        const maxRetryCount = getValue(retry, error, prevState) || 0;
+        const delay = getValue(retryDelay, error, prevState) || 0;
         return { shouldRetry: retryCount < maxRetryCount, delay };
       };
 
@@ -453,7 +453,7 @@ export const createQuery = <
 
           clearTimeout(refetchIntervalTimeoutId.get(keyHash));
 
-          if (isWaiting || !getValueOrComputedValue(enabled, key)) return resolve(state);
+          if (isWaiting || !getValue(enabled, key)) return resolve(state);
 
           if (isLoading) set({ isWaiting: true });
           else set({ isWaiting: true, isRefetching: true });
@@ -510,7 +510,7 @@ export const createQuery = <
                 };
 
                 const refetchIntervalValue =
-                  isClient && getValueOrComputedValue(refetchInterval, { ...get(), ...nextState });
+                  isClient && getValue(refetchInterval, { ...get(), ...nextState });
                 if (refetchIntervalValue) {
                   refetchIntervalTimeoutId.set(
                     keyHash,
@@ -599,8 +599,7 @@ export const createQuery = <
 
           const { isLoading, isWaitingNextPage, data, hasNextPage, pageParam, pageParams } = state;
           if (isLoading) return resolve(forceFetch());
-          if (isWaitingNextPage || !hasNextPage || !getValueOrComputedValue(enabled, key))
-            return resolve(state);
+          if (isWaitingNextPage || !hasNextPage || !getValue(enabled, key)) return resolve(state);
 
           set({ isWaitingNextPage: true, isGoingToRetryNextPage: false });
           clearTimeout(retryNextPageTimeoutId.get(keyHash));
@@ -678,7 +677,7 @@ export const createQuery = <
     (() => {
       const windowFocusHandler = () => {
         useQuery.getAllWithSubscriber().forEach((state) => {
-          const result = getValueOrComputedValue(fetchOnWindowFocus, state.key);
+          const result = getValue(fetchOnWindowFocus, state.key);
           if (result === 'always') state.forceFetch();
           else if (result) state.fetch();
         });
@@ -686,7 +685,7 @@ export const createQuery = <
 
       const reconnectHandler = () => {
         useQuery.getAllWithSubscriber().forEach((state) => {
-          const result = getValueOrComputedValue(fetchOnReconnect, state.key);
+          const result = getValue(fetchOnReconnect, state.key);
           if (result === 'always') state.forceFetch();
           else if (result) state.fetch();
         });
@@ -697,8 +696,7 @@ export const createQuery = <
         defaultDeps,
         onFirstSubscribe: (state) => {
           if (state.isSuccess) {
-            const refetchIntervalValue =
-              isClient && getValueOrComputedValue(refetchInterval, state);
+            const refetchIntervalValue = isClient && getValue(refetchInterval, state);
             if (refetchIntervalValue) {
               refetchIntervalTimeoutId.set(
                 state.keyHash,
@@ -716,7 +714,7 @@ export const createQuery = <
           onFirstSubscribe(state);
         },
         onSubscribe: (state) => {
-          const result = getValueOrComputedValue(fetchOnMount, state.key);
+          const result = getValue(fetchOnMount, state.key);
           if (result === 'always') state.forceFetch();
           else if (result) state.fetch();
           onSubscribe(state);
@@ -817,7 +815,7 @@ export const createQuery = <
 
   useQuery.optimisticUpdate = ({ key, response }) => {
     const prevState = useQuery.get(key);
-    const optimisticResponse = getValueOrComputedValue(response, prevState);
+    const optimisticResponse = getValue(response, prevState);
     useQuery.set(key, {
       isOptimisticData: true,
       response: optimisticResponse,

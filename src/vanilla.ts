@@ -1,4 +1,4 @@
-import { getValueOrComputedValue, noop } from './utils';
+import { getValue, noop } from './utils';
 
 export type StoreData = Record<string, any>;
 export type SetStoreData<T> = Partial<T> | ((prevState: T) => Partial<T>);
@@ -49,7 +49,7 @@ export const initStore = <T extends StoreData>(
 
   const set = (value: SetStoreData<T>, silent = false) => {
     const prevData = data;
-    data = { ...data, ...getValueOrComputedValue(value, data) };
+    data = { ...data, ...getValue(value, data) };
 
     if (intercept) {
       data = { ...data, ...intercept(data, prevData) };
