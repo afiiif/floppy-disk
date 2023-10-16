@@ -1,6 +1,7 @@
 import { readdir, readFile, writeFile } from 'node:fs/promises';
 
 import { join } from 'path';
+import { format } from 'prettier';
 
 if (process.env.PREACT !== 'true') process.exit();
 
@@ -28,16 +29,22 @@ const copyAndReplace = async () => {
              import { useState } from 'preact/hooks';`,
           )
           .replace(
-            "import React, { createContext, ReactNode, useContext, useState } from 'react';",
-            `import { ComponentChildren, createContext } from 'preact';
+            "import { createContext, createElement, ReactNode, useContext, useState } from 'react';",
+            `import { ComponentChildren, createContext, createElement } from 'preact';
              import { useContext, useState } from 'preact/hooks';`,
           )
           .replace('ReactNode', 'ComponentChildren')
-          .replace('return <Context.Provider', '// @ts-ignore\nreturn <Context.Provider')
           .replace(/from 'react'/g, "from 'preact/hooks'");
 
         // Write the modified content to the Preact file
-        await writeFile(preactFilePath, replacedContent, 'utf8');
+        await writeFile(
+          preactFilePath,
+          await format(replacedContent, {
+            parser: 'typescript',
+            ...require('../.prettierrc.js'),
+          }),
+          'utf8',
+        );
         console.log(`Copied and replaced in ${preactFilePath}`);
       }),
     );
