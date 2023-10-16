@@ -14,7 +14,7 @@ describe('createQuery - single query', () => {
     beforeEach(() => {
       queryFn = jest.fn().mockImplementation(async () => {
         return new Promise((resolve) => {
-          setTimeout(() => resolve({ id: 1, name: 'test' }), 100);
+          setTimeout(() => resolve({ id: 1, name: 'test' }), 33);
         });
       });
       useQuery = createQuery<Key, Response>(queryFn);
@@ -60,7 +60,7 @@ describe('createQuery - single query', () => {
       queryFn = jest.fn().mockImplementation(async () => {
         // Always error
         return new Promise((_resolve, reject) => {
-          setTimeout(() => reject(new Error('Test error')), 100);
+          setTimeout(() => reject(new Error('Test error')), 33);
         });
       });
       useQuery = createQuery<Key, Response>(queryFn);
@@ -68,7 +68,7 @@ describe('createQuery - single query', () => {
       const hook1 = renderHook(() => useQuery());
       const hook2 = renderHook(() => useQuery());
 
-      const fetchingAndRetryDelay = 100 + 1000;
+      const fetchingAndRetryDelay = 33 + 1000;
       await hook1.waitForNextUpdate({ timeout: 2 * fetchingAndRetryDelay + 300 });
 
       const { current } = hook1.result;
@@ -100,7 +100,7 @@ describe('createQuery - single query', () => {
             } else {
               resolve({ id: 1, name: 'test' });
             }
-          }, 100);
+          }, 33);
         });
       });
       useQuery = createQuery<Key, Response>(queryFn, { retry: 3, retryDelay: 100 });
@@ -140,7 +140,7 @@ describe('createQuery - single query', () => {
             } else {
               resolve({ id: 1, name: 'test' });
             }
-          }, 100);
+          }, 33);
         });
       });
       useQuery = createQuery<Key, Response>(queryFn, { retryDelay: 100 });
@@ -194,7 +194,7 @@ describe('createQuery - single query', () => {
             } else {
               resolve({ id: 1, name: 'test' });
             }
-          }, 100);
+          }, 33);
         });
       });
       useQuery = createQuery<Key, Response>(queryFn, {
@@ -241,7 +241,7 @@ describe('createQuery - single query', () => {
             } else {
               resolve({ id: 1, name: 'test 2' });
             }
-          }, 100);
+          }, 33);
         });
       });
       useQuery = createQuery<Key, Response>(queryFn);
@@ -359,7 +359,7 @@ describe('createQuery - single query', () => {
           setTimeout(() => {
             const name = ['', 'A', 'B', 'C', 'D'][id];
             resolve({ id, name });
-          }, 100);
+          }, 33);
         });
       });
       useQuery = createQuery<Key, Response>(queryFn);
@@ -389,7 +389,7 @@ describe('createQuery - single query', () => {
               }
             }
             resolve({ id, name });
-          }, 100);
+          }, 33);
         });
       });
       useQuery = createQuery<Key, Response, string>(queryFn, {
@@ -466,7 +466,7 @@ describe('createQuery - single query', () => {
 
       const queryFn2 = jest.fn().mockImplementation(async ({ id }) => {
         return new Promise((resolve) => {
-          setTimeout(() => resolve({ id, name: 'test' }), 100);
+          setTimeout(() => resolve({ id, name: 'test' }), 33);
         });
       });
 
@@ -488,7 +488,7 @@ describe('createQuery - single query', () => {
       expect(queryFn2).toHaveBeenCalledTimes(1);
 
       await act(async () => {
-        await new Promise((r) => setTimeout(r, 100));
+        await new Promise((r) => setTimeout(r, 33));
         fireEvent(window, new Event('focus'));
       });
       await hook2.waitForNextUpdate();
@@ -497,7 +497,7 @@ describe('createQuery - single query', () => {
 
       hook2.unmount();
       await act(async () => {
-        await new Promise((r) => setTimeout(r, 100));
+        await new Promise((r) => setTimeout(r, 33));
         fireEvent(window, new Event('focus'));
       });
       await hook1.waitForNextUpdate();
