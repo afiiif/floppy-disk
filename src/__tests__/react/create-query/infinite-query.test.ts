@@ -30,7 +30,7 @@ describe('createQuery - infinite query', () => {
           }
           if (responses2[page]) resolve(responses2[page]);
           else reject(new Error('Test error'));
-        }, 33);
+        }, 44);
       });
     });
     useQuery = createQuery((_, { pageParam = 1 }) => queryFn({ page: pageParam }), {

@@ -12,7 +12,7 @@ describe('createMutation - without param', () => {
   beforeEach(() => {
     mutationFn = jest.fn().mockImplementation(async () => {
       return new Promise((resolve) => {
-        setTimeout(() => resolve({ status: 'success' }), 33);
+        setTimeout(() => resolve({ status: 'success' }), 44);
       });
     });
     useMutation = createMutation<Var, Response>(mutationFn);
@@ -68,7 +68,7 @@ describe('createMutation - with param', () => {
   beforeEach(() => {
     mutationFn = jest.fn().mockImplementation(async (param) => {
       return new Promise((resolve) => {
-        setTimeout(() => resolve({ status: 'success', id: param.id }), 33);
+        setTimeout(() => resolve({ status: 'success', id: param.id }), 44);
       });
     });
     useMutation = createMutation<Var, Response>(mutationFn);
@@ -133,7 +133,7 @@ describe('createMutation - with param', () => {
           } else {
             resolve({ status: 'success', id: param.id });
           }
-        }, 33);
+        }, 44);
       });
     });
     useMutation = createMutation<Var, Response>(mutationFn);
@@ -201,7 +201,7 @@ describe('createMutation - with param', () => {
           } else {
             resolve({ status: 'success', id: param.id });
           }
-        }, 33);
+        }, 44);
       });
     });
     useMutation = createMutation<Var, Response>(mutationFn, {
