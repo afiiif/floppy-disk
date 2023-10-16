@@ -1,6 +1,6 @@
-import React, { createContext, ReactNode, useContext, useState } from 'react';
+import { createContext, createElement, ReactNode, useContext, useState } from 'react';
 
-export const withContext = <T,>(initFn: () => T) => {
+export const withContext = <T>(initFn: () => T) => {
   const Context = createContext<T | null>(null);
 
   const Provider = ({
@@ -15,7 +15,7 @@ export const withContext = <T,>(initFn: () => T) => {
       onInitialize && onInitialize(store);
       return store;
     });
-    return <Context.Provider value={value}>{children}</Context.Provider>;
+    return createElement(Context.Provider, { value, children });
   };
 
   const useCurrentContext = () => useContext(Context);
