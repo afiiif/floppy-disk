@@ -41,15 +41,6 @@
       },
       "module": "./esm/index.js",
       "default": "./lib/index.js"
-    },
-    "./preact": {
-      "types": "./lib/preact/index.d.ts",
-      "import": {
-        "types": "./esm/preact/index.d.ts",
-        "default": "./esm/preact/index.js"
-      },
-      "module": "./esm/preact/index.js",
-      "default": "./lib/preact/index.js"
     }
   },
   "engines": {

@@ -1,6 +1,8 @@
 import { readdir, readFile, writeFile } from 'node:fs/promises';
 
-import { extname, join } from 'path';
+import { join } from 'path';
+
+if (process.env.PREACT !== 'true') process.exit();
 
 const reactFilesPath = './src/react';
 const preactFilesPath = './src/preact';
@@ -9,12 +11,9 @@ async function copyAndReplace() {
   try {
     const files = await readdir(reactFilesPath);
 
-    // Filter out only .ts files
-    const tsFiles = files.filter((file) => extname(file) === '.ts');
-
     // Copy and replace in each file
     await Promise.all(
-      tsFiles.map(async (tsFile) => {
+      files.map(async (tsFile) => {
         const reactFilePath = join(reactFilesPath, tsFile);
         const preactFilePath = join(preactFilesPath, tsFile);
 
@@ -28,6 +27,13 @@ async function copyAndReplace() {
             `import { h as createElement, FunctionComponent } from 'preact';
              import { useState } from 'preact/hooks';`,
           )
+          .replace(
+            "import React, { createContext, ReactNode, useContext, useState } from 'react';",
+            `import { ComponentChildren, createContext } from 'preact';
+             import { useContext, useState } from 'preact/hooks';`,
+          )
+          .replace('ReactNode', 'ComponentChildren')
+          .replace('return <Context.Provider', '// @ts-ignore\nreturn <Context.Provider')
           .replace(/from 'react'/g, "from 'preact/hooks'");
 
         // Write the modified content to the Preact file
