@@ -2,7 +2,7 @@ name: Code Quality Check & Publish
 
 on:
   push:
-    branches: [main, alpha, beta]
+    branches: [main, beta, alpha, experimental]
   pull_request:
     types: [opened, synchronize]
 
@@ -49,7 +49,12 @@ jobs:
   publish:
     name: Publish to NPM
     needs: [lint, type-check, test]
-    if: github.repository == 'afiiif/floppy-disk' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/alpha' || github.ref == 'refs/heads/beta')
+    if: |
+      github.repository == 'afiiif/floppy-disk'
+        && (github.ref == 'refs/heads/main'
+          || github.ref == 'refs/heads/beta'
+          || github.ref == 'refs/heads/alpha'
+          || github.ref == 'refs/heads/experimental')
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -63,7 +68,12 @@ jobs:
           npm pkg delete 'engines'
           npm pkg delete 'devDependencies'
       - name: Build package
-        run: yarn build
+        run: |
+          if [ "${{ github.ref }}" = "refs/heads/experimental" ]; then
+            PREACT=true yarn build
+          else
+            yarn build
+          fi
       - name: Release package
         run: yarn semantic-release
         env:

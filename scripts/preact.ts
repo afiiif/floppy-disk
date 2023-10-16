@@ -7,7 +7,7 @@ if (process.env.PREACT !== 'true') process.exit();
 const reactFilesPath = './src/react';
 const preactFilesPath = './src/preact';
 
-async function copyAndReplace() {
+const copyAndReplace = async () => {
   try {
     const files = await readdir(reactFilesPath);
 
@@ -46,6 +46,24 @@ async function copyAndReplace() {
   } catch (error) {
     console.error('An error occurred:', error);
   }
-}
+};
 
-copyAndReplace();
+const updatePackageJson = async () => {
+  const packageJsonContent = await readFile('./package.json', 'utf8');
+  const packageJson = JSON.parse(packageJsonContent);
+  packageJson.exports['./preact'] = {
+    types: './lib/preact/index.d.ts',
+    import: {
+      types: './esm/preact/index.d.ts',
+      default: './esm/preact/index.js',
+    },
+    module: './esm/preact/index.js',
+    default: './lib/preact/index.js',
+  };
+  await writeFile('./package.json', JSON.stringify(packageJson, null, 2), 'utf8');
+};
+
+(async () => {
+  await copyAndReplace();
+  await updatePackageJson();
+})();
