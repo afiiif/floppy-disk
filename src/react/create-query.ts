@@ -584,7 +584,7 @@ export const createQuery = <
 
       const fetch = () => {
         const { responseUpdatedAt } = get();
-        const isStale = Date.now() > (responseUpdatedAt || 0) + staleTime;
+        const isStale = !responseUpdatedAt || Date.now() > responseUpdatedAt + staleTime;
         if (!isStale) return;
         forceFetch();
       };
