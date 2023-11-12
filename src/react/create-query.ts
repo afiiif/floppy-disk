@@ -856,3 +856,9 @@ export const createQuery = <
 
   return useQuery;
 };
+
+export type ExtractQueryState<T extends UseQuery<any, any, any, any, any>> = {
+  loading: Extract<ReturnType<T['get']>, { status: 'loading' }>;
+  success: Extract<ReturnType<T['get']>, { status: 'success' }>;
+  error: Extract<ReturnType<T['get']>, { status: 'error' }>;
+};
