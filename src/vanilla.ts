@@ -1,4 +1,4 @@
-import { getValue, noop } from './utils';
+import { getValue, Maybe, noop } from './utils';
 
 export type StoreData = Record<string, any>;
 export type SetStoreData<T> = Partial<T> | ((prevState: T) => Partial<T>);
@@ -12,7 +12,7 @@ export type StoreInitializer<T> =
 export type StoreEvent<T> = (state: T) => void;
 
 export type InitStoreOptions<T> = {
-  intercept?: (nextState: T, prevState: T) => Partial<T>;
+  intercept?: (nextState: T, prevState: T) => Maybe<Partial<T>>;
   onFirstSubscribe?: StoreEvent<T>;
   onSubscribe?: StoreEvent<T>;
   onUnsubscribe?: StoreEvent<T>;
