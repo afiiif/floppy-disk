@@ -113,7 +113,7 @@ export const fetcher =
     }
 
     const resText = await res.text().catch(() => undefined);
-    throw createError('Response type is not JSON', {
+    throw createError('Response type is not a JSON', {
       status: res.status,
       statusText: res.statusText,
       response: resText,
