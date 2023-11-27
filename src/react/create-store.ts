@@ -17,7 +17,7 @@ export type UseStore<T extends StoreData> = {
    * @param selectDeps A function that return the dependency array (just like in `useEffect`), to trigger reactivity.
    * Defaults to `undefined` (reactive to all state change) if you didn't set `defaultDeps` on `createStore`.
    *
-   * IMPORTANT NOTE: `selectDeps` must not be changed after initialization.
+   * **IMPORTANT NOTE:** `selectDeps` must not be changed after initialization.
    */
   (selectDeps?: SelectDeps<T>): T;
   get: () => T;
@@ -25,9 +25,13 @@ export type UseStore<T extends StoreData> = {
   subscribe: (fn: (state: T) => void, selectDeps?: SelectDeps<T>) => () => void;
   getSubscribers: () => Subscribers<T>;
   /**
-   * Set default values inside a component.
+   * ⚛️ (**_Hook_**)
    *
-   * IMPORTANT NOTE: Put this on the root component or parent component, before any component subscribed!
+   * Set default values **inside of a component**.
+   *
+   * **IMPORTANT NOTE:**
+   * - This is a hook, put it inside of a React component
+   * - Put this on the root component or parent component, before any component subscribed!
    */
   setDefaultValues: (values: SetStoreData<T>) => void;
   Watch: (props: WatchProps<T>) => any;
@@ -46,7 +50,7 @@ export const createStore = <T extends StoreData>(
   const { defaultDeps } = options;
 
   /**
-   * IMPORTANT NOTE: selectDeps function must not be changed after initialization.
+   * **IMPORTANT NOTE:** `selectDeps` function must not be changed after initialization.
    */
   const useStore = (selectDeps: SelectDeps<T> = defaultDeps) => {
     const [state, setState] = useState(get);

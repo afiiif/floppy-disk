@@ -30,7 +30,7 @@ export type UseStores<TKey extends StoreKey = StoreKey, T extends StoreData = St
    * @param selectDeps A function that return the dependency array (just like in `useEffect`), to trigger reactivity.
    * Defaults to `undefined` (reactive to all state change) if you didn't set `defaultDeps` on `createStores`.
    *
-   * IMPORTANT NOTE: `selectDeps` must not be changed after initialization.
+   * **IMPORTANT NOTE:** `selectDeps` must not be changed after initialization.
    */
   (...args: [Maybe<TKey>, SelectDeps<T>?] | [SelectDeps<T>?]): T;
   get: (key?: Maybe<TKey>) => T;
@@ -43,9 +43,13 @@ export type UseStores<TKey extends StoreKey = StoreKey, T extends StoreData = St
   getStore: (key?: Maybe<TKey>) => InitStoreReturn<T>;
   getStores: () => Map<string, InitStoreReturn<T>>;
   /**
-   * Set default values inside a component.
+   * ⚛️ (**_Hook_**)
    *
-   * IMPORTANT NOTE: Put this on the root component or parent component, before any component subscribed!
+   * Set default values **inside of a component**.
+   *
+   * **IMPORTANT NOTE:**
+   * - This is a hook, put it inside of a React component
+   * - Put this on the root component or parent component, before any component subscribed!
    */
   setDefaultValues: (key: Maybe<TKey>, values: SetStoreData<T>) => void;
   Watch: (props: WatchProps<T> & { storeKey?: Maybe<TKey> }) => any;
@@ -94,7 +98,7 @@ export const createStores = <TKey extends StoreKey = StoreKey, T extends StoreDa
   };
 
   /**
-   * IMPORTANT NOTE: selectDeps function must not be changed after initialization.
+   * **IMPORTANT NOTE:** `selectDeps` function must not be changed after initialization.
    */
   const useStores = (...args: [Maybe<TKey>, SelectDeps<T>?] | [SelectDeps<T>?]) => {
     const [_key, selectDeps = defaultDeps] = (

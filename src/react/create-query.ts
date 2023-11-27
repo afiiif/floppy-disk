@@ -72,7 +72,7 @@ export type QueryState<
    *
    * @returns function to revert the changes & function to invalidate the query
    *
-   * IMPORTANT NOTE: This won't work well on infinite query.
+   * **IMPORTANT NOTE:** This won't work well on infinite query.
    */
   optimisticUpdate: (
     response:
@@ -313,11 +313,15 @@ export type UseQuery<
   TPageParam = any,
 > = UseStores<TKey, QueryState<TKey, TResponse, TData, TError, TPageParam>> & {
   /**
+   * ⚛️ (**_Hook_**)
+   *
    * Set query's initial response.
    *
    * This is used for server-side rendered page or static page.
    *
-   * IMPORTANT NOTE: Put this on the root component or parent component, before any component subscribed!
+   * **IMPORTANT NOTE:**
+   * - This is a hook, put it inside of a React component
+   * - Put this on the root component or parent component, before any component subscribed!
    */
   setInitialResponse: (options: {
     key?: Maybe<TKey>;
@@ -345,7 +349,7 @@ export type UseQuery<
    *
    * @returns function to revert the changes & function to invalidate the query
    *
-   * IMPORTANT NOTE: This won't work well on infinite query.
+   * **IMPORTANT NOTE:** This won't work well on infinite query.
    */
   optimisticUpdate: (options: {
     key?: Maybe<TKey>;
@@ -354,7 +358,12 @@ export type UseQuery<
       | ((prevState: QueryState<TKey, TResponse, TData, TError, TPageParam>) => TResponse);
   }) => { revert: () => void; invalidate: () => void };
   /**
+   * ⚛️ (**_Hook_**)
+   *
    * Use query with suspense mode.
+   *
+   * **IMPORTANT NOTE:**
+   * - This is a hook, put it inside of a React component
    */
   suspend: (
     key?: Maybe<TKey>,
