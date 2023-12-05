@@ -10,7 +10,10 @@ import {
   Subscribers,
 } from '../vanilla';
 
-export type WatchProps<T> = { selectDeps?: SelectDeps<T>; render: (state: T) => any };
+export type WatchProps<T, K extends SelectDeps<T> | keyof T = SelectDeps<T>> = {
+  selectDeps?: K;
+  render: (state: K extends keyof T ? T[K] : T) => any;
+};
 
 export type UseStore<T extends StoreData> = {
   /**
@@ -19,10 +22,10 @@ export type UseStore<T extends StoreData> = {
    *
    * **IMPORTANT NOTE:** `selectDeps` must not be changed after initialization.
    */
-  (selectDeps?: SelectDeps<T>): T;
+  <K extends SelectDeps<T> | keyof T = SelectDeps<T>>(selectDeps?: K): K extends keyof T ? T[K] : T;
   get: () => T;
   set: (value: SetStoreData<T>, silent?: boolean) => void;
-  subscribe: (fn: (state: T) => void, selectDeps?: SelectDeps<T>) => () => void;
+  subscribe: (fn: (state: T) => void, selectDeps?: SelectDeps<T> | keyof T) => () => void;
   getSubscribers: () => Subscribers<T>;
   /**
    * ⚛️ (**_Hook_**)
@@ -34,7 +37,7 @@ export type UseStore<T extends StoreData> = {
    * - Put this on the root component or parent component, before any component subscribed!
    */
   setDefaultValues: (values: SetStoreData<T>) => void;
-  Watch: (props: WatchProps<T>) => any;
+  Watch: <K extends SelectDeps<T> | keyof T = SelectDeps<T>>(props: WatchProps<T, K>) => any;
 };
 
 /**
@@ -52,13 +55,16 @@ export const createStore = <T extends StoreData>(
   /**
    * **IMPORTANT NOTE:** `selectDeps` function must not be changed after initialization.
    */
-  const useStore = (selectDeps: SelectDeps<T> = defaultDeps) => {
+  const useStore = <K extends SelectDeps<T> | keyof T = SelectDeps<T>>(
+    selectDeps = defaultDeps as K,
+  ) => {
     const [state, setState] = useState(get);
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
     useEffect(() => subscribe(setState, selectDeps), []);
 
-    return state;
+    type UseStoreReturn = K extends keyof T ? T[K] : T;
+    return (typeof selectDeps === 'string' ? state[selectDeps] : state) as UseStoreReturn;
   };
 
   useStore.get = get;
@@ -79,7 +85,10 @@ export const createStore = <T extends StoreData>(
     });
   };
 
-  const Watch = ({ selectDeps = defaultDeps, render }: WatchProps<T>) => {
+  const Watch = <K extends SelectDeps<T> | keyof T = SelectDeps<T>>({
+    selectDeps = defaultDeps as K,
+    render,
+  }: WatchProps<T, K>) => {
     const store = useStore(selectDeps);
     return render(store);
   };
