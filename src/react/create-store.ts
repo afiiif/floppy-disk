@@ -17,10 +17,26 @@ export type WatchProps<T, K extends SelectDeps<T> | keyof T = SelectDeps<T>> = {
 
 export type UseStore<T extends StoreData> = {
   /**
-   * @param selectDeps A function that return the dependency array (just like in `useEffect`), to trigger reactivity.
+   * @param selectDeps (Optional) A function that return the dependency array (just like in `useEffect`), to trigger reactivity.
    * Defaults to `undefined` (reactive to all state change) if you didn't set `defaultDeps` on `createStore`.
    *
+   * Since version `2.13.0`, we can use a store's object key to control reactivity.
+   *
    * **IMPORTANT NOTE:** `selectDeps` must not be changed after initialization.
+   *
+   * @example
+   * ```tsx
+   * const useMyStore = createStore({
+   *   foo: 12,
+   *   bar: true,
+   *   baz: "z",
+   * });
+   *
+   * const MyComponent = () => {
+   *   const foo = useMyStore("foo");
+   *   // Will only re-render if "foo" updated
+   * };
+   * ```
    */
   <K extends SelectDeps<T> | keyof T = SelectDeps<T>>(selectDeps?: K): K extends keyof T ? T[K] : T;
   get: () => T;

@@ -26,14 +26,35 @@ export type StoresInitializer<TKey extends StoreKey = StoreKey, T extends StoreD
 export type UseStores<TKey extends StoreKey = StoreKey, T extends StoreData = StoreData> = {
   /**
    * @param key (Optional) Store key, an object that will be hashed into a string as a store identifier.
+   * No need to memoize the store key.
    *
-   * @param selectDeps A function that return the dependency array (just like in `useEffect`), to trigger reactivity.
+   * @param selectDeps (Optional) A function that return the dependency array (just like in `useEffect`), to trigger reactivity.
    * Defaults to `undefined` (reactive to all state change) if you didn't set `defaultDeps` on `createStores`.
    *
+   * Since version `2.13.0`, we can use a store's object key to control reactivity.
+   *
    * **IMPORTANT NOTE:** `selectDeps` must not be changed after initialization.
+   *
+   * @example
+   * ```tsx
+   * type StoreKey = { id: string };
+   * type StoreData = { foo: number; bar: boolean; baz: string };
+   * const useMyStores = createStores<StoreKey, StoreData>({
+   *   foo: 12,
+   *   bar: true,
+   *   baz: "z",
+   * });
+   *
+   * export const MyComponent = () => {
+   *   const foo = useMyStores({ id: "p1" }, "foo");
+   *   // Will only re-render if "foo" & store key ("id") updated
+   * };
+   * ```
    */
+  <K extends SelectDeps<T> | keyof T = SelectDeps<T>>(selectDeps?: K): K extends keyof T ? T[K] : T;
   <K extends SelectDeps<T> | keyof T = SelectDeps<T>>(
-    ...args: [Maybe<TKey>, K?] | [K?]
+    key: Maybe<TKey>,
+    selectDeps?: K,
   ): K extends keyof T ? T[K] : T;
   get: (key?: Maybe<TKey>) => T;
   getAll: () => T[];

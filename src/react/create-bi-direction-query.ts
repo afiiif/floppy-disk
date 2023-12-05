@@ -1,5 +1,4 @@
 import { hasValue, Maybe } from '../utils';
-import { SelectDeps } from '../vanilla';
 import { createQuery, CreateQueryOptions, QueryState } from './create-query';
 import { StoreKey } from './create-stores';
 
@@ -82,13 +81,21 @@ export const createBiDirectionQuery = <
     },
   );
 
-  const useBiDirectionQuery = (
-    ...args:
-      | [Maybe<TKey>, SelectDeps<QueryState<TKey, TResponse, TData, TError, TPageParam>>?]
-      | [SelectDeps<QueryState<TKey, TResponse, TData, TError, TPageParam>>?]
-  ) => {
-    const pQuery = usePrevPagesQuery(...args);
-    const nQuery = useNextPagesQuery(...args);
+  const useBiDirectionQuery = (...args: Parameters<typeof usePrevPagesQuery>) => {
+    const pQuery = usePrevPagesQuery(...args) as QueryState<
+      TKey,
+      TResponse,
+      TData,
+      TError,
+      TPageParam
+    >;
+    const nQuery = useNextPagesQuery(...args) as QueryState<
+      TKey,
+      TResponse,
+      TData,
+      TError,
+      TPageParam
+    >;
 
     return {
       ...nQuery,
