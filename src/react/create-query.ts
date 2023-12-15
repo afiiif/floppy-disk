@@ -426,7 +426,7 @@ export const createQuery = <
     keepPreviousData,
     getNextPageParam = () => undefined,
     onSuccess = noop,
-    onError = noop,
+    onError = console.error,
     onSettled = noop,
     cacheTime = 5 * 60 * 1000,
     refetchInterval = false,

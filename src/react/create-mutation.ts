@@ -57,7 +57,7 @@ export const createMutation = <TVar, TResponse = any, TError = unknown>(
   const {
     onMutate = noop,
     onSuccess = noop,
-    onError = noop,
+    onError = console.error,
     onSettled = noop,
     ...createStoreOptions
   } = options;
