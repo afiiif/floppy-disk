@@ -426,7 +426,7 @@ export const createQuery = <
     keepPreviousData,
     getNextPageParam = () => undefined,
     onSuccess = noop,
-    onError = console.error,
+    onError,
     onSettled = noop,
     cacheTime = 5 * 60 * 1000,
     refetchInterval = false,
@@ -582,7 +582,8 @@ export const createQuery = <
                         hasNextPage: hasValue(pageParam),
                       },
                 );
-                onError(error, stateBeforeCallQuery);
+                if (onError) onError(error, stateBeforeCallQuery);
+                else console.error(error, get());
                 onSettled(stateBeforeCallQuery);
                 innerResolve(get());
               });
@@ -661,7 +662,8 @@ export const createQuery = <
                 error,
                 errorUpdatedAt: Date.now(),
               });
-              onError(error, stateBeforeCallQuery);
+              if (onError) onError(error, stateBeforeCallQuery);
+              else console.error(error, get());
               onSettled(stateBeforeCallQuery);
               resolve(get());
             });

@@ -57,7 +57,7 @@ export const createMutation = <TVar, TResponse = any, TError = unknown>(
   const {
     onMutate = noop,
     onSuccess = noop,
-    onError = console.error,
+    onError,
     onSettled = noop,
     ...createStoreOptions
   } = options;
@@ -98,7 +98,8 @@ export const createMutation = <TVar, TResponse = any, TError = unknown>(
                 error,
                 errorUpdatedAt: Date.now(),
               });
-              onError(error, variables, stateBeforeMutate);
+              if (onError) onError(error, variables, stateBeforeMutate);
+              else console.error(error, variables, get());
               resolve({ error, variables });
             })
             .finally(() => {
