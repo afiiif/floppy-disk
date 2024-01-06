@@ -74,7 +74,8 @@ export const fetcher =
     const res = await fetch(finalUrl, finalOptions);
 
     const contentType = res.headers.get('content-type');
-    if (contentType && contentType.includes('application/json')) {
+    const isJsonFile = /\.json(\?.+)?$/.test(finalUrl);
+    if (contentType?.includes('application/json') || isJsonFile) {
       let resJson = await res.json();
       if (query) {
         if (resJson.errors) {
