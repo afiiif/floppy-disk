@@ -505,10 +505,15 @@ describe('createQuery - single query', () => {
       expect(queryFn2).toHaveBeenCalledTimes(2);
 
       hook1.rerender({ id: 2 });
+      await hook1.waitForNextUpdate();
+      expect(queryFn).toHaveBeenCalledTimes(4);
+
       const hook3 = renderHook(() => useQuery2());
       await hook3.waitForNextUpdate();
+      expect(queryFn2).toHaveBeenCalledTimes(3);
 
-      act(() => {
+      await act(async () => {
+        await new Promise((r) => setTimeout(r, 100));
         fireEvent(window, new Event('online'));
       });
       await hook3.waitForNextUpdate();
