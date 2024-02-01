@@ -1,6 +1,6 @@
 import { act, renderHook } from '@testing-library/react-hooks';
 
-import { createMutation, UseMutation } from '../../react/create-mutation';
+import { createMutation, UseMutation } from '../../src';
 
 describe('createMutation - without param', () => {
   type Var = undefined;

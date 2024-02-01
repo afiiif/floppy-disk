@@ -1,6 +1,6 @@
 import { act, renderHook } from '@testing-library/react-hooks';
 
-import { createStores, UseStores } from '../../react/create-stores';
+import { createStores, UseStores } from '../../src';
 
 describe('createStores', () => {
   describe('simple counter', () => {

@@ -1,4 +1,4 @@
-import { initStore, InitStoreReturn, StoreData } from '../vanilla';
+import { initStore, InitStoreReturn, StoreData } from '../src';
 
 describe('initStore', () => {
   interface TestData extends StoreData {

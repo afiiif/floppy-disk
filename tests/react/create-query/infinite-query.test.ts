@@ -1,6 +1,6 @@
 import { act, renderHook } from '@testing-library/react-hooks';
 
-import { createQuery, UseQuery } from '../../../react/create-query';
+import { createQuery, UseQuery } from '../../../src';
 
 describe('createQuery - infinite query', () => {
   type Key = undefined;
