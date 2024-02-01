@@ -25,22 +25,41 @@
   "sideEffects": false,
   "files": [
     "lib/",
-    "esm/"
+    "esm/",
+    "utils/"
   ],
-  "main": "lib/index.js",
-  "module": "esm/index.js",
-  "types": "lib/index.d.ts",
-  "typings": "lib/index.d.ts",
+  "main": "./lib/index.js",
+  "module": "./esm/index.js",
+  "types": "./lib/index.d.ts",
   "exports": {
     "./package.json": "./package.json",
     ".": {
-      "types": "./lib/index.d.ts",
       "import": {
         "types": "./esm/index.d.ts",
         "default": "./esm/index.js"
       },
-      "module": "./esm/index.js",
-      "default": "./lib/index.js"
+      "module": {
+        "types": "./esm/index.d.ts",
+        "default": "./esm/index.js"
+      },
+      "default": {
+        "types": "./lib/index.d.ts",
+        "default": "./lib/index.js"
+      }
+    },
+    "./utils": {
+      "import": {
+        "types": "./esm/utils.d.ts",
+        "default": "./esm/utils.js"
+      },
+      "module": {
+        "types": "./esm/utils.d.ts",
+        "default": "./esm/utils.js"
+      },
+      "default": {
+        "types": "./lib/utils.d.ts",
+        "default": "./lib/utils.js"
+      }
     }
   },
   "engines": {

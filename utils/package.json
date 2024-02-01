@@ -1,0 +1,6 @@
+{
+  "sideEffects": false,
+  "main": "../lib/utils.js",
+  "module": "../esm/utils.js",
+  "types": "../lib/utils.d.ts"
+}
