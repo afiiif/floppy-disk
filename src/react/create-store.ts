@@ -8,7 +8,7 @@ import {
   StoreData,
   StoreInitializer,
   Subscribers,
-} from '../vanilla';
+} from '../store';
 
 export type WatchProps<T, K extends SelectDeps<T> | keyof T = SelectDeps<T>> = {
   selectDeps?: K;

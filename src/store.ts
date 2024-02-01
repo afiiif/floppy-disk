@@ -96,3 +96,5 @@ export const initStore = <T extends StoreData>(
 
   return { get, set, subscribe, getSubscribers };
 };
+
+export const hashStoreKey = (obj?: any) => JSON.stringify(obj, Object.keys(obj).sort());
