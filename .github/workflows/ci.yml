@@ -68,12 +68,7 @@ jobs:
           npm pkg delete 'engines'
           npm pkg delete 'devDependencies'
       - name: Build package
-        run: |
-          if [ "${{ github.ref }}" = "refs/heads/experimental" ]; then
-            PREACT=true yarn build
-          else
-            yarn build
-          fi
+        run: yarn build
       - name: Release package
         run: yarn semantic-release
         env:
