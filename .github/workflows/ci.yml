@@ -63,14 +63,15 @@ jobs:
           node-version: 18
       - name: Install dependencies
         uses: bahmutov/npm-install@v1
+      - name: Build package
+        run: yarn build
       - name: Update package.json
         run: |
           npm pkg delete 'engines'
           npm pkg delete 'devDependencies'
-      - name: Build package
-        run: yarn build
+          npm pkg delete 'scripts'
       - name: Release package
-        run: yarn semantic-release
+        run: npx semantic-release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
