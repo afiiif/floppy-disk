@@ -4,15 +4,15 @@ import {
   initStore,
   InitStoreOptions,
   SelectDeps,
-  SetStoreData,
-  StoreData,
+  SetStoreState,
   StoreInitializer,
+  StoreState,
   Subscribers,
 } from '../store';
 
 export type WatchProps<T> = { selectDeps?: SelectDeps<T>; render: (state: T) => any };
 
-export type UseStore<T extends StoreData> = {
+export type UseStore<T extends StoreState> = {
   /**
    * @param selectDeps A function that return the dependency array (just like in `useEffect`), to trigger reactivity.
    *
@@ -24,7 +24,7 @@ export type UseStore<T extends StoreData> = {
    */
   (selectDeps?: SelectDeps<T>): T;
   get: () => T;
-  set: (value: SetStoreData<T>, silent?: boolean) => void;
+  set: (value: SetStoreState<T>, silent?: boolean) => void;
   subscribe: (fn: (state: T) => void, selectDeps?: SelectDeps<T>) => () => void;
   getSubscribers: () => Subscribers<T>;
   /**
@@ -36,14 +36,14 @@ export type UseStore<T extends StoreData> = {
    * - This is a hook, put it inside of a React component
    * - Put this on the root component or parent component, before any component subscribed!
    */
-  setDefaultValues: (values: SetStoreData<T>) => void;
+  setDefaultValues: (values: SetStoreState<T>) => void;
   Watch: (props: WatchProps<T>) => any;
 };
 
 /**
  * @see https://floppy-disk.vercel.app/docs/api#createstore
  */
-export const createStore = <T extends StoreData>(
+export const createStore = <T extends StoreState>(
   initializer: StoreInitializer<T>,
   options: InitStoreOptions<T> & {
     defaultDeps?: SelectDeps<T>;
@@ -69,7 +69,7 @@ export const createStore = <T extends StoreData>(
   useStore.subscribe = subscribe;
   useStore.getSubscribers = getSubscribers;
 
-  useStore.setDefaultValues = (value: SetStoreData<T>) => {
+  useStore.setDefaultValues = (value: SetStoreState<T>) => {
     // eslint-disable-next-line react-hooks/rules-of-hooks
     useState(() => {
       const subscribers = getSubscribers();

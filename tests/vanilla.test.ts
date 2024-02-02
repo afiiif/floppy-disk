@@ -1,7 +1,7 @@
-import { initStore, InitStoreReturn, StoreData } from '../src';
+import { initStore, InitStoreReturn, StoreState } from '../src';
 
 describe('initStore', () => {
-  interface TestData extends StoreData {
+  interface TestData extends StoreState {
     counter: number;
     text: string;
   }

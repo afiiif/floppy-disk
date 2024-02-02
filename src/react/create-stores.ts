@@ -5,8 +5,8 @@ import {
   InitStoreOptions,
   InitStoreReturn,
   SelectDeps,
-  SetStoreData,
-  StoreData,
+  SetStoreState,
+  StoreState,
   Subscribers,
 } from '../store';
 import { getValue, Maybe, noop } from '../utils';
@@ -14,16 +14,19 @@ import { WatchProps } from './create-store';
 
 export type StoreKey = Record<string, any> | undefined;
 
-export type StoresInitializer<TKey extends StoreKey = StoreKey, T extends StoreData = StoreData> =
+export type StoresInitializer<
+  TKey extends StoreKey = StoreKey,
+  T extends StoreState = StoreState,
+> =
   | T
   | ((api: {
       get: () => T;
-      set: (value: SetStoreData<T>, silent?: boolean) => void;
+      set: (value: SetStoreState<T>, silent?: boolean) => void;
       key: TKey;
       keyHash: string;
     }) => T);
 
-export type UseStores<TKey extends StoreKey = StoreKey, T extends StoreData = StoreData> = {
+export type UseStores<TKey extends StoreKey = StoreKey, T extends StoreState = StoreState> = {
   /**
    * @param key (Optional) Store key, an object that will be hashed into a string as a store identifier.
    * No need to memoize the store key.
@@ -40,8 +43,8 @@ export type UseStores<TKey extends StoreKey = StoreKey, T extends StoreData = St
   get: (key?: Maybe<TKey>) => T;
   getAll: () => T[];
   getAllWithSubscriber: () => T[];
-  set: (key: Maybe<TKey>, value: SetStoreData<T>, silent?: boolean) => void;
-  setAll: (value: SetStoreData<T>, silent?: boolean) => void;
+  set: (key: Maybe<TKey>, value: SetStoreState<T>, silent?: boolean) => void;
+  setAll: (value: SetStoreState<T>, silent?: boolean) => void;
   subscribe: (key: Maybe<TKey>, fn: (state: T) => void, selectDeps?: SelectDeps<T>) => () => void;
   getSubscribers: (key: Maybe<TKey>) => Subscribers<T>;
   getStore: (key?: Maybe<TKey>) => InitStoreReturn<T>;
@@ -55,13 +58,13 @@ export type UseStores<TKey extends StoreKey = StoreKey, T extends StoreData = St
    * - This is a hook, put it inside of a React component
    * - Put this on the root component or parent component, before any component subscribed!
    */
-  setDefaultValues: (key: Maybe<TKey>, values: SetStoreData<T>) => void;
+  setDefaultValues: (key: Maybe<TKey>, values: SetStoreState<T>) => void;
   Watch: (props: WatchProps<T> & { storeKey?: Maybe<TKey> }) => any;
 };
 
 export type CreateStoresOptions<
   TKey extends StoreKey = StoreKey,
-  T extends StoreData = StoreData,
+  T extends StoreState = StoreState,
 > = InitStoreOptions<T> & {
   onBeforeChangeKey?: (nextKey: TKey, prevKey: TKey) => void;
   /**
@@ -77,7 +80,7 @@ export const hashStoreKey = (obj?: any) => JSON.stringify(obj, Object.keys(obj).
 /**
  * @see https://floppy-disk.vercel.app/docs/api#createstores
  */
-export const createStores = <TKey extends StoreKey = StoreKey, T extends StoreData = StoreData>(
+export const createStores = <TKey extends StoreKey = StoreKey, T extends StoreState = StoreState>(
   initializer: StoresInitializer<TKey, T>,
   options: CreateStoresOptions<TKey, T> = {},
 ): UseStores<TKey, T> => {
@@ -154,11 +157,11 @@ export const createStores = <TKey extends StoreKey = StoreKey, T extends StoreDa
     return allStores;
   };
 
-  useStores.set = (key: Maybe<TKey>, value: SetStoreData<T>, silent?: boolean) => {
+  useStores.set = (key: Maybe<TKey>, value: SetStoreState<T>, silent?: boolean) => {
     const store = getStore(key);
     store.set(value, silent);
   };
-  useStores.setAll = (value: SetStoreData<T>, silent?: boolean) => {
+  useStores.setAll = (value: SetStoreState<T>, silent?: boolean) => {
     stores.forEach((store) => {
       store.set(value, silent);
     });
@@ -180,7 +183,7 @@ export const createStores = <TKey extends StoreKey = StoreKey, T extends StoreDa
   useStores.getStore = (key?: Maybe<TKey>) => getStore(key);
   useStores.getStores = () => stores;
 
-  useStores.setDefaultValues = (key: Maybe<TKey>, value: SetStoreData<T>) => {
+  useStores.setDefaultValues = (key: Maybe<TKey>, value: SetStoreState<T>) => {
     // eslint-disable-next-line react-hooks/rules-of-hooks
     useState(() => {
       const store = getStore(key);
