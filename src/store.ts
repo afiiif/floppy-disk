@@ -12,7 +12,7 @@ export type StoreInitializer<T> =
 export type StoreEvent<T> = (state: T) => void;
 
 export type InitStoreOptions<T> = {
-  intercept?: (nextState: T, prevState: T) => Maybe<Partial<T>>;
+  intercept?: (nextState: T, prevState: T) => void | Maybe<Partial<T>>;
   onFirstSubscribe?: StoreEvent<T>;
   onSubscribe?: StoreEvent<T>;
   onUnsubscribe?: StoreEvent<T>;
