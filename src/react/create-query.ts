@@ -846,7 +846,7 @@ export const createQuery = <
 
   useQuery.suspend = (key?: Maybe<TKey>) => {
     // eslint-disable-next-line react-hooks/rules-of-hooks
-    const state = useQuery(key) as QueryState<TKey, TResponse, TData, TError, TPageParam>;
+    const state = useQuery(key);
     if (state.isLoading) throw state.forceFetch();
     if (state.isError) throw state.error;
     return state;
@@ -860,7 +860,7 @@ export const createQuery = <
       error = fallbackComponent,
     } = props;
     // eslint-disable-next-line react-hooks/rules-of-hooks
-    const state = useQuery(queryKey) as QueryState<TKey, TResponse, TData, TError, TPageParam>;
+    const state = useQuery(queryKey);
     if (state.data) return createElement<any>(success, state);
     return createElement<any>(state.isLoading ? loading : error, state);
   };

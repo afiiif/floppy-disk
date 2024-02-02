@@ -26,7 +26,6 @@ describe('createStores', () => {
       const hook1b = renderHook(() => useStores());
       const hook2a = renderHook(() => useStores({ id: 2 }));
       const hook2b = renderHook(() => useStores({ id: 2 }));
-      const hook2c = renderHook(() => useStores({ id: 2 }, 'counter'));
       const hook3a = renderHook(() => useStores({ id: 3 }));
       const hook3b = renderHook(() => useStores({ id: 3 }));
 
@@ -34,7 +33,6 @@ describe('createStores', () => {
       expect(hook1b.result.current.counter).toEqual(1);
       expect(hook2a.result.current.counter).toEqual(1);
       expect(hook2b.result.current.counter).toEqual(1);
-      expect(hook2c.result.current).toEqual(1);
       expect(hook3a.result.current.counter).toEqual(1);
       expect(hook3b.result.current.counter).toEqual(1);
 
@@ -46,7 +44,6 @@ describe('createStores', () => {
       expect(hook1b.result.current.counter).toEqual(2);
       expect(hook2a.result.current.counter).toEqual(1);
       expect(hook2b.result.current.counter).toEqual(1);
-      expect(hook2c.result.current).toEqual(1);
       expect(hook3a.result.current.counter).toEqual(1);
       expect(hook3b.result.current.counter).toEqual(1);
 
@@ -58,7 +55,6 @@ describe('createStores', () => {
       expect(hook1b.result.current.counter).toEqual(2);
       expect(hook2a.result.current.counter).toEqual(2);
       expect(hook2b.result.current.counter).toEqual(2);
-      expect(hook2c.result.current).toEqual(2);
       expect(hook3a.result.current.counter).toEqual(1);
       expect(hook3b.result.current.counter).toEqual(1);
     });
@@ -105,13 +101,9 @@ describe('createStores', () => {
 
       const hook1 = renderHook(() => useStores2((state) => [state.a]));
       const hook2 = renderHook(() => useStores2((state) => [state.b]));
-      const hook3 = renderHook(() => useStores2('a'));
-      const hook4 = renderHook(() => useStores2('b'));
 
       expect(hook1.result.current.a).toEqual(1);
       expect(hook2.result.current.b).toEqual(10);
-      expect(hook3.result.current).toEqual(1);
-      expect(hook4.result.current).toEqual(10);
 
       act(() => {
         useStores2.set(null, { a: 2 });
@@ -119,7 +111,6 @@ describe('createStores', () => {
 
       expect(hook1.result.current.a).toEqual(2);
       expect(hook2.result.current.a).toEqual(1);
-      expect(hook3.result.current).toEqual(2);
 
       act(() => {
         useStores2.set(null, { b: 20 });
@@ -129,7 +120,6 @@ describe('createStores', () => {
       expect(hook1.result.current.b).toEqual(10);
       expect(hook2.result.current.a).toEqual(2);
       expect(hook2.result.current.b).toEqual(20);
-      expect(hook4.result.current).toEqual(20);
     });
 
     it('should be able to subscribe state outside the component', () => {

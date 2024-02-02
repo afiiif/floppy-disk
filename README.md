@@ -30,7 +30,7 @@ import { createQuery, createMutation } from 'floppy-disk'; // 9.7 kB (gzipped: 3
 
 - **Create Store**
   - Get/set store inside/outside component
-  - Very simple way to customize the reactivity (state update subscription)
+  - Very simple way to customize the reactivity (a.k.a. state update subscription)
   - Support middleware
   - Set state interception
   - Store event (`onSubscribe`, `onUnsubscribe`, etc.)
@@ -112,12 +112,12 @@ Use the hook anywhere, no providers are needed.
 
 ```jsx
 function Cat() {
-  const age = useCatStore('age');
+  const { age } = useCatStore((state) => [state.age]);
   return <div>Cat's age: {age}</div>;
 }
 
 function Control() {
-  const increaseAge = useCatStore('increaseAge');
+  const { increaseAge } = useCatStore((state) => [state.increaseAge]);
   return <button onClick={increaseAge}>Increase cat's age</button>;
 }
 ```
@@ -130,36 +130,26 @@ Control the reactivity. The concept is same as useEffect dependency array.
 function YourComponent() {
   const { age, isSleeping } = useCatStore();
   // Will re-render every state change    ^
+  ...
 }
 
 function YourComponent() {
   const { age, isSleeping } = useCatStore((state) => [state.isSleeping]);
   // Will only re-render when isSleeping is updated   ^
   // Update on age won't cause re-render this component
+  ...
 }
 
 function YourComponent() {
   const { age, isSleeping } = useCatStore((state) => [state.age, state.isSleeping]);
   // Will re-render when age or isSleeping is updated ^
+  ...
 }
 
 function YourComponent() {
   const { age, isSleeping } = useCatStore((state) => [state.age > 3]);
   // Will only re-render when (age>3) is updated
-}
-```
-
-Even simpler way, after version `2.13.0`, we can use store's object key:
-
-```jsx
-function YourComponent() {
-  const age = useCatStore('age');
-  // Will only re-render when age is updated
-}
-
-function YourComponent() {
-  const age = useCatStore('isSleeping');
-  // Will only re-render when isSleeping is updated
+  ...
 }
 ```
 
@@ -198,7 +188,7 @@ const decreaseAgeSilently = () => {
 };
 //                👇 Will not re-render
 function Cat() {
-  const age = useCatStore('age');
+  const { age } = useCatStore((state) => [state.age]);
   return <div>Cat's age: {age}</div>;
 }
 ```
@@ -268,7 +258,7 @@ Prevent re-render using `Watch`.
 
 ```jsx
 function CatPage() {
-  const age = useCatStore('age');
+  const { age } = useCatStore((state) => [state.age]);
   // If age changed, this component will re-render which will cause
   // HeavyComponent1 & HeavyComponent2 to be re-rendered as well.
   return (
@@ -286,8 +276,8 @@ function CatPageOptimized() {
     <main>
       <HeavyComponent1 />
       <useCatStore.Watch
-        selectDeps="age"
-        render={(age) => {
+        selectDeps={(state) => [state.age]}
+        render={({ age }) => {
           return <div>Cat's age: {age}</div>;
         }}
       />
@@ -338,20 +328,11 @@ function Parent() {
 
 function CatAge() {
   const { age } = useCatStoreContext()((state) => [state.age]);
-
-  // Shorthand after v1.13.0:
-  // const age = useCatStoreContext()('age');
-
   return <div>Age: {age}</div>;
 }
-
 function CatIsSleeping() {
   const useCatStore = useCatStoreContext();
   const { isSleeping } = useCatStore((state) => [state.isSleeping]);
-
-  // Shorthand after v1.13.0:
-  // const isSleeping = useCatStore('isSleeping');
-
   return (
     <>
       <div>Is Sleeping: {String(isSleeping)}</div>
@@ -802,7 +783,6 @@ Don't use conditional reactivity selector.
 
 ```jsx
 function Cat({ isSomething }) {
-  const value = useCatStore(isSomething ? 'age' : 'isSleeping'); // ❌
   const { age } = useCatStore(isSomething ? (state) => [state.age] : null); // ❌
   const { age } = useCatStore((state) => (isSomething ? [state.age] : [state.isSleeping])); // ❌
   return <div>Cat's age: {age}</div>;

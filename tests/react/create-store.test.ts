@@ -64,13 +64,9 @@ describe('createStore', () => {
 
       const hook1 = renderHook(() => useStore2((state) => [state.a]));
       const hook2 = renderHook(() => useStore2((state) => [state.b]));
-      const hook3 = renderHook(() => useStore2('a'));
-      const hook4 = renderHook(() => useStore2('b'));
 
       expect(hook1.result.current.a).toEqual(1);
       expect(hook2.result.current.b).toEqual(10);
-      expect(hook3.result.current).toEqual(1);
-      expect(hook4.result.current).toEqual(10);
 
       act(() => {
         useStore2.set({ a: 2 });
@@ -78,7 +74,6 @@ describe('createStore', () => {
 
       expect(hook1.result.current.a).toEqual(2);
       expect(hook2.result.current.a).toEqual(1);
-      expect(hook3.result.current).toEqual(2);
 
       act(() => {
         useStore2.set({ b: 20 });
@@ -88,7 +83,6 @@ describe('createStore', () => {
       expect(hook1.result.current.b).toEqual(10);
       expect(hook2.result.current.a).toEqual(2);
       expect(hook2.result.current.b).toEqual(20);
-      expect(hook4.result.current).toEqual(20);
     });
 
     it('should be able to set default values', () => {

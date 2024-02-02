@@ -29,43 +29,20 @@ export type UseStores<TKey extends StoreKey = StoreKey, T extends StoreData = St
    * No need to memoize the store key.
    *
    * @param selectDeps (Optional) A function that return the dependency array (just like in `useEffect`), to trigger reactivity.
+   *
    * Defaults to `undefined` (reactive to all state change) if you didn't set `defaultDeps` on `createStores`.
    *
-   * Since version `2.13.0`, we can use a store's object key to control reactivity.
+   * Value of `null` will also make it reactive to all state change.
    *
    * **IMPORTANT NOTE:** `selectDeps` must not be changed after initialization.
-   *
-   * @example
-   * ```tsx
-   * type StoreKey = { id: string };
-   * type StoreData = { foo: number; bar: boolean; baz: string };
-   * const useMyStores = createStores<StoreKey, StoreData>({
-   *   foo: 12,
-   *   bar: true,
-   *   baz: "z",
-   * });
-   *
-   * export const MyComponent = () => {
-   *   const foo = useMyStores({ id: "p1" }, "foo");
-   *   // Will only re-render if "foo" & store key ("id") updated
-   * };
-   * ```
    */
-  <K extends SelectDeps<T> | keyof T = SelectDeps<T>>(selectDeps?: K): K extends keyof T ? T[K] : T;
-  <K extends SelectDeps<T> | keyof T = SelectDeps<T>>(
-    key: Maybe<TKey>,
-    selectDeps?: K,
-  ): K extends keyof T ? T[K] : T;
+  (...args: [Maybe<TKey>, SelectDeps<T>?] | [SelectDeps<T>?]): T;
   get: (key?: Maybe<TKey>) => T;
   getAll: () => T[];
   getAllWithSubscriber: () => T[];
   set: (key: Maybe<TKey>, value: SetStoreData<T>, silent?: boolean) => void;
   setAll: (value: SetStoreData<T>, silent?: boolean) => void;
-  subscribe: (
-    key: Maybe<TKey>,
-    fn: (state: T) => void,
-    selectDeps?: SelectDeps<T> | keyof T,
-  ) => () => void;
+  subscribe: (key: Maybe<TKey>, fn: (state: T) => void, selectDeps?: SelectDeps<T>) => () => void;
   getSubscribers: (key: Maybe<TKey>) => Subscribers<T>;
   getStore: (key?: Maybe<TKey>) => InitStoreReturn<T>;
   getStores: () => Map<string, InitStoreReturn<T>>;
@@ -79,9 +56,7 @@ export type UseStores<TKey extends StoreKey = StoreKey, T extends StoreData = St
    * - Put this on the root component or parent component, before any component subscribed!
    */
   setDefaultValues: (key: Maybe<TKey>, values: SetStoreData<T>) => void;
-  Watch: <K extends SelectDeps<T> | keyof T = SelectDeps<T>>(
-    props: WatchProps<T, K> & { storeKey?: Maybe<TKey> },
-  ) => any;
+  Watch: (props: WatchProps<T> & { storeKey?: Maybe<TKey> }) => any;
 };
 
 export type CreateStoresOptions<
@@ -131,13 +106,10 @@ export const createStores = <TKey extends StoreKey = StoreKey, T extends StoreDa
   /**
    * **IMPORTANT NOTE:** `selectDeps` function must not be changed after initialization.
    */
-  const useStores = <K extends SelectDeps<T> | keyof T = SelectDeps<T>>(
-    ...args: [Maybe<TKey>, K?] | [K?]
-  ) => {
+  const useStores = (...args: [Maybe<TKey>, SelectDeps<T>?] | [SelectDeps<T>?]) => {
     const [_key, selectDeps = defaultDeps] = (
-      typeof args[0] === 'function' || typeof args[0] === 'string' ? [{}, args[0]] : args
+      typeof args[0] === 'function' ? [{}, args[0]] : args
     ) as [TKey, SelectDeps<T>];
-
     const key = _key || ({} as TKey);
     const keyHash = hashKeyFn(key);
 
@@ -159,10 +131,7 @@ export const createStores = <TKey extends StoreKey = StoreKey, T extends StoreDa
 
     if (keyHash !== prevKeyHash.current) onBeforeChangeKey(key, prevKey.current);
 
-    const state = get();
-
-    type UseStoresReturn = K extends keyof T ? T[K] : T;
-    return (typeof selectDeps === 'string' ? state[selectDeps] : state) as UseStoresReturn;
+    return get();
   };
 
   useStores.get = (key?: Maybe<TKey>) => {
@@ -198,7 +167,7 @@ export const createStores = <TKey extends StoreKey = StoreKey, T extends StoreDa
   useStores.subscribe = (
     key: Maybe<TKey>,
     fn: (state: T) => void,
-    selectDeps: SelectDeps<T> | keyof T = defaultDeps,
+    selectDeps: SelectDeps<T> = defaultDeps,
   ) => {
     const store = getStore(key);
     return store.subscribe(fn, selectDeps);
@@ -225,11 +194,11 @@ export const createStores = <TKey extends StoreKey = StoreKey, T extends StoreDa
     });
   };
 
-  const Watch = <K extends SelectDeps<T> | keyof T = SelectDeps<T>>({
+  const Watch = ({
     storeKey,
-    selectDeps = defaultDeps as K,
+    selectDeps = defaultDeps,
     render,
-  }: WatchProps<T, K> & { storeKey?: Maybe<TKey> }) => {
+  }: WatchProps<T> & { storeKey?: Maybe<TKey> }) => {
     const store = useStores(storeKey, selectDeps);
     return render(store);
   };

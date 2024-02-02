@@ -22,7 +22,7 @@ export type InitStoreOptions<T> = {
 export type InitStoreReturn<T> = {
   get: () => T;
   set: (value: SetStoreData<T>, silent?: boolean) => void;
-  subscribe: (fn: (state: T) => void, selectDeps?: SelectDeps<T> | keyof T) => () => void;
+  subscribe: (fn: (state: T) => void, selectDeps?: SelectDeps<T>) => () => void;
   getSubscribers: () => Subscribers<T>;
 };
 
@@ -78,11 +78,8 @@ export const initStore = <T extends StoreData>(
     });
   };
 
-  const subscribe = (fn: (state: T) => void, selectDeps?: SelectDeps<T> | keyof T) => {
-    subscribers.set(
-      fn,
-      (typeof selectDeps === 'string' ? (s) => [s[selectDeps]] : selectDeps) as SelectDeps<T>,
-    );
+  const subscribe = (fn: (state: T) => void, selectDeps?: SelectDeps<T>) => {
+    subscribers.set(fn, selectDeps);
     if (subscribers.size === 1) onFirstSubscribe(data);
     onSubscribe(data);
     return () => {

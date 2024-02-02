@@ -98,22 +98,18 @@ describe('initStore', () => {
   it('should call subscribers with matched dependency when set is called', () => {
     const subscriber1 = jest.fn();
     const subscriber2 = jest.fn();
-    const subscriber3 = jest.fn();
 
     store.subscribe(subscriber1, (state) => [state.counter]);
     store.subscribe(subscriber2, (state) => [state.text]);
-    store.subscribe(subscriber3, 'counter');
 
     store.set({ counter: 2 });
     expect(subscriber1).toHaveBeenCalledWith(store.get());
     expect(subscriber2).not.toHaveBeenCalled();
-    expect(subscriber3).toHaveBeenCalledWith(store.get());
 
     store.set({ text: 'updated' });
     expect(subscriber1).toHaveBeenCalledTimes(1);
     expect(subscriber2).toHaveBeenCalledTimes(1);
     expect(subscriber2).toHaveBeenCalledWith({ counter: 2, text: 'updated' });
-    expect(subscriber3).toHaveBeenCalledTimes(1);
   });
 
   it('should not call subscribers when silent option is true', () => {
