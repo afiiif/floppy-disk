@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 
 import {
-  hashStoreKey,
   initStore,
   InitStoreOptions,
   InitStoreReturn,
@@ -97,6 +96,8 @@ export type CreateStoresOptions<
   defaultDeps?: SelectDeps<T>;
   hashKeyFn?: (obj: TKey) => string;
 };
+
+export const hashStoreKey = (obj?: any) => JSON.stringify(obj, Object.keys(obj).sort());
 
 /**
  * @see https://floppy-disk.vercel.app/docs/api#createstores
