@@ -1,4 +1,4 @@
-import { createError, getValue, identityFn } from './utils';
+import { createError, getValue, identityFn } from '../utils';
 
 const encodeParams = (params: Record<string, string | number | boolean>) =>
   Object.entries(params)

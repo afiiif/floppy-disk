@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 
+import { getValue, Maybe, noop } from '../utils';
 import {
   initStore,
   InitStoreOptions,
@@ -8,8 +9,7 @@ import {
   SetStoreState,
   StoreState,
   Subscribers,
-} from '../store';
-import { getValue, Maybe, noop } from '../utils';
+} from '../vanilla/init-store';
 import { WatchProps } from './create-store';
 
 export type StoreKey = Record<string, any> | undefined;

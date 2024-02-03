@@ -1,5 +1,5 @@
-export * from './store';
-export * from './fetcher';
+export * from './vanilla/init-store';
+export * from './vanilla/fetcher';
 
 export * from './react/create-store';
 export * from './react/create-stores';

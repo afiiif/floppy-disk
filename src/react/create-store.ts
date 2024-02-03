@@ -8,7 +8,7 @@ import {
   StoreInitializer,
   StoreState,
   Subscribers,
-} from '../store';
+} from '../vanilla/init-store';
 
 export type WatchProps<T> = { selectDeps?: SelectDeps<T>; render: (state: T) => any };
 

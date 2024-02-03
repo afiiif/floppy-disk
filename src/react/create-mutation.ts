@@ -1,5 +1,5 @@
-import { InitStoreOptions } from '../store';
 import { noop } from '../utils';
+import { InitStoreOptions } from '../vanilla/init-store';
 import { createStore, UseStore } from './create-store';
 
 export type MutationState<TVar, TResponse = any, TError = unknown> = {

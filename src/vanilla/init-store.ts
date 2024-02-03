@@ -1,4 +1,4 @@
-import { getValue, Maybe, noop } from './utils';
+import { getValue, Maybe, noop } from '../utils';
 
 export type StoreState = Record<string, any>;
 export type SetStoreState<T> = Partial<T> | ((state: T) => Partial<T>);
