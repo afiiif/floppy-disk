@@ -8,25 +8,11 @@
   "emmet.includeLanguages": {
     "javascript": "javascriptreact"
   },
-  "[javascript]": {
+  "[javascript][typescript][typescriptreact]": {
     "editor.tabSize": 2,
     "editor.rulers": [100],
     "editor.codeActionsOnSave": {
-      "source.fixAll.eslint": true
-    }
-  },
-  "[typescript]": {
-    "editor.tabSize": 2,
-    "editor.rulers": [100],
-    "editor.codeActionsOnSave": {
-      "source.fixAll.eslint": true
-    }
-  },
-  "[typescriptreact]": {
-    "editor.tabSize": 2,
-    "editor.rulers": [100],
-    "editor.codeActionsOnSave": {
-      "source.fixAll.eslint": true
+      "source.fixAll.eslint": "explicit"
     }
   }
 }
