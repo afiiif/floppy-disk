@@ -97,7 +97,30 @@ export type CreateStoresOptions<
   hashKeyFn?: (obj: TKey) => string;
 };
 
-export const hashStoreKey = (obj?: any) => JSON.stringify(obj, Object.keys(obj).sort());
+const hasObjectPrototype = (value: any) => {
+  return Object.prototype.toString.call(value) === '[object Object]';
+};
+const isPlainObject = (value: any) => {
+  if (!hasObjectPrototype(value)) return false;
+  const ctor = value.constructor;
+  if (typeof ctor === 'undefined') return true;
+  const prot = ctor.prototype;
+  if (!hasObjectPrototype(prot)) return false;
+  if (!prot.hasOwnProperty('isPrototypeOf')) return false;
+  return true;
+};
+export const hashStoreKey = (value?: any) =>
+  // Copied from: https://github.com/TanStack/query/blob/main/packages/query-core/src/utils.ts
+  JSON.stringify(value, (_, val) =>
+    isPlainObject(val)
+      ? Object.keys(val)
+          .sort()
+          .reduce((result, key) => {
+            result[key] = val[key];
+            return result;
+          }, {} as any)
+      : val,
+  );
 
 /**
  * @see https://floppy-disk.vercel.app/docs/api#createstores
