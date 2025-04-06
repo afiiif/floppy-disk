@@ -110,7 +110,7 @@ const isPlainObject = (value: any) => {
   return true;
 };
 export const hashStoreKey = (value?: any) =>
-  // Copied from: https://github.com/TanStack/query/blob/main/packages/query-core/src/utils.ts
+  // Copied from: https://github.com/TanStack/query/blob/v5.50.1/packages/query-core/src/utils.ts#L205
   JSON.stringify(value, (_, val) =>
     isPlainObject(val)
       ? Object.keys(val)
