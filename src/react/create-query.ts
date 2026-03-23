@@ -161,12 +161,18 @@ export const createQuery = <TData, TVariable extends Record<string, any> = never
       retryTimeoutId?: number;
       retryResolver?: ((value: TState | PromiseLike<TState>) => void) | undefined;
       garbageCollectionTimeoutId?: number;
+      rollbackData?: TData | undefined;
     };
     execute: () => Promise<TState>;
     revalidate: () => Promise<TState>;
     invalidate: () => void;
     reset: () => void;
     delete: () => boolean;
+    optimisticUpdate: (data: TData) => {
+      revalidate: () => Promise<TState>;
+      rollback: () => TData;
+    };
+    rollbackOptimisticUpdate: () => TData;
   };
   const internals = new WeakMap<StoreApi<TState>, Internal>();
 
@@ -204,6 +210,17 @@ export const createQuery = <TData, TVariable extends Record<string, any> = never
       internals.get(store)!.reset();
       return stores.delete(variableHash);
     },
+    optimisticUpdate: (optimisticData) => {
+      const { metadata, revalidate, rollbackOptimisticUpdate } = internals.get(store)!;
+      metadata.rollbackData = store.getState().data;
+      store.setState({ data: optimisticData });
+      return { revalidate, rollback: rollbackOptimisticUpdate };
+    },
+    rollbackOptimisticUpdate: () => {
+      const { metadata } = internals.get(store)!;
+      store.setState({ data: metadata.rollbackData! });
+      return metadata.rollbackData!;
+    },
   });
 
   const execute = async (store: StoreApi<TState>, variable: TVariable) => {
@@ -223,6 +240,11 @@ export const createQuery = <TData, TVariable extends Record<string, any> = never
         });
         queryFn(variable, stateBeforeExecute)
           .then((data) => {
+            if (data === undefined) {
+              console.error(
+                'Query function returned undefined. Successful responses must not be undefined.',
+              );
+            }
             store.setState({
               isPending: false,
               isRevalidating: false,
@@ -236,6 +258,7 @@ export const createQuery = <TData, TVariable extends Record<string, any> = never
               error: undefined,
               errorUpdatedAt: undefined,
             });
+            metadata.rollbackData = data;
             resolve(store.getState());
             metadata.retryResolver?.(store.getState());
             metadata.retryResolver = undefined;
