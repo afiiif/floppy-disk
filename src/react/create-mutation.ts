@@ -67,7 +67,7 @@ export type MutationOptions<TData, TVariable> = InitStoreOptions<
   ) => void;
 };
 
-export const createMutation = <TData, TVariable = never>(
+export const createMutation = <TData, TVariable = undefined>(
   mutationFn: (
     variable: TVariable,
     stateBeforeExecute: MutationState<TData, TVariable>,
@@ -140,7 +140,9 @@ export const createMutation = <TData, TVariable = never>(
       console.debug('Manual setState (not via provided actions) on mutation store');
       store.setState(value);
     },
-    execute,
+    execute: execute as TVariable extends undefined
+      ? () => Promise<{ variable: undefined; data?: TData; error?: any }>
+      : (variable: TVariable) => Promise<{ variable: TVariable; data?: TData; error?: any }>,
     reset: () => {
       if (store.getState().isPending) {
         console.warn(
