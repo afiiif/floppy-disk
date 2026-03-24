@@ -131,8 +131,12 @@ export const createQuery = <TData, TVariable extends Record<string, any> = never
     },
     onLastUnsubscribe: (state, store) => {
       options.onLastUnsubscribe?.(state, store);
-      // Start garbage collection timeout
+      // Cancel retry
       const { metadata, revalidate } = internals.get(store)!;
+      clearTimeout(metadata.retryTimeoutId);
+      metadata.retryResolver?.(state);
+      metadata.retryResolver = undefined;
+      // Start garbage collection timeout
       metadata.garbageCollectionTimeoutId = setTimeout(() => {
         store.setState(initialState);
       }, gcTime);
@@ -300,16 +304,24 @@ export const createQuery = <TData, TVariable extends Record<string, any> = never
               metadata.retryResolver = resolve;
               metadata.retryTimeoutId = setTimeout(createPromise, retryDelay);
             } else {
-              const state = store.getState();
               store.setState({
                 isPending: false,
                 isRevalidating: false,
                 isRetrying: false,
                 retryCount: 0,
-                state: state.data ? 'SUCCESS_BUT_REVALIDATION_ERROR' : 'ERROR',
                 error,
                 errorUpdatedAt: Date.now(),
+                ...(store.getState().data
+                  ? {
+                      state: 'SUCCESS_BUT_REVALIDATION_ERROR',
+                      isError: false,
+                    }
+                  : {
+                      state: 'ERROR',
+                      isError: true,
+                    }),
               });
+              const state = store.getState();
               resolve(state);
               metadata.retryResolver?.(state);
               metadata.retryResolver = undefined;
