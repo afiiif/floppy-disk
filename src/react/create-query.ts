@@ -56,6 +56,20 @@ export type QueryState<TData> = {
     }
 );
 
+const INITIAL_STATE = {
+  isPending: false,
+  isRevalidating: false,
+  isRetrying: false,
+  retryCount: 0,
+  state: 'INITIAL',
+  isSuccess: false,
+  isError: false,
+  data: undefined,
+  dataUpdatedAt: undefined,
+  error: undefined,
+  errorUpdatedAt: undefined,
+};
+
 export type QueryOptions<TData, TVariable extends Record<string, any>> = InitStoreOptions<
   QueryState<TData>
 > & {
@@ -86,19 +100,7 @@ export const createQuery = <TData, TVariable extends Record<string, any> = never
 
   type TState = QueryState<TData>;
 
-  const initialState = {
-    isPending: false,
-    isRevalidating: false,
-    isRetrying: false,
-    retryCount: 0,
-    state: 'INITIAL',
-    isSuccess: false,
-    isError: false,
-    data: undefined,
-    dataUpdatedAt: undefined,
-    error: undefined,
-    errorUpdatedAt: undefined,
-  } as TState;
+  const initialState = INITIAL_STATE as TState;
 
   const stores = new Map<string, StoreApi<TState>>();
 

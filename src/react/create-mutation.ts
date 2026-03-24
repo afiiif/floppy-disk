@@ -36,6 +36,18 @@ export type MutationState<TData, TVariable> = {
     }
 );
 
+const INITIAL_STATE = {
+  state: 'INITIAL',
+  isPending: false,
+  isSuccess: false,
+  isError: false,
+  variable: undefined,
+  data: undefined,
+  dataUpdatedAt: undefined,
+  error: undefined,
+  errorUpdatedAt: undefined,
+};
+
 export type MutationOptions<TData, TVariable> = InitStoreOptions<
   MutationState<TData, TVariable>
 > & {
@@ -66,17 +78,7 @@ export const createMutation = <TData, TVariable = never>(
 
   type TState = MutationState<TData, TVariable>;
 
-  const initialState = {
-    state: 'INITIAL',
-    isPending: false,
-    isSuccess: false,
-    isError: false,
-    variable: undefined,
-    data: undefined,
-    dataUpdatedAt: undefined,
-    error: undefined,
-    errorUpdatedAt: undefined,
-  } as TState;
+  const initialState = INITIAL_STATE as TState;
 
   const store = initStore(initialState, options);
   const useStore = <TStateSlice = TState>(selector?: (state: TState) => TStateSlice) =>
