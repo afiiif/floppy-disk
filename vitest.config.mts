@@ -18,7 +18,7 @@ export default defineConfig({
     reporters: process.env.GITHUB_ACTIONS ? ['default', 'github-actions'] : ['default'],
     setupFiles: ['tests/_setup.ts'],
     coverage: {
-      include: ['src/**/'],
+      include: ['src/**/*.{js,ts,jsx,tsx}'],
       reporter: ['text', 'json', 'html', 'text-summary'],
       reportsDirectory: './coverage/',
       provider: 'v8',
