@@ -169,7 +169,7 @@ export const createQuery = <TData, TVariable extends Record<string, any> = never
     };
     execute: () => Promise<TState>;
     revalidate: () => Promise<TState>;
-    invalidate: () => void;
+    invalidate: () => boolean;
     reset: () => void;
     delete: () => boolean;
     optimisticUpdate: (data: TData) => {
@@ -188,7 +188,14 @@ export const createQuery = <TData, TVariable extends Record<string, any> = never
     metadata: {},
     execute: () => execute(store, variable),
     revalidate: () => revalidate(store, variable),
-    invalidate: () => store.setState({ dataUpdatedAt: 1 }),
+    invalidate: () => {
+      store.setState({ dataUpdatedAt: 1 });
+      if (store.getSubscribers().size > 0) {
+        internals.get(store)!.execute();
+        return true;
+      }
+      return false;
+    },
     reset: () => {
       const { metadata } = internals.get(store)!;
       clearTimeout(metadata.retryTimeoutId);
@@ -382,7 +389,12 @@ export const createQuery = <TData, TVariable extends Record<string, any> = never
     });
   };
 
-  return getStore;
+  return Object.assign(getStore, {
+    executeAll: () => stores.forEach((store) => internals.get(store)!.execute()),
+    revalidateAll: () => stores.forEach((store) => internals.get(store)!.revalidate()),
+    invalidateAll: () => stores.forEach((store) => internals.get(store)!.invalidate()),
+    resetAll: () => stores.forEach((store) => internals.get(store)!.reset()),
+  });
 };
 
 let focusListenersAdded = false;
