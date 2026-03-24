@@ -65,6 +65,7 @@ export type QueryOptions<TData, TVariable extends Record<string, any>> = InitSto
   revalidateOnReconnect?: boolean;
   onSuccess?: (data: TData, variable: TVariable, stateBeforeExecute: QueryState<TData>) => void;
   onError?: (error: any, variable: TVariable, stateBeforeExecute: QueryState<TData>) => void;
+  onSettled?: (variable: TVariable, stateBeforeExecute: QueryState<TData>) => void;
   shouldRetry?: (error: any, currentState: QueryState<TData>) => [true, number] | [false];
 };
 
@@ -79,6 +80,7 @@ export const createQuery = <TData, TVariable extends Record<string, any> = never
     revalidateOnReconnect = true,
     onSuccess = noop,
     onError,
+    onSettled = noop,
     shouldRetry: shouldRetryFn = (_, s) => (s.retryCount === 0 ? [true, 1500] : [false]),
   } = options;
 
@@ -190,7 +192,7 @@ export const createQuery = <TData, TVariable extends Record<string, any> = never
       clearTimeout(metadata.retryTimeoutId);
       if (metadata.retryResolver || metadata.promiseResolver) {
         console.debug(
-          'Ongoing query execution was ignored due to reset(). The result will not update the store.',
+          'Ongoing query execution was ignored due to reset(). The result will not update the store state.',
         );
         metadata.promiseResolver?.(initialState);
         metadata.retryResolver?.(initialState);
@@ -263,6 +265,7 @@ export const createQuery = <TData, TVariable extends Record<string, any> = never
             metadata.retryResolver?.(store.getState());
             metadata.retryResolver = undefined;
             onSuccess(data, variable, stateBeforeExecute);
+            onSettled(variable, stateBeforeExecute);
           })
           .catch((error) => {
             store.setState({
@@ -286,11 +289,12 @@ export const createQuery = <TData, TVariable extends Record<string, any> = never
                 error,
                 errorUpdatedAt: Date.now(),
               });
-              if (onError) onError(error, variable, stateBeforeExecute);
-              else console.error(state);
               resolve(state);
               metadata.retryResolver?.(state);
               metadata.retryResolver = undefined;
+              if (onError) onError(error, variable, stateBeforeExecute);
+              else console.error(state);
+              onSettled(variable, stateBeforeExecute);
             }
           })
           .finally(() => {

@@ -31,6 +31,7 @@ export const createStores = <TState extends Record<string, any>, TKey extends Re
           );
           return false;
         }
+        store.setState(initialState);
         return stores.delete(keyHash);
       },
     });
