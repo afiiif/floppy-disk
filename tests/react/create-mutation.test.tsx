@@ -20,12 +20,7 @@ describe('createMutation', () => {
 
   it('handles success flow correctly', async () => {
     let resolveFn: (value: string) => void;
-    const mutationFn = vi.fn(
-      () =>
-        new Promise<string>((resolve) => {
-          resolveFn = resolve;
-        }),
-    );
+    const mutationFn = vi.fn(() => new Promise<string>((resolve) => (resolveFn = resolve)));
     const onSuccess = vi.fn();
     const onError = vi.fn();
     const onSettled = vi.fn();
@@ -84,12 +79,7 @@ describe('createMutation', () => {
 
   it('handles error flow correctly', async () => {
     let rejectFn: (error: any) => void;
-    const mutationFn = vi.fn(
-      () =>
-        new Promise<string>((_, reject) => {
-          rejectFn = reject;
-        }),
-    );
+    const mutationFn = vi.fn(() => new Promise<string>((_, reject) => (rejectFn = reject)));
     const onSuccess = vi.fn();
     const onError = vi.fn();
     const onSettled = vi.fn();
@@ -152,10 +142,7 @@ describe('createMutation', () => {
 
     let resolveFn: any;
     const mutationFn = vi.fn(
-      (_: number) =>
-        new Promise<number>((resolve) => {
-          resolveFn = resolve;
-        }),
+      (_: number) => new Promise<number>((resolve) => (resolveFn = resolve)),
     );
 
     const useMutation = createMutation(mutationFn);
@@ -208,10 +195,7 @@ describe('createMutation', () => {
   it('selector avoids unnecessary re-renders', async () => {
     let resolveFn: (v: number) => void;
     const useMutation = createMutation(
-      (_: number) =>
-        new Promise<number>((resolve) => {
-          resolveFn = resolve;
-        }),
+      (_: number) => new Promise<number>((resolve) => (resolveFn = resolve)),
     );
 
     let renderAllState = 0;
