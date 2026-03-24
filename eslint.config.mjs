@@ -9,7 +9,7 @@ import testingLibrary from 'eslint-plugin-testing-library';
 import tseslint from 'typescript-eslint';
 
 export default defineConfig(
-  globalIgnores(['dist/', 'examples/', 'website/', 'coverage/']),
+  globalIgnores(['dist/', 'examples/', 'website/', 'coverage/', 'experiment/']),
   eslint.configs.recommended,
   importPlugin.flatConfigs.recommended,
   tseslint.configs.recommended,

@@ -10,3 +10,5 @@ $RECYCLE.BIN/
 coverage/
 .rpt2_cache/
 .idea
+/experiment/*
+!/experiment/index.*
