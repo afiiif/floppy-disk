@@ -1,5 +1,6 @@
-import { act } from '@testing-library/react';
-import { describe, expect, it } from 'vitest';
+import { useState } from 'react';
+import { act, fireEvent, render, screen } from '@testing-library/react';
+import { describe, expect, it, vi } from 'vitest';
 import { createStores } from 'floppy-disk/react';
 
 describe('createStores', () => {
@@ -24,5 +25,89 @@ describe('createStores', () => {
     });
     expect(storeA.getState().foo).toBe(1);
     expect(storeB.getState().foo).toBe(0);
+  });
+
+  it('hook subscribes to correct store based on key', () => {
+    const getStore = createStores<{ count: number }, { id: string }>({ count: 0 });
+
+    let renderA = 0;
+    let renderB = 0;
+
+    function CompA() {
+      const useStore = getStore({ id: 'A' });
+      const count = useStore((s) => s.count);
+      renderA++;
+      return <div>A: {count}</div>;
+    }
+
+    function CompB() {
+      const useStore = getStore({ id: 'B' });
+      const count = useStore((s) => s.count);
+      renderB++;
+      return <div>B: {count}</div>;
+    }
+
+    render(
+      <>
+        <CompA />
+        <CompB />
+      </>,
+    );
+
+    act(() => {
+      getStore({ id: 'A' }).setState({ count: 1 });
+    });
+
+    expect(screen.getByText('A: 1')).toBeInTheDocument();
+    expect(screen.getByText('B: 0')).toBeInTheDocument();
+    expect(renderA).toBe(2);
+    expect(renderB).toBe(1);
+  });
+
+  it('does not re-subscribe on re-render with same key', () => {
+    const onSubscribe = vi.fn();
+    const getStore = createStores({ count: 0 }, { onSubscribe });
+
+    function Comp() {
+      const [, forceRender] = useState({});
+      const useStore = getStore({ id: 1 });
+      useStore();
+      return <button onClick={() => forceRender({})}>rerender</button>;
+    }
+
+    render(<Comp />);
+    expect(onSubscribe).toHaveBeenCalledTimes(1);
+
+    fireEvent.click(screen.getByText('rerender'));
+    expect(onSubscribe).toHaveBeenCalledTimes(1);
+  });
+
+  it('handles delete correctly with active and cleaned subscriptions', () => {
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+
+    const getStore = createStores({ count: 0 });
+    const useStore = getStore({ id: 1 });
+
+    function Comp() {
+      useStore();
+      return null;
+    }
+
+    const { unmount } = render(<Comp />);
+    act(() => {
+      useStore.setState({ count: 2 });
+    });
+
+    const resultWhileMounted = useStore.delete();
+    expect(resultWhileMounted).toBe(false);
+    expect(warnSpy).toHaveBeenCalledTimes(1);
+    expect(useStore.getState()).toEqual({ count: 2 });
+
+    unmount();
+    const resultAfterUnmount = useStore.delete();
+    expect(resultAfterUnmount).toBe(true);
+    expect(useStore.getState()).toEqual({ count: 0 });
+
+    warnSpy.mockRestore();
   });
 });
