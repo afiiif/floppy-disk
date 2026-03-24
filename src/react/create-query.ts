@@ -167,9 +167,9 @@ export const createQuery = <TData, TVariable extends Record<string, any> = never
       garbageCollectionTimeoutId?: number;
       rollbackData?: TData | undefined;
     };
-    execute: () => Promise<TState>;
-    revalidate: () => Promise<TState>;
-    invalidate: () => boolean;
+    execute: (overwriteOngoingExecution?: boolean) => Promise<TState>;
+    revalidate: (overwriteOngoingExecution?: boolean) => Promise<TState>;
+    invalidate: (overwriteOngoingExecution?: boolean) => boolean;
     reset: () => void;
     delete: () => boolean;
     optimisticUpdate: (data: TData) => {
@@ -186,12 +186,16 @@ export const createQuery = <TData, TVariable extends Record<string, any> = never
     variableHash: string,
   ): Internal => ({
     metadata: {},
-    execute: () => execute(store, variable),
-    revalidate: () => revalidate(store, variable),
-    invalidate: () => {
+    execute: (overwriteOngoingExecution = false) => {
+      return execute(store, variable, overwriteOngoingExecution);
+    },
+    revalidate: (overwriteOngoingExecution = false) => {
+      return revalidate(store, variable, overwriteOngoingExecution);
+    },
+    invalidate: (overwriteOngoingExecution = false) => {
       store.setState({ dataUpdatedAt: 1 });
       if (store.getSubscribers().size > 0) {
-        internals.get(store)!.execute();
+        internals.get(store)!.execute(overwriteOngoingExecution);
         return true;
       }
       return false;
@@ -234,9 +238,13 @@ export const createQuery = <TData, TVariable extends Record<string, any> = never
     },
   });
 
-  const execute = async (store: StoreApi<TState>, variable: TVariable) => {
+  const execute = async (
+    store: StoreApi<TState>,
+    variable: TVariable,
+    overwriteOngoingExecution = false,
+  ) => {
     const { metadata } = internals.get(store)!;
-    if (metadata.promise) return metadata.promise;
+    if (!overwriteOngoingExecution && metadata.promise) return metadata.promise;
     clearTimeout(metadata.retryTimeoutId);
 
     const createPromise = () => {
@@ -256,6 +264,8 @@ export const createQuery = <TData, TVariable extends Record<string, any> = never
                 'Query function returned undefined. Successful responses must not be undefined.',
               );
             }
+            if (!metadata.promiseResolver) return; // Handle reset: should ignore ongoing execution
+            if (promise !== metadata.promise) return resolve(metadata.promise!); // Handle overwriteOngoingExecution
             store.setState({
               isPending: false,
               isRevalidating: false,
@@ -277,6 +287,8 @@ export const createQuery = <TData, TVariable extends Record<string, any> = never
             onSettled(variable, stateBeforeExecute);
           })
           .catch((error) => {
+            if (!metadata.promiseResolver && !metadata.retryResolver) return; // Handle reset: should ignore ongoing execution
+            if (promise !== metadata.promise) return resolve(metadata.promise!); // Handle overwriteOngoingExecution
             store.setState({
               isPending: false,
               isRevalidating: false,
@@ -307,8 +319,10 @@ export const createQuery = <TData, TVariable extends Record<string, any> = never
             }
           })
           .finally(() => {
-            metadata.promise = undefined;
-            metadata.promiseResolver = undefined;
+            if (metadata.promise === promise) {
+              metadata.promise = undefined;
+              metadata.promiseResolver = undefined;
+            }
           });
       });
       metadata.promise = promise;
@@ -317,12 +331,16 @@ export const createQuery = <TData, TVariable extends Record<string, any> = never
     return createPromise();
   };
 
-  const revalidate = async (store: StoreApi<TState>, variable: TVariable) => {
+  const revalidate = async (
+    store: StoreApi<TState>,
+    variable: TVariable,
+    overwriteOngoingExecution?: boolean,
+  ) => {
     const { metadata } = internals.get(store)!;
-    if (metadata.promise) return metadata.promise;
+    if (!overwriteOngoingExecution && metadata.promise) return metadata.promise;
     const state = store.getState();
     if (state.dataUpdatedAt && state.dataUpdatedAt + staleTime > Date.now()) return state;
-    return execute(store, variable);
+    return execute(store, variable, overwriteOngoingExecution);
   };
 
   // -------
@@ -390,10 +408,18 @@ export const createQuery = <TData, TVariable extends Record<string, any> = never
   };
 
   return Object.assign(getStore, {
-    executeAll: () => stores.forEach((store) => internals.get(store)!.execute()),
-    revalidateAll: () => stores.forEach((store) => internals.get(store)!.revalidate()),
-    invalidateAll: () => stores.forEach((store) => internals.get(store)!.invalidate()),
-    resetAll: () => stores.forEach((store) => internals.get(store)!.reset()),
+    executeAll: (overwriteOngoingExecution?: boolean) => {
+      stores.forEach((store) => internals.get(store)!.execute(overwriteOngoingExecution));
+    },
+    revalidateAll: (overwriteOngoingExecution?: boolean) => {
+      stores.forEach((store) => internals.get(store)!.revalidate(overwriteOngoingExecution));
+    },
+    invalidateAll: (overwriteOngoingExecution?: boolean) => {
+      stores.forEach((store) => internals.get(store)!.invalidate(overwriteOngoingExecution));
+    },
+    resetAll: () => {
+      stores.forEach((store) => internals.get(store)!.reset());
+    },
   });
 };
 
