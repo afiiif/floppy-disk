@@ -707,6 +707,41 @@ describe('createQuery', () => {
     debugSpy.mockRestore();
   });
 
+  it('sets initial data correctly', async () => {
+    const resolveFns: Array<(v: string) => void> = [];
+    const queryFn = vi.fn(() => new Promise<string>((resolve) => resolveFns.push(resolve)));
+    const query = createQuery<string, { id: number }>(queryFn);
+
+    renderHook(() => {
+      const useQuery1 = query({ id: 1 });
+      const q1 = useQuery1();
+
+      const useQuery2 = query({ id: 2 });
+      useQuery2.setInitialData('initial-2');
+      const q2 = useQuery2();
+
+      const useQuery3 = query({ id: 3 });
+      useQuery3.setInitialData('initial-3', true);
+      const q3 = useQuery3();
+
+      return [q1.data, q2.data, q3.data];
+    });
+
+    expect(queryFn).toHaveBeenCalledTimes(2);
+    expect(query({ id: 1 }).getState().data).toBe(undefined);
+    expect(query({ id: 2 }).getState().data).toBe('initial-2');
+    expect(query({ id: 3 }).getState().data).toBe('initial-3');
+
+    await act(async () => {
+      resolveFns.shift()!('ok-1');
+      resolveFns.shift()!('ok-3');
+    });
+
+    expect(query({ id: 1 }).getState().data).toBe('ok-1');
+    expect(query({ id: 2 }).getState().data).toBe('initial-2');
+    expect(query({ id: 3 }).getState().data).toBe('ok-3');
+  });
+
   it('logs error when queryFn returns undefined', async () => {
     const spy = vi.spyOn(console, 'error').mockImplementation(() => {});
 

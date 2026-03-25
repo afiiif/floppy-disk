@@ -171,6 +171,7 @@ export const createQuery = <TData, TVariable extends Record<string, any> = never
       garbageCollectionTimeoutId?: number;
       rollbackData?: TData | undefined;
     };
+    setInitialData: (data: TData, revalidate?: boolean) => boolean;
     execute: (overwriteOngoingExecution?: boolean) => Promise<TState>;
     revalidate: (overwriteOngoingExecution?: boolean) => Promise<TState>;
     invalidate: (overwriteOngoingExecution?: boolean) => boolean;
@@ -190,6 +191,19 @@ export const createQuery = <TData, TVariable extends Record<string, any> = never
     variableHash: string,
   ): Internal => ({
     metadata: {},
+    setInitialData: (data, revalidate = false) => {
+      const state = store.getState();
+      if (state.state === 'INITIAL' && state.data === undefined) {
+        store.setState({
+          state: 'SUCCESS',
+          isSuccess: true,
+          data,
+          dataUpdatedAt: revalidate ? 1 : Date.now(),
+        });
+        return true;
+      }
+      return false;
+    },
     execute: (overwriteOngoingExecution = false) => {
       return execute(store, variable, overwriteOngoingExecution);
     },
