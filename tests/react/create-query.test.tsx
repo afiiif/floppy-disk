@@ -439,4 +439,285 @@ describe('createQuery', () => {
     expect(warnSpy).toHaveBeenCalledTimes(1);
     warnSpy.mockRestore();
   });
+
+  it('executes all stores and respects overwrite flag', async () => {
+    const resolveFns: Array<(v: string) => void> = [];
+    const queryFn = vi.fn(() => new Promise<string>((resolve) => resolveFns.push(resolve)));
+
+    const query = createQuery<string, { id: number }>(queryFn);
+
+    query({ id: 1 });
+    query.executeAll();
+    expect(queryFn).toHaveBeenCalledTimes(1);
+
+    await act(async () => {
+      resolveFns.shift()!('data-1');
+    });
+
+    query({ id: 2 });
+    query.executeAll();
+    expect(queryFn).toHaveBeenCalledTimes(3);
+
+    await act(async () => {
+      resolveFns.shift()!('data-2'); // 1 still pending
+    });
+
+    query.executeAll();
+    expect(queryFn).toHaveBeenCalledTimes(4);
+
+    query.executeAll(true);
+    expect(queryFn).toHaveBeenCalledTimes(6);
+  });
+
+  it('revalidates only stale stores', async () => {
+    vi.useFakeTimers();
+
+    const queryFn = vi.fn().mockImplementation(async ({ id }: { id: number }) => `ok${id}`);
+    const query = createQuery<string, { id: number }>(queryFn);
+
+    renderHook(() => {
+      const a = query({ id: 1 })();
+      const b = query({ id: 2 })();
+      return { a, b };
+    });
+
+    expect(queryFn).toHaveBeenCalledTimes(2);
+
+    // ❌ should NOT revalidate because still fresh
+    await act(async () => {
+      query.revalidateAll();
+    });
+    expect(queryFn).toHaveBeenCalledTimes(2);
+
+    // ⏱ make stale
+    await act(async () => {
+      const defaultStaleTime = 2500;
+      vi.advanceTimersByTime(defaultStaleTime);
+    });
+
+    // ✅ now revalidate should run
+    await act(async () => {
+      query.revalidateAll();
+    });
+    expect(queryFn).toHaveBeenNthCalledWith(3, { id: 1 }, expect.objectContaining({ data: 'ok1' }));
+    expect(queryFn).toHaveBeenNthCalledWith(4, { id: 2 }, expect.objectContaining({ data: 'ok2' }));
+
+    vi.useRealTimers();
+  });
+
+  it('invalidates all but only refetches subscribed stores', async () => {
+    const queryFn = vi.fn(async ({ id }: { id: number }) => `ok${id}`);
+    const query = createQuery<string, { id: number }>(queryFn);
+
+    await Promise.all([
+      query({ id: 1 }).execute(),
+      query({ id: 2 }).execute(),
+      query({ id: 3 }).execute(),
+    ]);
+    expect(queryFn).toHaveBeenCalledTimes(3);
+    expect(query({ id: 1 }).getState().data).toBe('ok1');
+
+    query({ id: 1 }).subscribe(() => {});
+    query({ id: 2 }).subscribe(() => {});
+
+    await act(async () => {
+      query.invalidateAll();
+    });
+    expect(queryFn).toHaveBeenCalledTimes(5);
+    expect(query({ id: 3 }).getState().dataUpdatedAt).toBe(1);
+  });
+
+  it('resets all stores to initial state', async () => {
+    const queryFn = vi.fn(async ({ id }: { id: number }) => `ok${id}`);
+    const query = createQuery<string, { id: number }>(queryFn);
+
+    const s1 = query({ id: 1 });
+    const s2 = query({ id: 2 });
+
+    await Promise.all([s1.execute(), s2.execute()]);
+    expect(s1.getState().data).toBe('ok1');
+    expect(s2.getState().data).toBe('ok2');
+
+    query.resetAll();
+
+    expect(s1.getState()).toMatchObject({
+      data: undefined,
+      error: undefined,
+      isPending: false,
+      isSuccess: false,
+      isError: false,
+      state: 'INITIAL',
+    });
+
+    expect(s2.getState()).toMatchObject({
+      data: undefined,
+      error: undefined,
+      isPending: false,
+      isSuccess: false,
+      isError: false,
+      state: 'INITIAL',
+    });
+  });
+
+  it('manual setState is overridden by execute', async () => {
+    const debugSpy = vi.spyOn(console, 'debug').mockImplementation(() => {});
+
+    const queryFn = vi.fn(async () => 'server');
+    const query = createQuery<string>(queryFn);
+    const store = query();
+
+    await store.execute();
+    expect(store.getState().data).toBe('server');
+
+    store.setState({ data: 'manual' });
+    expect(store.getState().data).toBe('manual');
+
+    expect(debugSpy).toHaveBeenCalledTimes(1);
+    debugSpy.mockRestore();
+  });
+
+  it('revalidates on window focus (only subscribed + stale)', async () => {
+    vi.useFakeTimers();
+
+    const resolveFns: Array<(v: string) => void> = [];
+    const queryFn = vi.fn(() => new Promise<string>((resolve) => resolveFns.push(resolve)));
+    const query = createQuery<string, { id: number }>(queryFn, { staleTime: 1000 });
+
+    renderHook(() => {
+      const useQuery = query({ id: 1 });
+      return useQuery();
+    });
+
+    const { unmount } = renderHook(() => {
+      const useQuery = query({ id: 2 });
+      return useQuery();
+    });
+
+    await act(async () => {
+      resolveFns.shift()!('ok1');
+      resolveFns.shift()!('ok2');
+    });
+    expect(queryFn).toHaveBeenCalledTimes(2);
+
+    await act(async () => {
+      vi.advanceTimersByTime(1500);
+    });
+
+    unmount();
+
+    await act(async () => {
+      window.dispatchEvent(new Event('focus'));
+    });
+    expect(queryFn).toHaveBeenCalledTimes(3);
+
+    vi.useRealTimers();
+  });
+
+  it('revalidates on reconnect (only subscribed + stale)', async () => {
+    vi.useFakeTimers();
+
+    const resolveFns: Array<(v: string) => void> = [];
+    const queryFn = vi.fn(() => new Promise<string>((resolve) => resolveFns.push(resolve)));
+    const query = createQuery<string, { id: number }>(queryFn, { staleTime: 1000 });
+
+    renderHook(() => {
+      const useQuery = query({ id: 1 });
+      return useQuery();
+    });
+
+    const { unmount } = renderHook(() => {
+      const useQuery = query({ id: 2 });
+      return useQuery();
+    });
+
+    await act(async () => {
+      resolveFns.shift()!('ok1');
+      resolveFns.shift()!('ok2');
+    });
+    expect(queryFn).toHaveBeenCalledTimes(2);
+
+    await act(async () => {
+      vi.advanceTimersByTime(1500);
+    });
+
+    unmount();
+
+    await act(async () => {
+      window.dispatchEvent(new Event('online'));
+    });
+    expect(queryFn).toHaveBeenCalledTimes(3);
+
+    vi.useRealTimers();
+  });
+
+  it('garbage collects store when no subscribers left', async () => {
+    vi.useFakeTimers();
+
+    let resolveFn: (value: string) => void;
+    const queryFn = vi.fn(() => new Promise<string>((resolve) => (resolveFn = resolve)));
+    const query = createQuery<string>(queryFn, { gcTime: 1000 });
+
+    const { unmount } = renderHook(() => {
+      const useQuery = query();
+      return useQuery();
+    });
+
+    await act(async () => {
+      resolveFn('ok');
+    });
+    expect(queryFn).toHaveBeenCalledTimes(1);
+    expect(query().getState().data).toBe('ok');
+
+    unmount(); // unsubscribe
+
+    await act(async () => {
+      vi.advanceTimersByTime(1000);
+    });
+    expect(query().getState().data).toBe(undefined);
+
+    vi.useRealTimers();
+  });
+
+  it('handles enabled option & shallow comparison correctly', async () => {
+    const debugSpy = vi.spyOn(console, 'debug').mockImplementation(() => {});
+
+    const queryFn = vi.fn(async () => 'ok');
+    const query = createQuery<string>(queryFn);
+
+    let render = 0;
+    renderHook(() => {
+      render++;
+      const useQuery = query();
+      return useQuery({ enabled: false });
+    });
+
+    expect(queryFn).toHaveBeenCalledTimes(0);
+    expect(render).toBe(1);
+
+    await act(async () => {
+      query().setState({ data: 'manual' });
+    });
+    expect(render).toBe(2);
+
+    await act(async () => {
+      query().setState({ data: 'manual' });
+    });
+    expect(render).toBe(2);
+
+    debugSpy.mockRestore();
+  });
+
+  it('logs error when queryFn returns undefined', async () => {
+    const spy = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+    const queryFn = vi.fn(async () => undefined);
+    const query = createQuery(queryFn);
+
+    await query().execute();
+    expect(spy).toHaveBeenCalledWith(
+      'Query function returned undefined. Successful responses must not be undefined.',
+    );
+
+    spy.mockRestore();
+  });
 });
