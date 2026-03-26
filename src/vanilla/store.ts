@@ -1,9 +1,34 @@
 import { getValue, noop } from './basic.ts';
 
+/**
+ * Represents a partial state update.
+ *
+ * Can be either:
+ * - A partial object to merge into the current state
+ * - A function that receives the current state and returns a partial update
+ */
 export type SetState<TState> = Partial<TState> | ((state: TState) => Partial<TState>);
 
+/**
+ * A subscriber function that is called whenever the state updates.
+ *
+ * @param state - The latest state
+ * @param prevState - The previous state before the update
+ *
+ * @remarks
+ * - Subscribers are always called on every `setState`, regardless of equality.
+ * - It is the subscriber's responsibility to perform comparisons if needed.
+ */
 export type Subscriber<TState> = (state: TState, prevState: TState) => void;
 
+/**
+ * Core store API for managing state.
+ *
+ * @remarks
+ * - The store is intentionally simple and always notifies subscribers on updates.
+ * - No internal equality checks are performed.
+ * - Designed to be framework-agnostic (React bindings are built separately).
+ */
 export type StoreApi<TState extends Record<string, any>> = {
   setState: (value: SetState<TState>) => void;
   getState: () => TState;
@@ -11,6 +36,17 @@ export type StoreApi<TState extends Record<string, any>> = {
   getSubscribers: () => Set<Subscriber<TState>>;
 };
 
+/**
+ * Lifecycle hooks for the store.
+ *
+ * These hooks allow you to attach side effects based on subscription lifecycle.
+ *
+ * @remarks
+ * Useful for:
+ * - Lazy initialization (e.g. start fetching on first subscribe)
+ * - Cleanup (e.g. cancel timers, disconnect sockets)
+ * - Resource management (e.g. garbage collection)
+ */
 export type InitStoreOptions<TState extends Record<string, any>> = {
   onFirstSubscribe?: (state: TState, store: StoreApi<TState>) => void;
   onSubscribe?: (state: TState, store: StoreApi<TState>) => void;
@@ -18,6 +54,30 @@ export type InitStoreOptions<TState extends Record<string, any>> = {
   onLastUnsubscribe?: (state: TState, store: StoreApi<TState>) => void;
 };
 
+/**
+ * Creates a vanilla store with pub-sub capabilities.
+ *
+ * The store state is expected to be an **object**.\
+ * Updates are applied as partial merges, so non-object states are not supported.
+ *
+ * @param initialState - The initial state of the store
+ * @param options - Optional lifecycle hooks
+ *
+ * @returns A store API for managing state and subscriptions
+ *
+ * @remarks
+ * - State updates are **shallowly compared per key** before notifying subscribers.
+ * - Subscribers are only notified when at least one updated field changes (using `Object.is` comparison).
+ * - Subscribers receive both the new state and the previous state.
+ * - Lifecycle hooks allow side-effect management tied to subscription count.
+ *
+ * @example
+ * const store = initStore({ count: 0 });
+ *
+ * store.subscribe((state) => console.log(state.count));
+ * store.setState({ count: 1 }); // triggers subscriber
+ * store.setState({ count: 1 }); // no-op (no change)
+ */
 export const initStore = <TState extends Record<string, any>>(
   initialState: TState,
   options: InitStoreOptions<TState> = {},

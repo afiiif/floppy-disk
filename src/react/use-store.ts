@@ -23,6 +23,21 @@ export const useStoreUpdateNotifier = <TState extends Record<string, any>, TStat
   );
 };
 
+/**
+ * React hook for subscribing to a store with optional state selection.
+ *
+ * @param store - The store instance to subscribe to
+ * @param selector - Optional selector to derive a slice of state
+ *
+ * @returns The selected state slice (or full state if no selector is provided)
+ *
+ * @remarks
+ * - The selector does **not** need to be memoized.
+ * - The hook internally keeps the latest selector reference to avoid re-subscription.
+ *
+ * @example
+ * const count = useStoreState(store, (s) => s.count);
+ */
 export const useStoreState = <TState extends Record<string, any>, TStateSlice = TState>(
   store: StoreApi<TState>,
   selector: (state: TState) => TStateSlice = identity as (state: TState) => TStateSlice,

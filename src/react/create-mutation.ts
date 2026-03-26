@@ -1,6 +1,21 @@
 import { type InitStoreOptions, type SetState, initStore, noop } from '../vanilla.ts';
 import { useStoreState } from './use-store.ts';
 
+/**
+ * Represents the state of a mutation.
+ *
+ * @remarks
+ * A mutation does not cache results and only tracks the latest execution.
+ *
+ * The state transitions are:
+ * - `INITIAL` → before any execution
+ * - `SUCCESS` → when mutation resolves successfully
+ * - `ERROR` → when mutation fails
+ *
+ * Unlike queries:
+ * - No retry mechanism
+ * - No caching across executions
+ */
 export type MutationState<TData, TVariable> = {
   isPending: boolean;
 } & (
@@ -48,25 +63,67 @@ const INITIAL_STATE = {
   errorUpdatedAt: undefined,
 };
 
+/**
+ * Configuration options for a mutation.
+ *
+ * @remarks
+ * Lifecycle callbacks are triggered for each execution.
+ */
 export type MutationOptions<TData, TVariable> = InitStoreOptions<
   MutationState<TData, TVariable>
 > & {
+  /**
+   * Called when the mutation succeeds.
+   */
   onSuccess?: (
     data: TData,
     variable: TVariable,
     stateBeforeExecute: MutationState<TData, TVariable>,
   ) => void;
+
+  /**
+   * Called when the mutation fails.
+   */
   onError?: (
     error: any,
     variable: TVariable,
     stateBeforeExecute: MutationState<TData, TVariable>,
   ) => void;
+
+  /**
+   * Called after the mutation settles (either success or error).
+   */
   onSettled?: (
     variable: TVariable,
     stateBeforeExecute: MutationState<TData, TVariable>, //
   ) => void;
 };
 
+/**
+ * Creates a mutation store for handling async operations that modify data.
+ *
+ * @param mutationFn - Async function that performs the mutation
+ * @param options - Optional configuration and lifecycle callbacks
+ *
+ * @returns A function that acts as both:
+ * - A React hook for subscribing to mutation state
+ * - A mutation controller (execute, reset, etc.)
+ *
+ * @remarks
+ * - Mutations are **not cached** and only track the latest execution.
+ * - Designed for operations that change data (e.g. create, update, delete).
+ * - No retry mechanism is provided by default.
+ * - Each execution overwrites the previous state.
+ * - The mutation always resolves (never throws): the result contains either `data` or `error`.
+ *
+ * @example
+ * const useCreateUser = createMutation(async (input) => {
+ *   return api.createUser(input);
+ * });
+ *
+ * const { isPending } = useCreateUser();
+ * const result = await useCreateUser.execute({ name: 'John' });
+ */
 export const createMutation = <TData, TVariable = undefined>(
   mutationFn: (
     variable: TVariable,
@@ -136,13 +193,44 @@ export const createMutation = <TData, TVariable = undefined>(
     subscribe: store.subscribe,
     getSubscribers: store.getSubscribers,
     getState: store.getState,
+
+    /**
+     * Manually updates the mutation state.
+     *
+     * @remarks
+     * - Intended for advanced use cases.
+     * - Prefer using provided mutation actions (`execute`, `reset`) instead.
+     */
     setState: (value: SetState<TState>) => {
       console.debug('Manual setState (not via provided actions) on mutation store');
       store.setState(value);
     },
+
+    /**
+     * Executes the mutation.
+     *
+     * @param variable - Input passed to the mutation function
+     *
+     * @returns A promise that always resolves with:
+     * - `{ data, variable }` on success
+     * - `{ error, variable }` on failure
+     *
+     * @remarks
+     * - If a mutation is already in progress, a warning is logged.
+     * - Concurrent executions are allowed but may lead to race conditions.
+     * - The promise never rejects to simplify async handling.
+     */
     execute: execute as TVariable extends undefined
       ? () => Promise<{ variable: undefined; data?: TData; error?: any }>
       : (variable: TVariable) => Promise<{ variable: TVariable; data?: TData; error?: any }>,
+
+    /**
+     * Resets the mutation state back to its initial state.
+     *
+     * @remarks
+     * - Does not cancel any ongoing request.
+     * - If a request is still pending, its result may override the reset state.
+     */
     reset: () => {
       if (store.getState().isPending) {
         console.warn(
