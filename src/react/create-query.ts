@@ -164,6 +164,7 @@ export const createQuery = <TData, TVariable extends Record<string, any> = never
 
   type Internal = {
     metadata: {
+      isInvalidated?: boolean;
       promise?: Promise<TState> | undefined;
       promiseResolver?: ((value: TState | PromiseLike<TState>) => void) | undefined;
       retryTimeoutId?: number;
@@ -194,11 +195,13 @@ export const createQuery = <TData, TVariable extends Record<string, any> = never
     setInitialData: (data, revalidate = false) => {
       const state = store.getState();
       if (state.state === 'INITIAL' && state.data === undefined) {
+        const { metadata } = internals.get(store)!;
+        if (revalidate) metadata.isInvalidated = true;
         store.setState({
           state: 'SUCCESS',
           isSuccess: true,
           data,
-          dataUpdatedAt: revalidate ? 1 : Date.now(),
+          dataUpdatedAt: Date.now(),
         });
         return true;
       }
@@ -211,7 +214,8 @@ export const createQuery = <TData, TVariable extends Record<string, any> = never
       return revalidate(store, variable, overwriteOngoingExecution);
     },
     invalidate: (overwriteOngoingExecution = false) => {
-      store.setState({ dataUpdatedAt: 1 });
+      const { metadata } = internals.get(store)!;
+      metadata.isInvalidated = true;
       if (store.getSubscribers().size > 0) {
         internals.get(store)!.execute(overwriteOngoingExecution);
         return true;
@@ -297,6 +301,7 @@ export const createQuery = <TData, TVariable extends Record<string, any> = never
               error: undefined,
               errorUpdatedAt: undefined,
             });
+            metadata.isInvalidated = false;
             metadata.rollbackData = data;
             resolve(store.getState());
             metadata.retryResolver?.(store.getState());
@@ -365,7 +370,10 @@ export const createQuery = <TData, TVariable extends Record<string, any> = never
     const { metadata } = internals.get(store)!;
     if (!overwriteOngoingExecution && metadata.promise) return metadata.promise;
     const state = store.getState();
-    if (state.dataUpdatedAt && state.dataUpdatedAt + staleTime > Date.now()) return state;
+    if (state.dataUpdatedAt) {
+      const isFresh = state.dataUpdatedAt + staleTime > Date.now();
+      if (isFresh && !metadata.isInvalidated) return state;
+    }
     return execute(store, variable, overwriteOngoingExecution);
   };
 

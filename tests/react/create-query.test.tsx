@@ -524,7 +524,12 @@ describe('createQuery', () => {
       query.invalidateAll();
     });
     expect(queryFn).toHaveBeenCalledTimes(5);
-    expect(query({ id: 3 }).getState().dataUpdatedAt).toBe(1);
+
+    await query({ id: 1 }).revalidate(); // still fresh
+    expect(queryFn).toHaveBeenCalledTimes(5);
+
+    await query({ id: 3 }).revalidate(); // already invalidated
+    expect(queryFn).toHaveBeenCalledTimes(6);
   });
 
   it('resets all stores to initial state', async () => {
