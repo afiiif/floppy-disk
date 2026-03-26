@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useRef } from 'react';
 import {
   type InitStoreOptions,
   type SetState,
@@ -8,9 +8,9 @@ import {
   initStore,
   isClient,
   noop,
-  shallow,
 } from '../vanilla.ts';
 import { useIsomorphicLayoutEffect } from './use-isomorphic-layout-effect.ts';
+import { useStoreUpdateNotifier } from './use-store.ts';
 
 export type QueryState<TData> = {
   isPending: boolean;
@@ -398,19 +398,7 @@ export const createQuery = <TData, TVariable extends Record<string, any> = never
       selector: (state: TState) => TStateSlice = identity as (state: TState) => TStateSlice,
     ) => {
       // Store subscription & reactivity
-      const [, reRender] = useState({});
-      const selectorRef = useRef(selector);
-      selectorRef.current = selector;
-      useIsomorphicLayoutEffect(
-        () =>
-          store.subscribe((state, prevState) => {
-            if (selectorRef.current === identity) return reRender({});
-            const prevSlice = selectorRef.current(prevState);
-            const nextSlice = selectorRef.current(state);
-            if (!shallow(prevSlice, nextSlice)) reRender({});
-          }),
-        [store],
-      );
+      useStoreUpdateNotifier(store, selector);
 
       // Execute queryFn on mount & on re-render
       useIsomorphicLayoutEffect(() => {

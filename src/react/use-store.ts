@@ -2,9 +2,9 @@ import { useRef, useState } from 'react';
 import { type StoreApi, identity, shallow } from '../vanilla.ts';
 import { useIsomorphicLayoutEffect } from './use-isomorphic-layout-effect.ts';
 
-export const useStoreState = <TState extends Record<string, any>, TStateSlice = TState>(
+export const useStoreUpdateNotifier = <TState extends Record<string, any>, TStateSlice = TState>(
   store: StoreApi<TState>,
-  selector: (state: TState) => TStateSlice = identity as (state: TState) => TStateSlice,
+  selector: (state: TState) => TStateSlice,
 ) => {
   const [, reRender] = useState({});
 
@@ -21,6 +21,12 @@ export const useStoreState = <TState extends Record<string, any>, TStateSlice = 
       }),
     [store],
   );
+};
 
+export const useStoreState = <TState extends Record<string, any>, TStateSlice = TState>(
+  store: StoreApi<TState>,
+  selector: (state: TState) => TStateSlice = identity as (state: TState) => TStateSlice,
+) => {
+  useStoreUpdateNotifier(store, selector);
   return selector(store.getState());
 };
