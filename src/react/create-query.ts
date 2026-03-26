@@ -423,7 +423,7 @@ export const createQuery = <TData, TVariable extends Record<string, any> = never
       const prevState = useRef<{ data?: TData; dataUpdatedAt?: number }>({});
       if (storeState.isSuccess) {
         prevState.current = { data: storeState.data, dataUpdatedAt: storeState.dataUpdatedAt };
-      } else if (options.keepPreviousData) {
+      } else if (storeState.state === 'INITIAL' && options.keepPreviousData) {
         storeStateToBeUsed = { ...storeState, ...prevState.current } as TState;
       }
 
