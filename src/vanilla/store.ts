@@ -46,8 +46,14 @@ export const initStore = <TState extends Record<string, any>>(
   const getState = () => state;
   const setState = (value: SetState<TState>) => {
     const prevState = state;
-    state = { ...state, ...getValue(value, state) };
-    [...subscribers].forEach((subscriber) => subscriber(state, prevState));
+    const newValue = getValue(value, state);
+    for (const key in newValue) {
+      if (!Object.is(prevState[key], newValue[key])) {
+        state = { ...prevState, ...newValue };
+        [...subscribers].forEach((subscriber) => subscriber(state, prevState));
+        return;
+      }
+    }
   };
 
   const storeApi = {

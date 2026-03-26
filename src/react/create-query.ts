@@ -404,6 +404,7 @@ export const createQuery = <TData, TVariable extends Record<string, any> = never
       useIsomorphicLayoutEffect(
         () =>
           store.subscribe((state, prevState) => {
+            if (selectorRef.current === identity) return reRender({});
             const prevSlice = selectorRef.current(prevState);
             const nextSlice = selectorRef.current(state);
             if (!shallow(prevSlice, nextSlice)) reRender({});

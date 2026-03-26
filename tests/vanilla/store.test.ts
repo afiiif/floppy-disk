@@ -26,12 +26,12 @@ describe('initStore', () => {
     expect(store.getState()).toEqual({ a: 5, b: 2 });
   });
 
-  it('notifies subscribers even if state is same', () => {
+  it('does not notify subscribers if state is same', () => {
     const store = initStore({ count: 0 });
     const fn = vi.fn();
     store.subscribe(fn);
     store.setState({ count: 0 });
-    expect(fn).toHaveBeenCalledTimes(1);
+    expect(fn).toHaveBeenCalledTimes(0);
   });
 
   it('subscribes and unsubscribes correctly', () => {

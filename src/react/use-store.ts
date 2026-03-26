@@ -14,6 +14,7 @@ export const useStoreState = <TState extends Record<string, any>, TStateSlice = 
   useIsomorphicLayoutEffect(
     () =>
       store.subscribe((state, prevState) => {
+        if (selectorRef.current === identity) return reRender({});
         const prevSlice = selectorRef.current(prevState);
         const nextSlice = selectorRef.current(state);
         if (!shallow(prevSlice, nextSlice)) reRender({});
