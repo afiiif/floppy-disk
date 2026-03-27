@@ -1,4 +1,4 @@
-import { type InitStoreOptions, initStore } from 'floppy-disk';
+import { type InitStoreOptions, initStore } from '../vanilla.ts';
 import { useStoreState } from './use-store.ts';
 
 /**

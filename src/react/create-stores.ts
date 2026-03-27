@@ -1,4 +1,4 @@
-import { type InitStoreOptions, type StoreApi, getHash, initStore } from 'floppy-disk';
+import { type InitStoreOptions, type StoreApi, getHash, initStore } from '../vanilla.ts';
 import { useStoreState } from './use-store.ts';
 
 /**

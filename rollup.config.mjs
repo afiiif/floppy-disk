@@ -58,9 +58,6 @@ function createESMConfig(input, output) {
           : {
               'import.meta.env?.MODE': '(import.meta.env ? import.meta.env.MODE : undefined)',
             }),
-        // a workaround for #829
-        'use-sync-external-store/shim/with-selector':
-          'use-sync-external-store/shim/with-selector.js',
         delimiters: ['\\b', '\\b(?!(\\.|/))'],
         preventAssignment: true,
       }),
@@ -87,6 +84,7 @@ function createCommonJSConfig(input, output) {
   };
 }
 
+// https://github.com/pmndrs/zustand/blob/v5.0.12/rollup.config.mjs
 export default function (args) {
   let c = Object.keys(args).find((key) => key.startsWith('config-'));
   if (c) {
