@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react';
-import { type StoreApi, identity, shallow } from '../vanilla.ts';
+import { type StoreApi, identity, shallow } from 'floppy-disk';
 import { useIsomorphicLayoutEffect } from './use-isomorphic-layout-effect.ts';
 
 export const useStoreUpdateNotifier = <TState extends Record<string, any>, TStateSlice = TState>(

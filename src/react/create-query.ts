@@ -8,7 +8,7 @@ import {
   initStore,
   isClient,
   noop,
-} from '../vanilla.ts';
+} from 'floppy-disk';
 import { useIsomorphicLayoutEffect } from './use-isomorphic-layout-effect.ts';
 import { useStoreUpdateNotifier } from './use-store.ts';
 

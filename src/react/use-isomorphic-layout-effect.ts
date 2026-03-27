@@ -1,5 +1,5 @@
 import { useEffect, useLayoutEffect } from 'react';
-import { isClient } from '../vanilla.ts';
+import { isClient } from 'floppy-disk';
 
 /**
  * Does exactly same as `useLayoutEffect`.\
