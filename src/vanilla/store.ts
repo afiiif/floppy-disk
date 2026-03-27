@@ -1,4 +1,4 @@
-import { getValue, noop } from './basic.ts';
+import { getValue, isClient, noop } from './basic.ts';
 
 /**
  * Represents a partial state update.
@@ -28,6 +28,7 @@ export type Subscriber<TState> = (state: TState, prevState: TState) => void;
  * - The store performs **shallow change detection per key** before notifying subscribers.
  * - Subscribers are only notified when at least one field changes.
  * - Designed to be framework-agnostic (React bindings are built separately).
+ * - By default, `setState` is **disabled on the server** to prevent accidental shared state between requests.
  */
 export type StoreApi<TState extends Record<string, any>> = {
   setState: (value: SetState<TState>) => void;
@@ -52,6 +53,7 @@ export type InitStoreOptions<TState extends Record<string, any>> = {
   onSubscribe?: (state: TState, store: StoreApi<TState>) => void;
   onUnsubscribe?: (state: TState, store: StoreApi<TState>) => void;
   onLastUnsubscribe?: (state: TState, store: StoreApi<TState>) => void;
+  allowSetStateServerSide?: boolean;
 };
 
 /**
@@ -70,6 +72,9 @@ export type InitStoreOptions<TState extends Record<string, any>> = {
  * - Subscribers are only notified when at least one updated field changes (using `Object.is` comparison).
  * - Subscribers receive both the new state and the previous state.
  * - Lifecycle hooks allow side-effect management tied to subscription count.
+ * - By default, `setState` is **disabled on the server** to prevent accidental shared state between requests.
+ *   - This avoids leaking data between users in server environments.
+ *   - You can override this by setting `allowSetStateServerSide: true`.
  *
  * @example
  * const store = initStore({ count: 0 });
@@ -87,6 +92,7 @@ export const initStore = <TState extends Record<string, any>>(
     onSubscribe = noop,
     onUnsubscribe = noop,
     onLastUnsubscribe = noop,
+    allowSetStateServerSide = false,
   } = options;
 
   const subscribers = new Set<Subscriber<TState>>();
@@ -105,6 +111,12 @@ export const initStore = <TState extends Record<string, any>>(
   let state = initialState;
   const getState = () => state;
   const setState = (value: SetState<TState>) => {
+    if (!isClient && !allowSetStateServerSide) {
+      console.error(
+        'setState on the server is not allowed by default. Set `allowSetStateServerSide: true` to allow it.',
+      );
+      return;
+    }
     const prevState = state;
     const newValue = getValue(value, state);
     for (const key in newValue) {

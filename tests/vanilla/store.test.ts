@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import { initStore } from 'floppy-disk';
+import * as basic from '../../src/vanilla/basic';
 
 describe('initStore', () => {
   it('sets and gets state', () => {
@@ -80,5 +81,19 @@ describe('initStore', () => {
     unsub2();
     expect(onLastUnsubscribe).toHaveBeenCalledTimes(1);
     expect(onUnsubscribe).toHaveBeenCalledTimes(2);
+  });
+
+  it('does not allow setState on server by default', () => {
+    const isClientSpy = vi.spyOn(basic, 'isClient', 'get').mockReturnValue(false);
+    const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+    const store = initStore({ count: 0 });
+
+    store.setState({ count: 1 });
+    expect(store.getState()).toEqual({ count: 0 });
+    expect(consoleErrorSpy).toHaveBeenCalled();
+
+    isClientSpy.mockRestore();
+    consoleErrorSpy.mockRestore();
   });
 });
