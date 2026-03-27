@@ -12,3 +12,9 @@ coverage/
 .idea
 /experiment/*
 !/experiment/index.*
+.next/
+out/
+build/
+*.tsbuildinfo
+next-env.d.ts
+.vercel
