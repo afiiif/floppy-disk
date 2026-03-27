@@ -16,8 +16,8 @@ export type SetState<TState> = Partial<TState> | ((state: TState) => Partial<TSt
  * @param prevState - The previous state before the update
  *
  * @remarks
- * - Subscribers are always called on every `setState`, regardless of equality.
- * - It is the subscriber's responsibility to perform comparisons if needed.
+ * - Subscribers are only called when the state actually changes.
+ * - Change detection is performed per key using `Object.is`.
  */
 export type Subscriber<TState> = (state: TState, prevState: TState) => void;
 
@@ -25,8 +25,8 @@ export type Subscriber<TState> = (state: TState, prevState: TState) => void;
  * Core store API for managing state.
  *
  * @remarks
- * - The store is intentionally simple and always notifies subscribers on updates.
- * - No internal equality checks are performed.
+ * - The store performs **shallow change detection per key** before notifying subscribers.
+ * - Subscribers are only notified when at least one field changes.
  * - Designed to be framework-agnostic (React bindings are built separately).
  */
 export type StoreApi<TState extends Record<string, any>> = {
