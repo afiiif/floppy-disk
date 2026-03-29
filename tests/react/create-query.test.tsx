@@ -459,6 +459,7 @@ describe('createQuery', () => {
 
     let fullRender = 0;
     let dataRender = 0;
+    let isPendingRender = 0;
 
     function Full() {
       fullRender++;
@@ -474,21 +475,31 @@ describe('createQuery', () => {
       return <div>{data}</div>;
     }
 
+    function IsPendingOnly() {
+      isPendingRender++;
+      const useQuery = query();
+      const data = useQuery((s) => s.isPending);
+      return <div>{data}</div>;
+    }
+
     render(
       <>
         <Full />
         <DataOnly />
+        <IsPendingOnly />
       </>,
     );
 
     expect(fullRender).toBe(2);
     expect(dataRender).toBe(1);
+    expect(isPendingRender).toBe(1);
 
     await act(async () => {
       resolveFn('ok');
     });
     expect(fullRender).toBe(3);
     expect(dataRender).toBe(2);
+    expect(isPendingRender).toBe(2);
   });
 
   it('overwrites ongoing execution when specified (both promises resolve to latest)', async () => {

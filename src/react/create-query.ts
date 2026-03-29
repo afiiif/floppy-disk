@@ -606,6 +606,32 @@ export const createQuery = <TData, TVariable extends Record<string, any> = never
       internals.set(store, configureInternals(store, variable, variableHash));
     }
 
+    type UseStoreOptions = {
+      /**
+       * Whether the query should execute automatically on mount.
+       *
+       * @default true
+       */
+      enabled?: boolean;
+
+      /**
+       * Whether to keep previous successful data while a new variable is loading.
+       *
+       * @remarks
+       * - Only applies when the query is in the `INITIAL` state (no data & no error).
+       * - Intended for variable changes:
+       *   when switching from one variable to another, the previous data is temporarily shown
+       *   while the new execution is in progress.
+       * - Once the new execution resolves (success or error), the previous data is no longer used.
+       * - Prevents UI flicker (e.g. empty/loading state) during transitions.
+       *
+       * @example
+       * // Switching from userId=1 → userId=2
+       * // While loading userId=2, still show userId=1 data
+       * useQuery({ id: userId }, { keepPreviousData: true });
+       */ keepPreviousData?: boolean;
+    };
+
     /**
      * React hook for subscribing to query state.
      *
@@ -618,34 +644,26 @@ export const createQuery = <TData, TVariable extends Record<string, any> = never
      * - Automatically executes the query on mount (unless disabled).
      * - Selector does not need to be memoized.
      */
-    const useStore = <TStateSlice = TState>(
-      options: {
-        /**
-         * Whether the query should execute automatically on mount.
-         *
-         * @default true
-         */
-        enabled?: boolean;
+    function useStore<TStateSlice = TState>(
+      options?: UseStoreOptions,
+      selector?: (state: TState) => TStateSlice,
+    ): TStateSlice;
+    function useStore<TStateSlice = TState>(selector?: (state: TState) => TStateSlice): TStateSlice;
+    function useStore<TStateSlice = TState>(
+      optionsOrSelector: UseStoreOptions | ((state: TState) => TStateSlice) = {},
+      maybeSelector?: (state: TState) => TStateSlice,
+    ): TStateSlice {
+      let selector: (state: TState) => TStateSlice;
+      let options: UseStoreOptions;
 
-        /**
-         * Whether to keep previous successful data while a new variable is loading.
-         *
-         * @remarks
-         * - Only applies when the query is in the `INITIAL` state (no data & no error).
-         * - Intended for variable changes:
-         *   when switching from one variable to another, the previous data is temporarily shown
-         *   while the new execution is in progress.
-         * - Once the new execution resolves (success or error), the previous data is no longer used.
-         * - Prevents UI flicker (e.g. empty/loading state) during transitions.
-         *
-         * @example
-         * // Switching from userId=1 → userId=2
-         * // While loading userId=2, still show userId=1 data
-         * useQuery({ id: userId }, { keepPreviousData: true });
-         */ keepPreviousData?: boolean;
-      } = {},
-      selector: (state: TState) => TStateSlice = identity as (state: TState) => TStateSlice,
-    ) => {
+      if (typeof optionsOrSelector === 'function') {
+        options = {};
+        selector = optionsOrSelector;
+      } else {
+        options = optionsOrSelector;
+        selector = maybeSelector || (identity as (state: TState) => TStateSlice);
+      }
+
       // Store subscription & reactivity
       useStoreUpdateNotifier(store, selector);
 
@@ -665,7 +683,7 @@ export const createQuery = <TData, TVariable extends Record<string, any> = never
       }
 
       return selector(storeStateToBeUsed);
-    };
+    }
 
     return Object.assign(useStore, {
       subscribe: store.subscribe,
