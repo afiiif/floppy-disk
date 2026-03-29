@@ -68,7 +68,7 @@ describe('createQuery', () => {
     const store = query();
 
     const p1 = store.execute();
-    const p2 = store.execute();
+    const p2 = store.execute({ overwriteOngoingExecution: false });
     expect(p1).toStrictEqual(p2);
     expect(queryFn).toHaveBeenCalledTimes(1);
 
@@ -179,7 +179,7 @@ describe('createQuery', () => {
 
     const error = new Error('revalidate failed');
     await act(async () => {
-      query().invalidate(true);
+      query().invalidate({ overwriteOngoingExecution: true });
     });
     await act(async () => {
       rejectFn(error);
@@ -350,7 +350,7 @@ describe('createQuery', () => {
     const store = query();
 
     const p1 = store.execute();
-    const p2 = store.execute(true);
+    const p2 = store.execute();
 
     expect(p1).not.toBe(p2);
     expect(queryFn).toHaveBeenCalledTimes(2);
@@ -462,17 +462,18 @@ describe('createQuery', () => {
       resolveFns.shift()!('data-2'); // 1 still pending
     });
 
-    query.executeAll();
+    query.executeAll({ overwriteOngoingExecution: false });
     expect(queryFn).toHaveBeenCalledTimes(4);
 
-    query.executeAll(true);
+    query.executeAll();
     expect(queryFn).toHaveBeenCalledTimes(6);
   });
 
   it('revalidates only stale stores', async () => {
     vi.useFakeTimers();
 
-    const queryFn = vi.fn().mockImplementation(async ({ id }: { id: number }) => `ok${id}`);
+    const resolveFns: Array<(v: string) => void> = [];
+    const queryFn = vi.fn(() => new Promise<string>((resolve) => resolveFns.push(resolve)));
     const query = createQuery<string, { id: number }>(queryFn);
 
     renderHook(() => {
@@ -482,6 +483,11 @@ describe('createQuery', () => {
     });
 
     expect(queryFn).toHaveBeenCalledTimes(2);
+
+    await act(async () => {
+      resolveFns.shift()!('ok1');
+      resolveFns.shift()!('ok2');
+    });
 
     // ❌ should NOT revalidate because still fresh
     await act(async () => {

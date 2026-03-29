@@ -303,47 +303,54 @@ export const createQuery = <TData, TVariable extends Record<string, any> = never
     /**
      * Executes the query function.
      *
-     * @param overwriteOngoingExecution - Whether to start a new execution instead of reusing an ongoing one
+     * @param options - Execution options
+     * @param options.overwriteOngoingExecution - Whether to start a new execution instead of reusing an ongoing one (default: `true`)
      *
      * @returns A promise resolving to the latest query state
      *
      * @remarks
-     * - Deduplicates concurrent executions by default.
-     * - If `overwriteOngoingExecution` is true, a new execution replaces the current one.
+     * - By default, each call starts a new execution even if one is already in progress.
+     * - Set `overwriteOngoingExecution: false` to reuse an ongoing execution (deduplication).
      * - Handles:
      *   - Pending state
      *   - Success state
      *   - Error state
      *   - Retry logic
      */
-    execute: (overwriteOngoingExecution?: boolean) => Promise<TState>;
+    execute: (options?: { overwriteOngoingExecution?: boolean }) => Promise<TState>;
 
     /**
-     * Re-executes the query if the data is stale.
+     * Re-executes the query if needed based on freshness or invalidation.
      *
-     * @param overwriteOngoingExecution - Whether to overwrite an ongoing execution
+     * @param options - Revalidation options
+     * @param options.overwriteOngoingExecution - Whether to overwrite an ongoing execution (default: `true`)
      *
      * @returns The current state if still fresh, otherwise a promise of the new state
      *
      * @remarks
-     * - Skips execution if data is still fresh (`staleTime`) and the query has not been invalidated.
-     * - Used for automatic revalidation (e.g. focus or reconnect).
+     * - Skips execution if data is still fresh (`staleTime`) **AND** the query has not been invalidated.
+     * - If execution is not skipped, by default it will start a new execution even if one is already in progress.
+     * - Set `overwriteOngoingExecution: false` to reuse an ongoing execution (deduplication).
      */
-    revalidate: (overwriteOngoingExecution?: boolean) => Promise<TState>;
+    revalidate: (options?: { overwriteOngoingExecution?: boolean }) => Promise<TState>;
 
     /**
      * Marks the query as invalidated and optionally triggers re-execution.
      *
-     * @param overwriteOngoingExecution - Whether to overwrite an ongoing execution
+     * @param options - Invalidation options
+     * @param options.overwriteOngoingExecution - Whether to overwrite an ongoing execution (default: `true`)
      *
      * @returns `true` if execution was triggered, `false` otherwise
      *
      * @remarks
      * - Invalidated queries are treated as stale regardless of `staleTime`.
      * - The next `revalidate` will always execute until a successful result clears the invalidation.
-     * - If there are active subscribers, execution will be triggered immediately.
+     * - If there are active subscribers: Execution is triggered immediately.
+     * - Otherwise: The query remains invalidated and will execute on the next revalidation.
+     * - By default, starts a new execution even if one is already in progress.
+     * - Set `overwriteOngoingExecution: false` to reuse an ongoing execution (deduplication).
      */
-    invalidate: (overwriteOngoingExecution?: boolean) => boolean;
+    invalidate: (options?: { overwriteOngoingExecution?: boolean }) => boolean;
 
     /**
      * Resets the query state to its initial state.
@@ -416,17 +423,17 @@ export const createQuery = <TData, TVariable extends Record<string, any> = never
       }
       return false;
     },
-    execute: (overwriteOngoingExecution = false) => {
+    execute: ({ overwriteOngoingExecution = true } = {}) => {
       return execute(store, variable, overwriteOngoingExecution);
     },
-    revalidate: (overwriteOngoingExecution = false) => {
+    revalidate: ({ overwriteOngoingExecution = true } = {}) => {
       return revalidate(store, variable, overwriteOngoingExecution);
     },
-    invalidate: (overwriteOngoingExecution = false) => {
+    invalidate: (options) => {
       const { metadata } = internals.get(store)!;
       metadata.isInvalidated = true;
       if (store.getSubscribers().size > 0) {
-        internals.get(store)!.execute(overwriteOngoingExecution);
+        internals.get(store)!.execute(options);
         return true;
       }
       return false;
@@ -644,7 +651,7 @@ export const createQuery = <TData, TVariable extends Record<string, any> = never
 
       // Execute queryFn on mount & on re-render
       useIsomorphicLayoutEffect(() => {
-        if (options.enabled !== false) revalidate(store, variable);
+        if (options.enabled !== false) revalidate(store, variable, false);
       }, [store, options.enabled]);
 
       // Handle keepPreviousData
@@ -679,8 +686,8 @@ export const createQuery = <TData, TVariable extends Record<string, any> = never
      * @remarks
      * - Useful for bulk refetching.
      */
-    executeAll: (overwriteOngoingExecution?: boolean) => {
-      stores.forEach((store) => internals.get(store)!.execute(overwriteOngoingExecution));
+    executeAll: (options?: { overwriteOngoingExecution?: boolean }) => {
+      stores.forEach((store) => internals.get(store)!.execute(options));
     },
 
     /**
@@ -689,8 +696,8 @@ export const createQuery = <TData, TVariable extends Record<string, any> = never
      * @remarks
      * - Only re-fetches stale queries.
      */
-    revalidateAll: (overwriteOngoingExecution?: boolean) => {
-      stores.forEach((store) => internals.get(store)!.revalidate(overwriteOngoingExecution));
+    revalidateAll: (options?: { overwriteOngoingExecution?: boolean }) => {
+      stores.forEach((store) => internals.get(store)!.revalidate(options));
     },
 
     /**
@@ -700,8 +707,8 @@ export const createQuery = <TData, TVariable extends Record<string, any> = never
      * - Marks all queries as invalidated and triggers revalidation if active.
      * - Invalidated queries bypass `staleTime` until successfully executed again.
      */
-    invalidateAll: (overwriteOngoingExecution?: boolean) => {
-      stores.forEach((store) => internals.get(store)!.invalidate(overwriteOngoingExecution));
+    invalidateAll: (options?: { overwriteOngoingExecution?: boolean }) => {
+      stores.forEach((store) => internals.get(store)!.invalidate(options));
     },
 
     /**
