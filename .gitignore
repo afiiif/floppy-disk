@@ -15,6 +15,7 @@ coverage/
 .next/
 out/
 build/
+.react-router/
 *.tsbuildinfo
 next-env.d.ts
 .vercel
