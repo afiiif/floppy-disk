@@ -4,8 +4,8 @@ import { CardWithReRenderHighlight } from './_shared';
 
 export function meta() {
   return [
-    { title: 'FloppyDisk.JS Store' },
-    { name: 'description', content: 'FloppyDisk.JS store' },
+    { title: 'FloppyDisk.js Store' },
+    { name: 'description', content: 'FloppyDisk.js store' },
   ];
 }
 

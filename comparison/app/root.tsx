@@ -78,8 +78,9 @@ export default function App() {
           </span>
         </nav>
       </header>
-      <main className="px-4 py-8 sm:px-6 sm:py-11 max-w-2xl mx-auto">
+      <main className="px-4 py-9 sm:px-6 sm:py-12 max-w-2xl mx-auto">
         <Outlet key={Date.now()} />
+        <div className="h-12" />
       </main>
     </>
   );

@@ -9,6 +9,10 @@ body {
   @apply font-mono text-[13px] leading-[18px] sm:text-sm text-mist-400;
 }
 
+.link {
+  @apply text-mist-300 hover:text-green-300 hover:underline;
+}
+
 header {
   @apply bg-[#282c34] whitespace-pre;
   a {
@@ -26,12 +30,12 @@ header {
 }
 
 button {
-  @apply rounded px-2.5 py-1 bg-green-500 text-[#21252b] hover:bg-green-400;
+  @apply rounded px-2.5 py-1 bg-green-400 text-[#21252b] disabled:cursor-not-allowed disabled:opacity-50;
   &:not(:disabled) {
-    @apply cursor-pointer;
+    @apply cursor-pointer hover:bg-green-300;
   }
   &:focus-visible {
-    @apply outline-0 ring-4 ring-green-400/35 bg-green-400;
+    @apply outline-0 ring-4 ring-green-300/35 bg-green-300;
   }
 }
 
@@ -40,13 +44,16 @@ button {
   h2 {
     @apply text-sky-500 pb-2;
   }
+  h3 {
+    @apply text-sky-500 pb-1 text-xs;
+  }
 }
 .card-badge {
   @apply absolute text-xs -top-2 -right-2 bg-mist-400 px-2 py-0.5 rounded text-[#21252b];
 }
 
 .animate-render {
-  animation: animateRender 0.5s ease;
+  animation: animateRender 0.6s ease;
 }
 
 @keyframes animateRender {
