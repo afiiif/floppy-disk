@@ -1,6 +1,7 @@
 import { act, render, renderHook } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import { createQuery } from 'floppy-disk/react';
+import * as basic from '../../src/vanilla/basic';
 
 describe('createQuery', () => {
   it('fetches data on mount and updates state accordingly', async () => {
@@ -236,6 +237,158 @@ describe('createQuery', () => {
       resolveFn('ok');
     });
     expect(store.getState().data).toBe('ok');
+
+    vi.useRealTimers();
+  });
+
+  it('retries based on default shouldRetry, then stops retrying after limit', async () => {
+    vi.useFakeTimers();
+    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+    let reject1: any;
+    let resolve2: any;
+    let reject3: any;
+    let reject4: any;
+
+    const queryFn = vi
+      .fn()
+      // fail → retry → success
+      .mockImplementationOnce(() => new Promise((_, reject) => (reject1 = reject)))
+      .mockImplementationOnce(() => new Promise((resolve) => (resolve2 = resolve)))
+      // next execute: fail → retry → fail again (should stop here)
+      .mockImplementationOnce(() => new Promise((_, reject) => (reject3 = reject)))
+      .mockImplementationOnce(() => new Promise((_, reject) => (reject4 = reject)));
+
+    const query = createQuery(queryFn);
+
+    renderHook(() => {
+      const useQuery = query();
+      return useQuery();
+    });
+
+    const store = query();
+
+    await act(async () => {
+      reject1(new Error('fail-1'));
+    });
+
+    await act(async () => {
+      vi.advanceTimersByTime(1000);
+    });
+    expect(queryFn).toHaveBeenCalledTimes(1); // retry not yet triggered
+
+    await act(async () => {
+      vi.advanceTimersByTime(500);
+    });
+    expect(queryFn).toHaveBeenCalledTimes(2);
+
+    await act(async () => {
+      resolve2('ok');
+    });
+    expect(store.getState().data).toBe('ok');
+    expect(store.getState().error).toBeUndefined();
+
+    await act(async () => {
+      store.execute();
+    });
+    await act(async () => {
+      reject3(new Error('fail-2'));
+    });
+    await act(async () => {
+      vi.advanceTimersByTime(1500);
+    });
+    expect(queryFn).toHaveBeenCalledTimes(4);
+
+    await act(async () => {
+      reject4(new Error('fail-3'));
+    });
+
+    const state = store.getState();
+    expect(state.error).toBeDefined();
+    expect(state.state).toBe('SUCCESS_BUT_REVALIDATION_ERROR');
+    expect(state.isSuccess).toBe(true);
+    expect(state.isError).toBe(false);
+
+    expect(errorSpy).toHaveBeenCalledTimes(1);
+    errorSpy.mockRestore();
+    vi.useRealTimers();
+  });
+
+  it('cancels retry when a newer execution is triggered', async () => {
+    vi.useFakeTimers();
+
+    let reject1: any;
+    let resolve2: any;
+    const queryFn = vi
+      .fn()
+      .mockImplementationOnce(() => new Promise((_, reject) => (reject1 = reject)))
+      .mockImplementationOnce(() => new Promise((resolve) => (resolve2 = resolve)));
+
+    const query = createQuery(queryFn);
+
+    renderHook(() => {
+      const useQuery = query();
+      return useQuery();
+    });
+
+    const store = query();
+
+    // Start req2 while waiting for req1
+    await act(async () => {
+      store.execute();
+    });
+
+    // req1 fails
+    await act(async () => {
+      reject1(new Error('fail'));
+    });
+
+    // Advance time → should NOT retry
+    await act(async () => {
+      vi.advanceTimersByTime(2000);
+    });
+
+    // Only 2 calls total (req1 + req2), no retry
+    expect(queryFn).toHaveBeenCalledTimes(2);
+
+    await act(async () => {
+      resolve2('ok');
+    });
+    expect(store.getState().data).toBe('ok');
+    expect(store.getState().isError).toBe(false);
+
+    vi.useRealTimers();
+  });
+
+  it('no retry when reset is triggered', async () => {
+    vi.useFakeTimers();
+
+    let rejectFn: any;
+    const queryFn = vi.fn(() => new Promise((_, reject) => (rejectFn = reject)));
+    const query = createQuery(queryFn);
+
+    renderHook(() => {
+      const useQuery = query();
+      return useQuery();
+    });
+
+    const store = query();
+
+    await act(async () => {
+      store.reset();
+    });
+
+    await act(async () => {
+      rejectFn(new Error('fail'));
+    });
+
+    await act(async () => {
+      vi.advanceTimersByTime(2000);
+    });
+
+    expect(queryFn).toHaveBeenCalledTimes(1);
+    expect(store.getState().data).toBe(undefined);
+    expect(store.getState().error).toBe(undefined);
 
     vi.useRealTimers();
   });
@@ -512,8 +665,10 @@ describe('createQuery', () => {
   });
 
   it('invalidates all but only refetches subscribed stores', async () => {
+    const isClientSpy = vi.spyOn(basic, 'isClient', 'get').mockReturnValue(false);
+
     const queryFn = vi.fn(async ({ id }: { id: number }) => `ok${id}`);
-    const query = createQuery<string, { id: number }>(queryFn);
+    const query = createQuery<string, { id: number }>(queryFn, { allowSetStateServerSide: true });
 
     await Promise.all([
       query({ id: 1 }).execute(),
@@ -523,8 +678,8 @@ describe('createQuery', () => {
     expect(queryFn).toHaveBeenCalledTimes(3);
     expect(query({ id: 1 }).getState().data).toBe('ok1');
 
-    query({ id: 1 }).subscribe(() => {});
-    query({ id: 2 }).subscribe(() => {});
+    const unsub1 = query({ id: 1 }).subscribe(() => {});
+    const unsub2 = query({ id: 2 }).subscribe(() => {});
 
     await act(async () => {
       query.invalidateAll();
@@ -536,6 +691,16 @@ describe('createQuery', () => {
 
     await query({ id: 3 }).revalidate(); // already invalidated
     expect(queryFn).toHaveBeenCalledTimes(6);
+
+    unsub1();
+    unsub2();
+
+    await act(async () => {
+      query.invalidateAll();
+    });
+    expect(queryFn).toHaveBeenCalledTimes(6);
+
+    isClientSpy.mockRestore();
   });
 
   it('resets all stores to initial state', async () => {

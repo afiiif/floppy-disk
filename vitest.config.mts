@@ -19,6 +19,7 @@ export default defineConfig({
     setupFiles: ['tests/_setup.ts'],
     coverage: {
       include: ['src/**/*.{js,ts,jsx,tsx}'],
+      exclude: ['src/react/use-isomorphic-layout-effect.ts'],
       reporter: ['text', 'json', 'html', 'text-summary'],
       reportsDirectory: './coverage/',
       provider: 'v8',
