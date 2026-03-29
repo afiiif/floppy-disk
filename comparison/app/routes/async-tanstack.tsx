@@ -1,12 +1,12 @@
-import { useState } from 'react';
 import {
   keepPreviousData,
   QueryClient,
   QueryClientProvider,
   useQuery,
 } from '@tanstack/react-query';
+import { useState } from 'react';
 
-import { basicQueryFn1, CardWithReRenderHighlight, keyedQueryFn2 } from './_shared';
+import { basicQueryFn1, CardWithReRenderHighlight, keyedQueryFn2, Tabs } from './_shared';
 
 export function meta() {
   return [
@@ -24,14 +24,35 @@ const queryClient = new QueryClient({
 export default function AsyncStateTanstack() {
   return (
     <QueryClientProvider client={queryClient}>
-      <h1 className="font-bold pb-5">TanStack-Query for Async State Management</h1>
-      <SimpleQuery />
-      <SimpleQuerySelectData />
-      <SimpleQuerySelectDataSlice />
-      <SimpleQueryActions />
-
-      <h2 className="pt-6 pb-4">Keyed Query (staleTime: 15s)</h2>
-      <KeyedQueryContainer />
+      <h1 className="font-bold pb-4">TanStack-Query for Async State Management</h1>
+      <Tabs
+        storageId="TanStackTab"
+        menu={[
+          {
+            label: 'Single Query',
+            content: (
+              <>
+                <SimpleQueryState />
+                <SimpleQueryData />
+                <SimpleQueryDataSlice />
+                <SimpleQueryActions />
+              </>
+            ),
+          },
+          {
+            label: 'Keyed Query',
+            content: <KeyedQueryContainer />,
+          },
+          {
+            label: 'Infinite Query',
+            content: <div>Infinite Query</div>,
+          },
+          {
+            label: 'Mutation',
+            content: <div>Mutation</div>,
+          },
+        ]}
+      />
     </QueryClientProvider>
   );
 }
@@ -47,7 +68,7 @@ const useBasicQuery = (
     ...options,
   });
 
-function SimpleQuery() {
+function SimpleQueryState() {
   const queryState = useBasicQuery();
   return (
     <CardWithReRenderHighlight>
@@ -57,7 +78,7 @@ function SimpleQuery() {
   );
 }
 
-function SimpleQuerySelectData() {
+function SimpleQueryData() {
   const queryState = useBasicQuery();
   return (
     <CardWithReRenderHighlight>
@@ -66,7 +87,7 @@ function SimpleQuerySelectData() {
     </CardWithReRenderHighlight>
   );
 }
-function SimpleQuerySelectDataSlice() {
+function SimpleQueryDataSlice() {
   const queryState = useBasicQuery({ select: (data: any) => data.b });
   return (
     <CardWithReRenderHighlight>
