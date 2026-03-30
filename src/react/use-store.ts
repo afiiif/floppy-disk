@@ -6,7 +6,7 @@ type Path = Array<string | number | symbol>;
 
 const getValueByPath = (obj: any, path: Path) => path.reduce((acc, key) => acc?.[key], obj);
 
-const isPrefixPath = (candidatePrefix: Path, targetPath: Path) => {
+export const isPrefixPath = (candidatePrefix: Path, targetPath: Path) => {
   if (candidatePrefix.length >= targetPath.length) return false;
   for (let i = 0; i < candidatePrefix.length; i++) {
     if (candidatePrefix[i] !== targetPath[i]) return false;

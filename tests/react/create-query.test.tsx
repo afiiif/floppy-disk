@@ -373,6 +373,7 @@ describe('createQuery', () => {
 
   it('no retry when reset is triggered', async () => {
     vi.useFakeTimers();
+    const debugSpy = vi.spyOn(console, 'debug').mockImplementation(() => {});
 
     let rejectFn: any;
     const queryFn = vi.fn(() => new Promise((_, reject) => (rejectFn = reject)));
@@ -400,8 +401,10 @@ describe('createQuery', () => {
     expect(queryFn).toHaveBeenCalledTimes(1);
     expect(store.getState().data).toBe(undefined);
     expect(store.getState().error).toBe(undefined);
+    expect(debugSpy).toHaveBeenCalledTimes(1);
 
     vi.useRealTimers();
+    debugSpy.mockRestore();
   });
 
   it('invalidate does not refetch when no subscribers', () => {

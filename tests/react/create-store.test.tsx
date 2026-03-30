@@ -15,12 +15,13 @@ describe('createStore', () => {
     const useStore = createStore({
       foo: 2,
       bar: 7,
-      baz: { a: { b: 99 } },
+      baz: { a: { b: 99 }, c: 999 },
     });
 
     let fullRender = 0;
     let fooRender = 0;
     let barRender = 0;
+    let bazRender = 0;
     let fooAndBazRender = 0;
 
     function Full() {
@@ -45,6 +46,12 @@ describe('createStore', () => {
       return <div>bar: {bar}</div>;
     }
 
+    function Baz() {
+      const { baz } = useStore();
+      bazRender++;
+      return <div>{JSON.stringify(baz)}</div>;
+    }
+
     function FooAndBaz() {
       const { foo, baz } = useStore();
       fooAndBazRender++;
@@ -61,6 +68,7 @@ describe('createStore', () => {
         <Full />
         <Foo />
         <Bar />
+        <Baz />
         <FooAndBaz />
       </>,
     );
@@ -73,6 +81,7 @@ describe('createStore', () => {
     expect(fullRender).toBe(1);
     expect(fooRender).toBe(1);
     expect(barRender).toBe(1);
+    expect(bazRender).toBe(1);
     expect(fooAndBazRender).toBe(1);
 
     act(() => {
@@ -86,6 +95,16 @@ describe('createStore', () => {
     expect(fullRender).toBe(2);
     expect(fooRender).toBe(2);
     expect(barRender).toBe(1);
+    expect(bazRender).toBe(1);
+    expect(fooAndBazRender).toBe(2);
+
+    act(() => {
+      useStore.setState({ baz: { a: { b: 99 }, c: 0 } });
+    });
+    expect(fullRender).toBe(2);
+    expect(fooRender).toBe(2);
+    expect(barRender).toBe(1);
+    expect(bazRender).toBe(2);
     expect(fooAndBazRender).toBe(2);
   });
 });
