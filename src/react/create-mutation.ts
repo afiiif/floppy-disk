@@ -138,7 +138,7 @@ export const createMutation = <TData, TVariable = undefined>(
   const initialState = INITIAL_STATE as TState;
 
   const store = initStore(initialState, options);
-  const useStore = () => useStoreState(store);
+  const useStore = () => useStoreState(store.getState(), store.subscribe);
 
   const execute = (variable: TVariable) => {
     const stateBeforeExecute = store.getState();

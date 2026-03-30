@@ -1,4 +1,4 @@
-import { useCallback, useRef } from 'react';
+import { useRef, useState } from 'react';
 import {
   type InitStoreOptions,
   type SetState,
@@ -9,7 +9,7 @@ import {
   noop,
 } from '../vanilla.ts';
 import { useIsomorphicLayoutEffect } from './use-isomorphic-layout-effect.ts';
-import { useStoreState } from './use-store.ts';
+import { compressPaths, getValueByPath, useStoreStateProxy } from './use-store.ts';
 
 /**
  * Represents the state of a query.
@@ -658,44 +658,61 @@ export const createQuery = <TData, TVariable extends Record<string, any> = never
      * const { name } = useQuery().data.user;
      * // Subscribes to `data.user.name`
      */
-    const useStore = (options: UseStoreOptions = {}) => {
-      // Execute queryFn on mount & on re-render
-      useIsomorphicLayoutEffect(() => {
-        if (options.enabled !== false) revalidate(store, variable, false);
-      }, [store, options.enabled]);
+    const useStore = (options: UseStoreOptions = {}): TState => {
+      const { enabled = true, keepPreviousData } = options;
 
       const storeState = store.getState();
-
       const prevState = useRef<Partial<TState>>({});
+
+      let storeStateToBeUsed = storeState;
       if (storeState.state !== 'INITIAL') {
         prevState.current = {
           data: storeState.data,
           dataUpdatedAt: storeState.dataUpdatedAt,
         } as Partial<TState>;
+      } else if (keepPreviousData) {
+        storeStateToBeUsed = { ...storeState, ...prevState.current } as TState;
       }
 
-      const storeStateProxied = useStoreState({
-        subscribe: store.subscribe,
-        getState: useCallback(() => {
-          if (storeState.state === 'INITIAL') {
-            const initialState: TState =
-              options.enabled === false ? storeState : { ...storeState, isPending: true };
-            if (options.keepPreviousData) {
-              return { ...initialState, ...prevState.current } as TState;
-            }
-            return initialState;
+      const [trackedState, usedPathsRef] = useStoreStateProxy(
+        enabled && storeState.state === 'INITIAL'
+          ? // Optimize rendering on initial state
+            // Do { isPending: true } → result
+            // instead of { isPending: false } → { isPending: true } → result
+            { ...storeStateToBeUsed, isPending: true }
+          : storeStateToBeUsed,
+      );
+
+      const [, reRender] = useState({});
+
+      useIsomorphicLayoutEffect(() => {
+        return store.subscribe((nextState, prevState, changedKeys) => {
+          if (prevState.state === 'INITIAL' && !prevState.isPending && nextState.isPending) {
+            // Prevent unnecessary re-render since the isPending already true on initial render
+            return;
           }
-          return storeState;
-          // eslint-disable-next-line react-hooks/exhaustive-deps
-        }, [store, storeState, options.enabled, options.keepPreviousData]),
-      });
+          const paths = compressPaths(usedPathsRef.current);
+          for (const path of paths) {
+            const rootKey = path[0] as keyof TState;
+            if (!changedKeys.includes(rootKey)) continue;
+            const prevVal = getValueByPath(prevState, path);
+            const nextVal = getValueByPath(nextState, path);
+            if (!Object.is(prevVal, nextVal)) return reRender({});
+          }
+        });
+      }, [store]);
 
-      if (options.keepPreviousData) {
+      // Execute queryFn on mount & on re-render
+      useIsomorphicLayoutEffect(() => {
+        if (enabled !== false) revalidate(store, variable, false);
+      }, [store, enabled]);
+
+      if (keepPreviousData) {
         // eslint-disable-next-line @typescript-eslint/no-unused-expressions
-        !!storeStateProxied.error; // Force subscribe to error
+        !!trackedState.error; // Force subscribe to error
       }
 
-      return storeStateProxied;
+      return trackedState;
     };
 
     return Object.assign(useStore, {

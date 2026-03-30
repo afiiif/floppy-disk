@@ -4,7 +4,7 @@ import { useIsomorphicLayoutEffect } from './use-isomorphic-layout-effect.ts';
 
 type Path = Array<string | number | symbol>;
 
-const getValueByPath = (obj: any, path: Path) => path.reduce((acc, key) => acc?.[key], obj);
+export const getValueByPath = (obj: any, path: Path) => path.reduce((acc, key) => acc?.[key], obj);
 
 export const isPrefixPath = (candidatePrefix: Path, targetPath: Path) => {
   if (candidatePrefix.length >= targetPath.length) return false;
@@ -14,7 +14,7 @@ export const isPrefixPath = (candidatePrefix: Path, targetPath: Path) => {
   return true;
 };
 
-const compressPaths = (paths: Path[]): Path[] => {
+export const compressPaths = (paths: Path[]): Path[] => {
   const result: Path[] = [];
   let prev: Path | null = null;
   for (let i = paths.length - 1; i >= 0; i--) {
@@ -25,33 +25,9 @@ const compressPaths = (paths: Path[]): Path[] => {
   return result;
 };
 
-/**
- * React hook for subscribing to a store using automatic dependency tracking.
- *
- * @param store - The store instance to subscribe to
- *
- * @returns A proxied version of the store state
- *
- * @remarks
- * - This hook uses a **Proxy-based tracking mechanism** to detect which parts of the state are accessed during render.
- * - The component will only re-render when the **accessed values actually change**.
- * - State must be treated as **immutable**:
- *   - Updates must replace objects rather than mutate them
- *   - Otherwise, changes may not be detected
- * - No selector or memoization is needed.
- *
- * @example
- * const state = useStoreState(store);
- * return <div>{state.user.name}</div>;
- * // Component will only re-render if `user.name` changes
- */
-export const useStoreState = <TState extends Record<string, any>>(
-  store: Pick<StoreApi<TState>, 'getState' | 'subscribe'>,
-): TState => {
+export const useStoreStateProxy = <TState extends Record<string, any>>(storeState: TState) => {
   const usedPathsRef = useRef<Path[]>([]);
   usedPathsRef.current = [];
-
-  const storeState = store.getState();
 
   const trackedState = useMemo(() => {
     const track = (path: Path) => usedPathsRef.current.push(path);
@@ -80,10 +56,39 @@ export const useStoreState = <TState extends Record<string, any>>(
     return createDeepProxy(storeState);
   }, [storeState]);
 
+  return [trackedState, usedPathsRef] as const;
+};
+
+/**
+ * React hook for subscribing to a store using automatic dependency tracking.
+ *
+ * @param store - The store instance to subscribe to
+ *
+ * @returns A proxied version of the store state
+ *
+ * @remarks
+ * - This hook uses a **Proxy-based tracking mechanism** to detect which parts of the state are accessed during render.
+ * - The component will only re-render when the **accessed values actually change**.
+ * - State must be treated as **immutable**:
+ *   - Updates must replace objects rather than mutate them
+ *   - Otherwise, changes may not be detected
+ * - No selector or memoization is needed.
+ *
+ * @example
+ * const state = useStoreState(store);
+ * return <div>{state.user.name}</div>;
+ * // Component will only re-render if `user.name` changes
+ */
+export const useStoreState = <TState extends Record<string, any>>(
+  storeState: TState,
+  subscribe: StoreApi<TState>['subscribe'],
+): TState => {
+  const [trackedState, usedPathsRef] = useStoreStateProxy(storeState);
+
   const [, reRender] = useState({});
 
   useIsomorphicLayoutEffect(() => {
-    return store.subscribe((nextState, prevState, changedKeys) => {
+    return subscribe((nextState, prevState, changedKeys) => {
       const paths = compressPaths(usedPathsRef.current);
       for (const path of paths) {
         const rootKey = path[0] as keyof TState;
@@ -93,7 +98,7 @@ export const useStoreState = <TState extends Record<string, any>>(
         if (!Object.is(prevVal, nextVal)) return reRender({});
       }
     });
-  }, [store.subscribe]);
+  }, [subscribe]);
 
   return trackedState;
 };

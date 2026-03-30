@@ -49,7 +49,7 @@ export const createStores = <TState extends Record<string, any>, TKey extends Re
       stores.set(keyHash, store);
     }
 
-    const useStore = () => useStoreState(store);
+    const useStore = () => useStoreState(store.getState(), store.subscribe);
 
     return Object.assign(useStore, {
       ...store,
