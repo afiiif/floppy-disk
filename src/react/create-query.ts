@@ -1,16 +1,15 @@
-import { useRef } from 'react';
+import { useRef, useState } from 'react';
 import {
   type InitStoreOptions,
   type SetState,
   type StoreApi,
   getHash,
-  identity,
   initStore,
   isClient,
   noop,
 } from '../vanilla.ts';
 import { useIsomorphicLayoutEffect } from './use-isomorphic-layout-effect.ts';
-import { useStoreUpdateNotifier } from './use-store.ts';
+import { compressPaths, getValueByPath, useStoreStateProxy } from './use-store.ts';
 
 /**
  * Represents the state of a query.
@@ -102,9 +101,9 @@ export type QueryOptions<TData, TVariable extends Record<string, any>> = InitSto
   /**
    * Time (in milliseconds) that data is considered fresh.
    *
-   * While fresh, revalidation will be skipped.
+   * While fresh, revalidation will be skipped unless explicitly invalidated.
    *
-   * @default 2500 ms (2.5 minutes)
+   * @default 2500 ms (2.5 seconds)
    */
   staleTime?: number;
 
@@ -174,16 +173,20 @@ export type QueryOptions<TData, TVariable extends Record<string, any>> = InitSto
  * @returns A function to retrieve or create a query instance by variable
  *
  * @remarks
- * - Queries are cached by a deterministic key derived from `variable`.
+ * - Queries are **keyed by variable** (via deterministic hashing).
  * - Each unique variable maps to its own store instance.
- * - Queries support:
- *   - Caching with `staleTime`
- *   - Explicit invalidation independent of freshness
- *   - Automatic garbage collection (`gcTime`)
- *   - Retry logic via `shouldRetry`
- *   - Background revalidation (focus / reconnect)
- * - Execution is deduplicated: multiple calls share the same in-flight promise.
- * - Ongoing executions can be optionally overwritten.
+ *
+ * Core features:
+ * - Caching via `staleTime`
+ * - Explicit invalidation (independent of freshness)
+ * - Retry logic via `shouldRetry`
+ * - Background revalidation (focus / reconnect)
+ * - Garbage collection via `gcTime`
+ *
+ * Execution behavior:
+ * - By default, executions **overwrite ongoing executions**
+ * - Set `overwriteOngoingExecution: false` to enable deduplication
+ * - Internal revalidation (focus/reconnect) uses deduplication by default
  *
  * @example
  * const userQuery = createQuery<UserDetail, { id: string }>(async ({ id }) => {
@@ -309,7 +312,7 @@ export const createQuery = <TData, TVariable extends Record<string, any> = never
      * @returns A promise resolving to the latest query state
      *
      * @remarks
-     * - By default, each call starts a new execution even if one is already in progress.
+     * - By default, each call **starts a new execution** even if one is already in progress.
      * - Set `overwriteOngoingExecution: false` to reuse an ongoing execution (deduplication).
      * - Handles:
      *   - Pending state
@@ -636,54 +639,81 @@ export const createQuery = <TData, TVariable extends Record<string, any> = never
      * React hook for subscribing to query state.
      *
      * @param options - Hook behavior configuration
-     * @param selector - Optional selector for deriving state
      *
-     * @returns Selected slice of query state
+     * @returns Query state (Proxy-wrapped for access tracking)
      *
      * @remarks
      * - Automatically executes the query on mount (unless disabled).
-     * - Selector does not need to be memoized.
+     * - Components automatically subscribe to the properties they access.
+     *
+     * @example
+     * const state = useQuery();
+     * // Subscribes to accessed properties
+     *
+     * @example
+     * const { data } = useQuery();
+     * // Subscribes to `data`
+     *
+     * @example
+     * const { name } = useQuery().data.user;
+     * // Subscribes to `data.user.name`
      */
-    function useStore<TStateSlice = TState>(
-      options?: UseStoreOptions,
-      selector?: (state: TState) => TStateSlice,
-    ): TStateSlice;
-    function useStore<TStateSlice = TState>(selector?: (state: TState) => TStateSlice): TStateSlice;
-    function useStore<TStateSlice = TState>(
-      optionsOrSelector: UseStoreOptions | ((state: TState) => TStateSlice) = {},
-      maybeSelector?: (state: TState) => TStateSlice,
-    ): TStateSlice {
-      let selector: (state: TState) => TStateSlice;
-      let options: UseStoreOptions;
+    const useStore = (options: UseStoreOptions = {}): TState => {
+      const { enabled = true, keepPreviousData } = options;
 
-      if (typeof optionsOrSelector === 'function') {
-        options = {};
-        selector = optionsOrSelector;
-      } else {
-        options = optionsOrSelector;
-        selector = maybeSelector || (identity as (state: TState) => TStateSlice);
-      }
-
-      // Store subscription & reactivity
-      useStoreUpdateNotifier(store, selector);
-
-      // Execute queryFn on mount & on re-render
-      useIsomorphicLayoutEffect(() => {
-        if (options.enabled !== false) revalidate(store, variable, false);
-      }, [store, options.enabled]);
-
-      // Handle keepPreviousData
       const storeState = store.getState();
+      const prevState = useRef<Partial<TState>>({});
+
       let storeStateToBeUsed = storeState;
-      const prevState = useRef<{ data?: TData; dataUpdatedAt?: number }>({});
-      if (storeState.isSuccess) {
-        prevState.current = { data: storeState.data, dataUpdatedAt: storeState.dataUpdatedAt };
-      } else if (storeState.state === 'INITIAL' && options.keepPreviousData) {
+      if (storeState.state !== 'INITIAL') {
+        prevState.current = {
+          data: storeState.data,
+          dataUpdatedAt: storeState.dataUpdatedAt,
+        } as Partial<TState>;
+      } else if (keepPreviousData) {
         storeStateToBeUsed = { ...storeState, ...prevState.current } as TState;
       }
 
-      return selector(storeStateToBeUsed);
-    }
+      const [trackedState, usedPathsRef] = useStoreStateProxy(
+        enabled && storeState.state === 'INITIAL'
+          ? // Optimize rendering on initial state
+            // Do { isPending: true } → result
+            // instead of { isPending: false } → { isPending: true } → result
+            { ...storeStateToBeUsed, isPending: true }
+          : storeStateToBeUsed,
+      );
+
+      const [, reRender] = useState({});
+
+      useIsomorphicLayoutEffect(() => {
+        return store.subscribe((nextState, prevState, changedKeys) => {
+          if (prevState.state === 'INITIAL' && !prevState.isPending && nextState.isPending) {
+            // Prevent unnecessary re-render since the isPending already true on initial render
+            return;
+          }
+          const paths = compressPaths(usedPathsRef.current);
+          for (const path of paths) {
+            const rootKey = path[0] as keyof TState;
+            if (!changedKeys.includes(rootKey)) continue;
+            const prevVal = getValueByPath(prevState, path);
+            const nextVal = getValueByPath(nextState, path);
+            if (!Object.is(prevVal, nextVal)) return reRender({});
+          }
+        });
+      }, [store]);
+
+      // Execute queryFn on mount & on re-render
+      useIsomorphicLayoutEffect(() => {
+        if (enabled !== false) revalidate(store, variable, false);
+      }, [store, enabled]);
+
+      if (keepPreviousData) {
+        // eslint-disable-next-line @typescript-eslint/no-unused-expressions
+        !!trackedState.error; // Force subscribe to error
+      }
+
+      return trackedState;
+    };
 
     return Object.assign(useStore, {
       subscribe: store.subscribe,

@@ -36,15 +36,16 @@ describe('initStore', () => {
   });
 
   it('subscribes and unsubscribes correctly', () => {
-    const store = initStore({ count: 0 });
+    const store = initStore({ foo: 0, bar: 123 });
     const fn = vi.fn();
 
     const unsub = store.subscribe(fn);
-    store.setState({ count: 1 });
+    store.setState({ foo: 1 });
     expect(fn).toHaveBeenCalledTimes(1);
+    expect(fn.mock.calls[0][2]).toEqual(['foo']);
 
     unsub();
-    store.setState({ count: 2 });
+    store.setState({ foo: 2 });
     expect(fn).toHaveBeenCalledTimes(1);
   });
 

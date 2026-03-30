@@ -29,6 +29,8 @@ describe('createQuery', () => {
       return useQuery();
     });
 
+    expect(queryFn).toHaveBeenCalledTimes(1);
+
     expect(result.current).toMatchObject({
       isPending: true,
       isRevalidating: false,
@@ -55,10 +57,10 @@ describe('createQuery', () => {
       isSuccess: true,
       isError: false,
       data: 'output',
+      dataUpdatedAt: expect.any(Number),
       error: undefined,
       errorUpdatedAt: undefined,
     });
-    expect(result.current.dataUpdatedAt).toBeTypeOf('number');
   });
 
   it('dedupes concurrent executions (same promise)', async () => {
@@ -131,13 +133,18 @@ describe('createQuery', () => {
       isSuccess: false,
       isError: true,
       data: undefined,
-      error,
+      errorUpdatedAt: expect.any(Number),
     });
-    expect(result.current.errorUpdatedAt).toBeTypeOf('number');
+    expect(result.current.error).toBeInstanceOf(Error);
+    expect(result.current.error).toHaveProperty('message', 'boom');
 
     expect(errorSpy).toHaveBeenCalledTimes(1);
     const loggedState = errorSpy.mock.calls[0][0];
-    expect(loggedState).toMatchObject(result.current);
+    const { error: _, ...rest } = result.current;
+    expect(loggedState).toMatchObject(rest);
+    expect(loggedState.error).toBeInstanceOf(Error);
+    expect(loggedState.error).toHaveProperty('message', 'boom');
+
     errorSpy.mockRestore();
   });
 
@@ -168,15 +175,19 @@ describe('createQuery', () => {
       return useQuery();
     });
 
+    expect(result.current.isPending).toBe(true);
     await act(async () => {
       resolveFn('ok');
     });
+
     expect(result.current).toMatchObject({
       state: 'SUCCESS',
       isSuccess: true,
       isError: false,
       data: 'ok',
     });
+
+    expect(onSuccess).toHaveBeenCalledTimes(1);
 
     const error = new Error('revalidate failed');
     await act(async () => {
@@ -191,11 +202,11 @@ describe('createQuery', () => {
       isSuccess: true,
       isError: false,
       data: 'ok',
-      error,
+      errorUpdatedAt: expect.any(Number),
     });
-    expect(result.current.errorUpdatedAt).toBeTypeOf('number');
+    expect(result.current.error).toBeInstanceOf(Error);
+    expect(result.current.error).toHaveProperty('message', 'revalidate failed');
 
-    expect(onSuccess).toHaveBeenCalledTimes(1);
     expect(onError).toHaveBeenCalledTimes(1);
     expect(onSettled).toHaveBeenCalledTimes(2);
   });
@@ -362,6 +373,7 @@ describe('createQuery', () => {
 
   it('no retry when reset is triggered', async () => {
     vi.useFakeTimers();
+    const debugSpy = vi.spyOn(console, 'debug').mockImplementation(() => {});
 
     let rejectFn: any;
     const queryFn = vi.fn(() => new Promise((_, reject) => (rejectFn = reject)));
@@ -389,8 +401,10 @@ describe('createQuery', () => {
     expect(queryFn).toHaveBeenCalledTimes(1);
     expect(store.getState().data).toBe(undefined);
     expect(store.getState().error).toBe(undefined);
+    expect(debugSpy).toHaveBeenCalledTimes(1);
 
     vi.useRealTimers();
+    debugSpy.mockRestore();
   });
 
   it('invalidate does not refetch when no subscribers', () => {
@@ -436,6 +450,8 @@ describe('createQuery', () => {
       { initialProps: { id: 1 } },
     );
 
+    expect(result.current.isPending).toBe(true);
+
     await act(async () => {
       resolve1('first');
     });
@@ -453,7 +469,7 @@ describe('createQuery', () => {
     expect(result.current.data).toBe('second');
   });
 
-  it('selector avoids unnecessary re-renders', async () => {
+  it('avoids unnecessary re-renders', async () => {
     let resolveFn: any;
     const query = createQuery(() => new Promise<string>((resolve) => (resolveFn = resolve)));
 
@@ -465,21 +481,21 @@ describe('createQuery', () => {
       fullRender++;
       const useQuery = query();
       const state = useQuery();
-      return <div>{state.isPending ? 'pending' : state.data}</div>;
+      return <div>{state.isPending ? 'pending' : JSON.stringify(state.data)}</div>;
     }
 
     function DataOnly() {
       dataRender++;
       const useQuery = query();
-      const data = useQuery({}, (s) => s.data);
-      return <div>{data}</div>;
+      const state = useQuery();
+      return <div>{JSON.stringify(state.data)}</div>;
     }
 
     function IsPendingOnly() {
       isPendingRender++;
       const useQuery = query();
-      const data = useQuery((s) => s.isPending);
-      return <div>{data}</div>;
+      const { isPending } = useQuery({});
+      return <div>{isPending}</div>;
     }
 
     render(
@@ -490,16 +506,26 @@ describe('createQuery', () => {
       </>,
     );
 
-    expect(fullRender).toBe(2);
+    expect(fullRender).toBe(1);
     expect(dataRender).toBe(1);
     expect(isPendingRender).toBe(1);
 
     await act(async () => {
-      resolveFn('ok');
+      resolveFn({ value: 'ok' });
     });
-    expect(fullRender).toBe(3);
+    expect(fullRender).toBe(2);
     expect(dataRender).toBe(2);
     expect(isPendingRender).toBe(2);
+
+    await act(async () => {
+      query().execute();
+    });
+    await act(async () => {
+      resolveFn({ value: 'ok' });
+    });
+    expect(fullRender).toBe(4);
+    expect(dataRender).toBe(2);
+    expect(isPendingRender).toBe(4);
   });
 
   it('overwrites ongoing execution when specified (both promises resolve to latest)', async () => {
@@ -583,12 +609,15 @@ describe('createQuery', () => {
       { initialProps: { id: 1 } },
     );
 
+    expect(result.current.isPending).toBe(true);
     await act(async () => {
       resolveFn('first');
     });
     expect(result.current.data).toBe('first');
 
     rerender({ id: 2 });
+
+    expect(result.current.isPending).toBe(true);
     await act(async () => {
       resolveFn('second');
     });
@@ -872,7 +901,7 @@ describe('createQuery', () => {
     const query = createQuery<string>(queryFn);
 
     let render = 0;
-    renderHook(() => {
+    const { result } = renderHook(() => {
       render++;
       const useQuery = query();
       return useQuery({ enabled: false });
@@ -880,6 +909,7 @@ describe('createQuery', () => {
 
     expect(queryFn).toHaveBeenCalledTimes(0);
     expect(render).toBe(1);
+    expect(result.current.data).toBe(undefined);
 
     await act(async () => {
       query().setState({ data: 'manual' });

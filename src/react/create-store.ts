@@ -14,23 +14,24 @@ import { useStoreState } from './use-store.ts';
  * @remarks
  * - Combines the vanilla store with React integration.
  * - The returned function can be used directly as a hook.
+ *   - The hook uses Proxy-based tracking to automatically detect which state fields are used.
+ *   - Components will only re-render when the accessed values change.
  *
  * @example
- * const useCounter = createStore({ count: 0 });
+ * const useMyStore = createStore({ foo: 1, bar: 2 });
  *
  * function Component() {
- *   const count = useCounter((s) => s.count);
+ *   const state = useMyStore();
+ *   return <div>{state.foo}</div>;
  * }
  *
- * useCounter.setState({ count: 1 });
+ * useMyStore.setState({ foo: 2 }); // only components using foo will re-render
  */
 export const createStore = <TState extends Record<string, any>>(
   initialState: TState,
   options?: InitStoreOptions<TState>,
 ) => {
   const store = initStore(initialState, options);
-  const useStore = <TStateSlice = TState>(selector?: (state: TState) => TStateSlice) =>
-    useStoreState(store, selector);
-
+  const useStore = () => useStoreState(store.getState(), store.subscribe);
   return Object.assign(useStore, store);
 };

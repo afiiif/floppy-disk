@@ -58,9 +58,9 @@ describe('createMutation', () => {
       isSuccess: true,
       isError: false,
       data: 'output',
+      dataUpdatedAt: expect.any(Number),
       variable: 'input',
     });
-    expect(result.current.dataUpdatedAt).toBeTypeOf('number');
 
     const state = useMutation.getState();
     expect(state).toMatchObject({
@@ -117,10 +117,11 @@ describe('createMutation', () => {
       isPending: false,
       isSuccess: false,
       isError: true,
-      error,
+      errorUpdatedAt: expect.any(Number),
       variable: 'input',
     });
-    expect(result.current.errorUpdatedAt).toBeTypeOf('number');
+    expect(result.current.error).toBeInstanceOf(Error);
+    expect(result.current.error).toHaveProperty('message', 'boom');
 
     const state = useMutation.getState();
     expect(state).toMatchObject({
@@ -192,7 +193,7 @@ describe('createMutation', () => {
     debugSpy.mockRestore();
   });
 
-  it('selector avoids unnecessary re-renders', async () => {
+  it('avoids unnecessary re-renders', async () => {
     let resolveFn: (v: number) => void;
     const useMutation = createMutation(
       (_: number) => new Promise<number>((resolve) => (resolveFn = resolve)),
@@ -209,7 +210,7 @@ describe('createMutation', () => {
 
     function SelectorComp() {
       renderOnlyData++;
-      const data = useMutation((s) => s.data);
+      const { data } = useMutation();
       return <div>data: {data}</div>;
     }
 

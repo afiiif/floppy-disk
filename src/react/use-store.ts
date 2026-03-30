@@ -1,47 +1,104 @@
-import { useRef, useState } from 'react';
-import { type StoreApi, identity, shallow } from '../vanilla.ts';
+import { useMemo, useRef, useState } from 'react';
+import { type StoreApi } from '../vanilla.ts';
 import { useIsomorphicLayoutEffect } from './use-isomorphic-layout-effect.ts';
 
-export const useStoreUpdateNotifier = <TState extends Record<string, any>, TStateSlice = TState>(
-  store: StoreApi<TState>,
-  selector: (state: TState) => TStateSlice,
-) => {
-  const [, reRender] = useState({});
+type Path = Array<string | number | symbol>;
 
-  const selectorRef = useRef(selector);
-  selectorRef.current = selector;
+export const getValueByPath = (obj: any, path: Path) => path.reduce((acc, key) => acc?.[key], obj);
 
-  useIsomorphicLayoutEffect(
-    () =>
-      store.subscribe((state, prevState) => {
-        if (selectorRef.current === identity) return reRender({});
-        const prevSlice = selectorRef.current(prevState);
-        const nextSlice = selectorRef.current(state);
-        if (!shallow(prevSlice, nextSlice)) reRender({});
-      }),
-    [store],
-  );
+export const isPrefixPath = (candidatePrefix: Path, targetPath: Path) => {
+  if (candidatePrefix.length >= targetPath.length) return false;
+  for (let i = 0; i < candidatePrefix.length; i++) {
+    if (candidatePrefix[i] !== targetPath[i]) return false;
+  }
+  return true;
+};
+
+export const compressPaths = (paths: Path[]): Path[] => {
+  const result: Path[] = [];
+  let prev: Path | null = null;
+  for (let i = paths.length - 1; i >= 0; i--) {
+    const current = paths[i];
+    if (!prev || !isPrefixPath(current, prev)) result.push(current);
+    prev = current;
+  }
+  return result;
+};
+
+export const useStoreStateProxy = <TState extends Record<string, any>>(storeState: TState) => {
+  const usedPathsRef = useRef<Path[]>([]);
+  usedPathsRef.current = [];
+
+  const trackedState = useMemo(() => {
+    const track = (path: Path) => usedPathsRef.current.push(path);
+
+    const proxyCache = new WeakMap();
+
+    const createDeepProxy = <T>(target: T, path: Path = []): T => {
+      if (typeof target !== 'object' || target === null) {
+        return target;
+      }
+      if (proxyCache.has(target)) {
+        return proxyCache.get(target);
+      }
+      const proxy = new Proxy(target, {
+        get(obj: any, key) {
+          const newPath = [...path, key];
+          track(newPath);
+          const value = obj[key];
+          return createDeepProxy(value, newPath);
+        },
+      });
+      proxyCache.set(target, proxy);
+      return proxy;
+    };
+
+    return createDeepProxy(storeState);
+  }, [storeState]);
+
+  return [trackedState, usedPathsRef] as const;
 };
 
 /**
- * React hook for subscribing to a store with optional state selection.
+ * React hook for subscribing to a store using automatic dependency tracking.
  *
  * @param store - The store instance to subscribe to
- * @param selector - Optional selector to derive a slice of state
  *
- * @returns The selected state slice (or full state if no selector is provided)
+ * @returns A proxied version of the store state
  *
  * @remarks
- * - The selector does **not** need to be memoized.
- * - The hook internally keeps the latest selector reference to avoid re-subscription.
+ * - This hook uses a **Proxy-based tracking mechanism** to detect which parts of the state are accessed during render.
+ * - The component will only re-render when the **accessed values actually change**.
+ * - State must be treated as **immutable**:
+ *   - Updates must replace objects rather than mutate them
+ *   - Otherwise, changes may not be detected
+ * - No selector or memoization is needed.
  *
  * @example
- * const count = useStoreState(store, (s) => s.count);
+ * const state = useStoreState(store);
+ * return <div>{state.user.name}</div>;
+ * // Component will only re-render if `user.name` changes
  */
-export const useStoreState = <TState extends Record<string, any>, TStateSlice = TState>(
-  store: StoreApi<TState>,
-  selector: (state: TState) => TStateSlice = identity as (state: TState) => TStateSlice,
-) => {
-  useStoreUpdateNotifier(store, selector);
-  return selector(store.getState());
+export const useStoreState = <TState extends Record<string, any>>(
+  storeState: TState,
+  subscribe: StoreApi<TState>['subscribe'],
+): TState => {
+  const [trackedState, usedPathsRef] = useStoreStateProxy(storeState);
+
+  const [, reRender] = useState({});
+
+  useIsomorphicLayoutEffect(() => {
+    return subscribe((nextState, prevState, changedKeys) => {
+      const paths = compressPaths(usedPathsRef.current);
+      for (const path of paths) {
+        const rootKey = path[0] as keyof TState;
+        if (!changedKeys.includes(rootKey)) continue;
+        const prevVal = getValueByPath(prevState, path);
+        const nextVal = getValueByPath(nextState, path);
+        if (!Object.is(prevVal, nextVal)) return reRender({});
+      }
+    });
+  }, [subscribe]);
+
+  return trackedState;
 };
