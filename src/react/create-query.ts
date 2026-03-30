@@ -644,6 +644,11 @@ export const createQuery = <TData, TVariable extends Record<string, any> = never
      * - Selector does not need to be memoized.
      */
     const useStore = (options: UseStoreOptions = {}) => {
+      // Execute queryFn on mount & on re-render
+      useIsomorphicLayoutEffect(() => {
+        if (options.enabled !== false) revalidate(store, variable, false);
+      }, [store, options.enabled]);
+
       const storeState = store.getState();
 
       const prevState = useRef<Partial<TState>>({});
@@ -657,23 +662,23 @@ export const createQuery = <TData, TVariable extends Record<string, any> = never
       const storeStateProxied = useStoreState({
         subscribe: store.subscribe,
         getState: useCallback(() => {
-          if (storeState.state === 'INITIAL' && options.keepPreviousData) {
-            return { ...storeState, ...prevState.current } as TState;
+          if (storeState.state === 'INITIAL') {
+            const initialState: TState =
+              options.enabled === false ? storeState : { ...storeState, isPending: true };
+            if (options.keepPreviousData) {
+              return { ...initialState, ...prevState.current } as TState;
+            }
+            return initialState;
           }
           return storeState;
           // eslint-disable-next-line react-hooks/exhaustive-deps
-        }, [store, storeState, options.keepPreviousData]),
+        }, [store, storeState, options.enabled, options.keepPreviousData]),
       });
 
       if (options.keepPreviousData) {
         // eslint-disable-next-line @typescript-eslint/no-unused-expressions
         !!storeStateProxied.error; // Force subscribe to error
       }
-
-      // Execute queryFn on mount & on re-render
-      useIsomorphicLayoutEffect(() => {
-        if (options.enabled !== false) revalidate(store, variable, false);
-      }, [store, options.enabled]);
 
       return storeStateProxied;
     };
