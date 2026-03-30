@@ -12,32 +12,48 @@ describe('createStore', () => {
   });
 
   it('re-renders correctly for selector and non-selector usage (foo/bar)', () => {
-    const useStore = createStore({ foo: 2, bar: 7 });
+    const useStore = createStore({
+      foo: 2,
+      bar: 7,
+      baz: { a: { b: 99 } },
+    });
 
     let fullRender = 0;
     let fooRender = 0;
     let barRender = 0;
+    let fooAndBazRender = 0;
 
     function Full() {
-      const state = useStore(); // no selector
+      const state = useStore();
       fullRender++;
       return (
         <div>
-          full: {state.foo}-{state.bar}
+          full: {state.foo}-{state.bar}-{state.baz.a.b}
         </div>
       );
     }
 
     function Foo() {
-      const foo = useStore((s) => s.foo);
+      const state = useStore();
       fooRender++;
-      return <div>foo: {foo}</div>;
+      return <div>foo: {state.foo}</div>;
     }
 
     function Bar() {
-      const bar = useStore((s) => s.bar);
+      const { bar } = useStore();
       barRender++;
       return <div>bar: {bar}</div>;
+    }
+
+    function FooAndBaz() {
+      const { foo, baz } = useStore();
+      fooAndBazRender++;
+      return (
+        <>
+          <div>{foo}</div>
+          <div>baz.a.b: {baz.a.b}</div>
+        </>
+      );
     }
 
     render(
@@ -45,26 +61,31 @@ describe('createStore', () => {
         <Full />
         <Foo />
         <Bar />
+        <FooAndBaz />
       </>,
     );
 
-    expect(screen.getByText('full: 2-7')).toBeInTheDocument();
+    expect(screen.getByText('full: 2-7-99')).toBeInTheDocument();
     expect(screen.getByText('foo: 2')).toBeInTheDocument();
     expect(screen.getByText('bar: 7')).toBeInTheDocument();
+    expect(screen.getByText('baz.a.b: 99')).toBeInTheDocument();
 
     expect(fullRender).toBe(1);
     expect(fooRender).toBe(1);
     expect(barRender).toBe(1);
+    expect(fooAndBazRender).toBe(1);
 
     act(() => {
       useStore.setState({ foo: 3 });
     });
-    expect(screen.getByText('full: 3-7')).toBeInTheDocument();
+    expect(screen.getByText('full: 3-7-99')).toBeInTheDocument();
     expect(screen.getByText('foo: 3')).toBeInTheDocument();
     expect(screen.getByText('bar: 7')).toBeInTheDocument();
+    expect(screen.getByText('baz.a.b: 99')).toBeInTheDocument();
 
     expect(fullRender).toBe(2);
     expect(fooRender).toBe(2);
     expect(barRender).toBe(1);
+    expect(fooAndBazRender).toBe(2);
   });
 });

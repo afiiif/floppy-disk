@@ -35,14 +35,14 @@ describe('createStores', () => {
 
     function CompA() {
       const useStore = getStore({ id: 'A' });
-      const count = useStore((s) => s.count);
+      const { count } = useStore();
       renderA++;
       return <div>A: {count}</div>;
     }
 
     function CompB() {
       const useStore = getStore({ id: 'B' });
-      const count = useStore((s) => s.count);
+      const { count } = useStore();
       renderB++;
       return <div>B: {count}</div>;
     }
