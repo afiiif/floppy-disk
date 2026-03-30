@@ -14,16 +14,23 @@ import { useStoreState } from './use-store.ts';
  * - Keys are deterministically hashed, ensuring stable identity.
  * - Stores are lazily created and cached.
  * - Each store has its own state, subscribers, and lifecycle.
+ * - Each returned store includes:
+ *   - React hook (with Proxy-based tracking)
+ *   - Store API methods
+ *   - `delete()` for manual cleanup
  * - Useful for scenarios like:
  *   - Query caches
  *   - Entity-based state
  *   - Dynamic instances
  *
  * @example
- * const getUserStore = createStores({ name: '' });
+ * const userStore = createStores<{ name: string }, { id: number }>({ name: '' });
  *
- * const userStore = getUserStore({ id: 1 });
- * const name = userStore((s) => s.name);
+ * function Component() {
+ *   const useUserStore = userStore({ id: 1 });
+ *   const state = useUserStore();
+ *   return <div>{state.name}</div>;
+ * }
  */
 export const createStores = <TState extends Record<string, any>, TKey extends Record<string, any>>(
   initialState: TState,
@@ -42,9 +49,7 @@ export const createStores = <TState extends Record<string, any>, TKey extends Re
       stores.set(keyHash, store);
     }
 
-    const useStore = <TStateSlice = TState>(selector?: (state: TState) => TStateSlice) => {
-      return useStoreState(store, selector);
-    };
+    const useStore = () => useStoreState(store);
 
     return Object.assign(useStore, {
       ...store,

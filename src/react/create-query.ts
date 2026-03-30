@@ -1,16 +1,15 @@
-import { useRef } from 'react';
+import { useCallback, useRef } from 'react';
 import {
   type InitStoreOptions,
   type SetState,
   type StoreApi,
   getHash,
-  identity,
   initStore,
   isClient,
   noop,
 } from '../vanilla.ts';
 import { useIsomorphicLayoutEffect } from './use-isomorphic-layout-effect.ts';
-import { useStoreUpdateNotifier } from './use-store.ts';
+import { useStoreState } from './use-store.ts';
 
 /**
  * Represents the state of a query.
@@ -644,46 +643,40 @@ export const createQuery = <TData, TVariable extends Record<string, any> = never
      * - Automatically executes the query on mount (unless disabled).
      * - Selector does not need to be memoized.
      */
-    function useStore<TStateSlice = TState>(
-      options?: UseStoreOptions,
-      selector?: (state: TState) => TStateSlice,
-    ): TStateSlice;
-    function useStore<TStateSlice = TState>(selector?: (state: TState) => TStateSlice): TStateSlice;
-    function useStore<TStateSlice = TState>(
-      optionsOrSelector: UseStoreOptions | ((state: TState) => TStateSlice) = {},
-      maybeSelector?: (state: TState) => TStateSlice,
-    ): TStateSlice {
-      let selector: (state: TState) => TStateSlice;
-      let options: UseStoreOptions;
+    const useStore = (options: UseStoreOptions = {}) => {
+      const storeState = store.getState();
 
-      if (typeof optionsOrSelector === 'function') {
-        options = {};
-        selector = optionsOrSelector;
-      } else {
-        options = optionsOrSelector;
-        selector = maybeSelector || (identity as (state: TState) => TStateSlice);
+      const prevState = useRef<Partial<TState>>({});
+      if (storeState.state !== 'INITIAL') {
+        prevState.current = {
+          data: storeState.data,
+          dataUpdatedAt: storeState.dataUpdatedAt,
+        } as Partial<TState>;
       }
 
-      // Store subscription & reactivity
-      useStoreUpdateNotifier(store, selector);
+      const storeStateProxied = useStoreState({
+        subscribe: store.subscribe,
+        getState: useCallback(() => {
+          if (storeState.state === 'INITIAL' && options.keepPreviousData) {
+            return { ...storeState, ...prevState.current } as TState;
+          }
+          return storeState;
+          // eslint-disable-next-line react-hooks/exhaustive-deps
+        }, [store, storeState, options.keepPreviousData]),
+      });
+
+      if (options.keepPreviousData) {
+        // eslint-disable-next-line @typescript-eslint/no-unused-expressions
+        !!storeStateProxied.error; // Force subscribe to error
+      }
 
       // Execute queryFn on mount & on re-render
       useIsomorphicLayoutEffect(() => {
         if (options.enabled !== false) revalidate(store, variable, false);
       }, [store, options.enabled]);
 
-      // Handle keepPreviousData
-      const storeState = store.getState();
-      let storeStateToBeUsed = storeState;
-      const prevState = useRef<{ data?: TData; dataUpdatedAt?: number }>({});
-      if (storeState.isSuccess) {
-        prevState.current = { data: storeState.data, dataUpdatedAt: storeState.dataUpdatedAt };
-      } else if (storeState.state === 'INITIAL' && options.keepPreviousData) {
-        storeStateToBeUsed = { ...storeState, ...prevState.current } as TState;
-      }
-
-      return selector(storeStateToBeUsed);
-    }
+      return storeStateProxied;
+    };
 
     return Object.assign(useStore, {
       subscribe: store.subscribe,
