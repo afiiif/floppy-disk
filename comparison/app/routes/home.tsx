@@ -5,6 +5,22 @@ export function meta() {
   ];
 }
 
+const buildOutput = `✓ 103 modules transformed.
+build/client/.vite/manifest.json                     3.24 kB │ gzip:  0.61 kB
+build/client/assets/root-DS469DaY.css               15.33 kB │ gzip:  3.74 kB
+build/client/assets/_components-CApVxW6A.js          0.84 kB │ gzip:  0.49 kB
+build/client/assets/store-floppy-disk-BH2e5n5s.js    1.13 kB │ gzip:  0.52 kB
+build/client/assets/store-zustand-Dl0WYSha.js        1.68 kB │ gzip:  0.80 kB
+build/client/assets/_utils-B9M1Z8Ow.js               1.73 kB │ gzip:  0.59 kB
+build/client/assets/root-CdiRZxeF.js                 2.34 kB │ gzip:  0.95 kB
+build/client/assets/home-BfNfAtRH.js                 2.80 kB │ gzip:  1.19 kB
+build/client/assets/async-floppy-disk-CAeS0Sqn.js    7.14 kB │ gzip:  2.01 kB
+build/client/assets/react-B_GsbzAT.js               10.80 kB │ gzip:  3.64 kB
+build/client/assets/async-tanstack-XOg0CP-8.js      43.93 kB │ gzip: 12.64 kB
+build/client/assets/chunk-UVKPFVEO-BARWKRxW.js     125.42 kB │ gzip: 42.24 kB
+build/client/assets/entry.client-j5N2nWy6.js       190.57 kB │ gzip: 60.05 kB
+✓ built in 715ms`.split('\n');
+
 export default function Home() {
   return (
     <div className="leading-[20px]">
@@ -15,47 +31,39 @@ export default function Home() {
 
       <section className="text-[11px] sm:text-[13px] leading-[15px] sm:leading-[18px] border p-3 rounded overflow-x-auto">
         <div className="whitespace-pre min-w-[467px] space-y-1">
-          <div>{'vite v7.3.1 building client environment for production...'}</div>
-          <div>{'✓ 102 modules transformed.'}</div>
-          <div>{'  /.vite/manifest.json                     3.06 kB │ gzip:  0.57 kB'}</div>
-          <div>{'  /assets/root-DzJSMdzf.css               12.18 kB │ gzip:  3.13 kB'}</div>
-          <div>{'  /assets/_shared-DIQD5OPT.js              0.96 kB │ gzip:  0.49 kB'}</div>
-          <div>{'  /assets/store-floppy-disk-Cpy3fbLt.js    1.12 kB │ gzip:  0.51 kB 🎉'}</div>
-          <div className="bg-green-500/10">
-            {'  /assets/store-zustand-BAlSrnWn.js        1.67 kB │ gzip:  0.79 kB'}
-          </div>
-          <div className="bg-orange-500/15">
-            {'  /assets/root-DiAsNG2A.js                 2.34 kB │ gzip:  0.95 kB'}
-          </div>
-          <div>{'  /assets/home-B7LxdS1e.js                 2.61 kB │ gzip:  1.07 kB'}</div>
-          <div className="bg-green-500/10">
-            {'  /assets/async-floppy-disk-BvXV4dzh.js    2.79 kB │ gzip:  0.94 kB 🎉'}
-          </div>
-          <div>{'  /assets/react-C7xYuR75.js                7.15 kB │ gzip:  2.71 kB'}</div>
-          <div className="bg-orange-500/15">
-            {'  /assets/async-tanstack-DHT6RKp7.js      36.42 kB │ gzip: 10.87 kB'}
-          </div>
-          <div>{'  /assets/chunk-UVKPFVEO-BARWKRxW.js     125.42 kB │ gzip: 42.24 kB'}</div>
-          <div>{'  /assets/entry.client-j5N2nWy6.js       190.57 kB │ gzip: 60.05 kB'}</div>
-          <div>{'✓ built in 690ms'}</div>
+          {buildOutput.map((line) => {
+            let className: string | undefined = undefined;
+            let emoji = '';
+            if (line.includes('floppy-disk')) {
+              className = 'bg-green-500/10 text-green-300';
+              emoji = ' 🎉';
+            } else if (line.includes('zustand') || line.includes('tanstack')) {
+              className = 'bg-orange-500/15 text-orange-400';
+            }
+            return (
+              <div className={className}>
+                {line.replace('build/client', '  ')}
+                {emoji}
+              </div>
+            );
+          })}
         </div>
       </section>
 
-      <p className="pt-6 text-pretty">
-        This site focuses on comparing bundle size while demonstrating equivalent functionality.
+      <p className="pt-6">
+        This site focuses on comparing bundle size while demonstrating{' '}
+        <span className="inline-block font-bold">equivalent functionality</span>.
       </p>
 
-      <div className="pt-4">You can find the code here:</div>
+      <div className="pt-5">You can find the code here:</div>
       <a className="link" href="https://github.com/afiiif/floppy-disk/tree/beta/comparison">
         github.com/afiiif/floppy-disk/tree/beta/comparison
       </a>
 
-      {/*
-      <div className="pt-4">Documentation is available here:</div>
-      <a href="#" className="opacity-50">
-        TODO: Update docs link
+      <div className="pt-5">Documentation is available here:</div>
+      <a className="link" href="https://github.com/afiiif/floppy-disk/tree/beta#readme">
+        github.com/afiiif/floppy-disk/tree/beta#readme
       </a>
-      */}
     </div>
   );
 }

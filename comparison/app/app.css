@@ -49,7 +49,7 @@ button {
   }
 }
 .card-badge {
-  @apply absolute text-xs -top-2 -right-2 bg-mist-400 px-2 py-0.5 rounded text-[#21252b];
+  @apply absolute z-20 text-xs -top-2 -right-2 bg-mist-400 px-2 py-0.5 rounded text-[#21252b];
 }
 
 .animate-render {
@@ -71,5 +71,24 @@ button {
     border-color: currentcolor;
     background-color: transparent;
     box-shadow: 0 0 0 4px color-mix(in oklab, var(--color-sky-500) 0%, transparent);
+  }
+}
+
+.tabs {
+  @apply -mx-4 px-4 sm:-mx-6 sm:px-6 pt-3 border-b mb-8 text-xs;
+  @apply flex gap-1;
+  @apply sticky top-0 bg-[#21252b] z-40;
+  > button {
+    @apply rounded-b-none border border-mist-600 border-b-transparent bg-transparent text-mist-500 relative;
+    &:hover {
+      @apply bg-transparent text-mist-400;
+    }
+    &[aria-current] {
+      @apply border-mist-400 border-b-transparent text-mist-400;
+      &::before {
+        content: '';
+        @apply block absolute inset-x-0 -bottom-0.5 h-1 bg-[#21252b];
+      }
+    }
   }
 }

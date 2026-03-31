@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 
-import { CardWithReRenderHighlight } from './_shared';
+import { CardWithReRenderHighlight } from './_components';
 
 export function meta() {
   return [{ title: 'Zustand Store' }, { name: 'description', content: 'Zustand store' }];
@@ -30,7 +30,7 @@ function StoreStateConsumer1() {
   return (
     <CardWithReRenderHighlight>
       <h2>{'useMyStore()'}</h2>
-      <pre>{JSON.stringify(value)}</pre>
+      <pre>{JSON.stringify(value, null, 2)}</pre>
     </CardWithReRenderHighlight>
   );
 }
