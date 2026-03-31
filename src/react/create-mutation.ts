@@ -51,7 +51,7 @@ export type MutationState<TData, TVariable, TError> = {
     }
 );
 
-const INITIAL_STATE = {
+export const INITIAL_STATE = {
   state: 'INITIAL',
   isPending: false,
   isSuccess: false,
@@ -256,8 +256,8 @@ export const createMutation = <TData, TVariable = undefined, TError = Error>(
      * Resets the mutation state back to its initial state.
      *
      * @remarks
-     * - Does not cancel any ongoing request.
-     * - If a request is still pending, its result may override the reset state.
+     * - Does not cancel any ongoing execution.
+     * - If an execution is still pending, its result may override the reset state.
      */
     reset: () => {
       if (store.getState().isPending) {

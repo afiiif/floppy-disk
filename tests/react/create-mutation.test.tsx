@@ -138,7 +138,7 @@ describe('createMutation', () => {
     expect(onSettled).toHaveBeenCalledWith('input', expect.any(Object));
   });
 
-  it('warns when executing while pending', async () => {
+  it('supports promise chaining (latest execution wins)', async () => {
     const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
     const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
 
