@@ -2,11 +2,13 @@ import {
   keepPreviousData,
   QueryClient,
   QueryClientProvider,
+  useInfiniteQuery,
   useQuery,
 } from '@tanstack/react-query';
-import { useState } from 'react';
+import { Fragment, useState } from 'react';
 
-import { basicQueryFn1, CardWithReRenderHighlight, keyedQueryFn2, Tabs } from './_shared';
+import { basicQueryFn1, infQueryFn1, keyedQueryFn2 } from './_utils';
+import { CardWithReRenderHighlight, Tabs } from './_components';
 
 export function meta() {
   return [
@@ -45,7 +47,7 @@ export default function AsyncStateTanstack() {
           },
           {
             label: 'Infinite Query',
-            content: <div>Infinite Query</div>,
+            content: <InfiniteQuery />,
           },
           {
             label: 'Mutation',
@@ -62,10 +64,10 @@ export default function AsyncStateTanstack() {
 const useBasicQuery = (
   options?: any, // Too lazy to do type gymnastic
 ) =>
-  useQuery({
+  useQuery<Awaited<ReturnType<typeof basicQueryFn1>>>({
+    ...options,
     queryKey: ['basic'],
     queryFn: basicQueryFn1,
-    ...options,
   });
 
 function SimpleQueryState() {
@@ -88,13 +90,11 @@ function SimpleQueryData() {
   );
 }
 function SimpleQueryDataSlice() {
-  const queryState = useBasicQuery({ select: (data: any) => data.b });
+  const queryState = useBasicQuery();
   return (
     <CardWithReRenderHighlight>
-      <h2>
-        queryState.data <span className="inline-block">{'with { select: data => data.b }'}</span>
-      </h2>
-      <pre className="text-xs">{JSON.stringify(queryState.data) || 'undefined'}</pre>
+      <h2>queryState.data?.b</h2>
+      <pre className="text-xs">{JSON.stringify(queryState.data?.b) || 'undefined'}</pre>
     </CardWithReRenderHighlight>
   );
 }
@@ -117,11 +117,11 @@ const useKeyedQuery = (
   id: number,
   options?: any, // Too lazy to do type gymnastic
 ) =>
-  useQuery({
+  useQuery<Awaited<ReturnType<typeof keyedQueryFn2>>>({
+    ...options,
     queryKey: ['keyed', id],
     queryFn: () => keyedQueryFn2({ id }),
     staleTime: 15_000,
-    ...options,
   });
 
 function KeyedQueryContainer() {
@@ -168,7 +168,6 @@ function KeyedQueryDataSlice({ id }: { id: number }) {
   );
 }
 function KeyedQueryActions({ id }: { id: number }) {
-  const { refetch } = useKeyedQuery(id);
   return (
     <CardWithReRenderHighlight className="flex gap-3 !mb-0">
       <button onClick={() => queryClient.invalidateQueries({ queryKey: ['keyed', id] })}>
@@ -178,5 +177,82 @@ function KeyedQueryActions({ id }: { id: number }) {
         Invalidate all ids
       </button>
     </CardWithReRenderHighlight>
+  );
+}
+
+// ---
+
+function InfiniteQuery() {
+  const queryState = useInfiniteQuery({
+    queryKey: ['inf-query'],
+    queryFn: ({ pageParam }) => infQueryFn1({ cursor: pageParam }),
+    initialPageParam: undefined as string | undefined,
+    getNextPageParam: (lastPage, pages) => lastPage.meta.nextCursor,
+    staleTime: Infinity,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+  });
+
+  const cursors = (queryState.data?.pageParams as Array<string | undefined>) || [];
+
+  const lastData = queryState.data?.pages.at(-1);
+  const nextCursor = lastData?.meta.nextCursor;
+
+  return (
+    <>
+      {queryState.data?.pages.map((group, i) => (
+        <div key={i} className="flex gap-5">
+          <div className="flex-1">
+            {group.data.map((item) => (
+              <CardWithReRenderHighlight key={item.id}>
+                <pre className="text-xs">{JSON.stringify(item, null, 2)}</pre>
+              </CardWithReRenderHighlight>
+            ))}
+          </div>
+          <div className="w-5 relative pb-12">
+            <div style={{ writingMode: 'vertical-lr' }} className="sticky top-20 sm:top-14">
+              Cursor:{' '}
+              {cursors[i] ? (
+                <span className="text-sky-500">{cursors[i]}</span>
+              ) : (
+                <span className="opacity-50">undefined</span>
+              )}{' '}
+              →
+            </div>
+          </div>
+        </div>
+      ))}
+
+      {queryState.isLoading || queryState.isFetchingNextPage ? (
+        <div className="flex gap-5">
+          <div className="flex-1">
+            {[1, 2, 3, 4].map((i) => (
+              <div key={i} className="card h-24 space-y-2.5">
+                <div className="rounded bg-mist-700 animate-pulse h-3 w-28"></div>
+                <div className="rounded bg-mist-700 animate-pulse h-3 w-32"></div>
+                <div className="rounded bg-mist-700 animate-pulse h-3 w-16"></div>
+              </div>
+            ))}
+          </div>
+          <div className="w-5 relative">
+            <div
+              style={{ writingMode: 'vertical-lr' }}
+              className="sticky top-20 sm:top-14 animate-pulse"
+            >
+              Cursor: {nextCursor || <span className="opacity-50">undefined</span>}
+            </div>
+          </div>
+        </div>
+      ) : (
+        queryState.hasNextPage && (
+          <div className="flex gap-4 items-center">
+            <button type="button" onClick={() => queryState.fetchNextPage()}>
+              Load more
+            </button>
+            <div className="text-xs">Next cursor: {nextCursor}</div>
+          </div>
+        )
+      )}
+    </>
   );
 }

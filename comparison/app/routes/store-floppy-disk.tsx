@@ -1,6 +1,6 @@
 import { createStore } from 'floppy-disk/react';
 
-import { CardWithReRenderHighlight } from './_shared';
+import { CardWithReRenderHighlight } from './_components';
 
 export function meta() {
   return [
@@ -32,28 +32,28 @@ function StoreStateConsumer1() {
   const value = useMyStore();
   return (
     <CardWithReRenderHighlight>
-      <h2>{'useMyStore()'}</h2>
-      <pre>{JSON.stringify(value)}</pre>
+      <h2>{'const value = useMyStore()'}</h2>
+      <pre>{JSON.stringify(value, null, 2)}</pre>
     </CardWithReRenderHighlight>
   );
 }
 
 function StoreStateConsumer2() {
-  const value = useMyStore((state) => state.foo);
+  const { foo } = useMyStore();
   return (
     <CardWithReRenderHighlight>
-      <h2>{'useMyStore(state => state.foo)'}</h2>
-      <pre>{JSON.stringify(value)}</pre>
+      <h2>{'const { foo } = useMyStore()'}</h2>
+      <pre>{JSON.stringify(foo)}</pre>
     </CardWithReRenderHighlight>
   );
 }
 
 function StoreStateConsumer3() {
-  const value = useMyStore((state) => state.bar);
+  const { bar } = useMyStore();
   return (
     <CardWithReRenderHighlight>
-      <h2>{'useMyStore(state => state.bar)'}</h2>
-      <pre>{JSON.stringify(value)}</pre>
+      <h2>{'const { bar } = useMyStore()'}</h2>
+      <pre>{JSON.stringify(bar)}</pre>
     </CardWithReRenderHighlight>
   );
 }

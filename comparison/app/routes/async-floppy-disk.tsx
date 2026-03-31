@@ -1,13 +1,8 @@
 import { createQuery } from 'floppy-disk/react';
 import { useState } from 'react';
 
-import {
-  basicQueryFn2,
-  CardWithReRenderHighlight,
-  infQueryFn2,
-  keyedQueryFn2,
-  Tabs,
-} from './_shared';
+import { basicQueryFn2, infQueryFn2, keyedQueryFn2 } from './_utils';
+import { CardWithReRenderHighlight, Tabs } from './_components';
 
 export function meta() {
   return [
@@ -57,33 +52,33 @@ export default function AsyncStateFloppyDisk() {
 const basicQuery = createQuery(basicQueryFn2, {
   staleTime: 4000,
 });
-const useQuery = basicQuery();
+const useBasicQuery = basicQuery();
 
 function SimpleQueryState() {
-  const queryState = useQuery();
+  const queryState = useBasicQuery();
   return (
     <CardWithReRenderHighlight>
-      <h2>{'const queryState = useQuery()'}</h2>
+      <h2>queryState</h2>
       <pre className="text-xs">{JSON.stringify(queryState, null, 2)}</pre>
     </CardWithReRenderHighlight>
   );
 }
 
 function SimpleQueryData() {
-  const data = useQuery((state) => state.data);
+  const queryState = useBasicQuery();
   return (
     <CardWithReRenderHighlight>
-      <h2>{'const data = useQuery(state => state.data)'}</h2>
-      <pre className="text-xs">{JSON.stringify(data, null, 2) || 'undefined'}</pre>
+      <h2>queryState.data</h2>
+      <pre className="text-xs">{JSON.stringify(queryState.data, null, 2) || 'undefined'}</pre>
     </CardWithReRenderHighlight>
   );
 }
 function SimpleQueryDataSlice() {
-  const b = useQuery((state) => state.data?.b);
+  const queryState = useBasicQuery();
   return (
     <CardWithReRenderHighlight>
-      <h2>{'const b = useQuery(state => state.data?.b)'}</h2>
-      <pre className="text-xs">{JSON.stringify(b) || 'undefined'}</pre>
+      <h2>queryState.data?.b</h2>
+      <pre className="text-xs">{JSON.stringify(queryState.data?.b) || 'undefined'}</pre>
     </CardWithReRenderHighlight>
   );
 }
@@ -91,8 +86,8 @@ function SimpleQueryDataSlice() {
 function SimpleQueryActions() {
   return (
     <CardWithReRenderHighlight className="flex gap-3">
-      <button onClick={() => useQuery.execute()}>Refetch</button>
-      <button onClick={() => useQuery.invalidate()}>Invalidate</button>
+      <button onClick={() => useBasicQuery.execute()}>Refetch</button>
+      <button onClick={() => useBasicQuery.invalidate()}>Invalidate</button>
     </CardWithReRenderHighlight>
   );
 }
@@ -130,21 +125,21 @@ function KeyedQueryState({ id }: { id: number }) {
   const queryState = useKeyedQuery();
   return (
     <CardWithReRenderHighlight>
-      <h3>{'queryState'}</h3>
+      <h3>queryState</h3>
       <pre className="text-xs">{JSON.stringify(queryState, null, 2)}</pre>
     </CardWithReRenderHighlight>
   );
 }
 function KeyedQueryDataSlice({ id }: { id: number }) {
   const useKeyedQuery = keyedQuery({ id });
-  const b = useKeyedQuery({ keepPreviousData: true }, (state) => state.data?.b);
-  const errMsg = useKeyedQuery((state) => (state.error as undefined | Error)?.message);
+  const queryState = useKeyedQuery({ keepPreviousData: true });
+  const errMsg = queryState.error?.message;
   return (
     <CardWithReRenderHighlight>
       <h3>
         queryState.data?.b with <span className="inline-block">{'{ keepPreviousData: true }'}</span>
       </h3>
-      <pre className="text-xs">{JSON.stringify(b) || 'undefined'}</pre>
+      <pre className="text-xs">{JSON.stringify(queryState.data?.b) || 'undefined'}</pre>
       {errMsg && (
         <pre className="text-xs opacity-50 pt-1">(error.message: {JSON.stringify(errMsg)})</pre>
       )}
@@ -164,9 +159,9 @@ function KeyedQueryActions({ id }: { id: number }) {
 // ---
 
 const infQuery = createQuery(infQueryFn2, {
+  staleTime: Infinity,
   revalidateOnFocus: false,
   revalidateOnReconnect: false,
-  staleTime: Infinity,
 });
 
 function InfiniteQuery() {
@@ -191,9 +186,7 @@ function InfiniteQuery() {
 
 function Page({ cursor }: { cursor?: string }) {
   const useQuery = infQuery({ cursor });
-  const [state, data, error] = useQuery(
-    (state) => [state.state, state.data, state.error as Error] as const,
-  );
+  const { state, data, error } = useQuery();
 
   if (state === 'INITIAL') {
     return (
@@ -234,7 +227,7 @@ function Page({ cursor }: { cursor?: string }) {
     <>
       <div className="flex gap-5">
         <div className="flex-1">
-          {data?.data.map((item) => (
+          {data.data.map((item) => (
             <CardWithReRenderHighlight key={item.id}>
               <pre className="text-xs">{JSON.stringify(item, null, 2)}</pre>
             </CardWithReRenderHighlight>
@@ -253,7 +246,7 @@ function Page({ cursor }: { cursor?: string }) {
         </div>
       </div>
 
-      {data?.meta.nextCursor && <LoadMoreButton nextCursor={data.meta.nextCursor} />}
+      {!!data.meta.nextCursor && <LoadMoreButton nextCursor={data.meta.nextCursor} />}
     </>
   );
 }
