@@ -9,8 +9,8 @@ import {
 } from '@tanstack/react-query';
 import { useState } from 'react';
 
-import { CardWithReRenderHighlight, Tabs } from './_components';
-import { basicQueryFn1, infQueryFn1, keyedQueryFn2, mutationFn1 } from './_utils';
+import { CardWithReRenderHighlight, Tabs } from '../shared/components';
+import { basicQueryFn1, infQueryFn1, keyedQueryFn2, mutationFn1 } from '../shared/utils';
 
 export function meta() {
   return [
