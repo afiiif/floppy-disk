@@ -31,7 +31,7 @@ import { compressPaths, getValueByPath, useStoreStateProxy } from './use-store.t
  * @remarks
  * - Data and error are mutually exclusive except in `SUCCESS_BUT_REVALIDATION_ERROR`.
  */
-export type QueryState<TData> = {
+export type QueryState<TData, TError> = {
   isPending: boolean;
   isRevalidating: boolean;
   isRetrying: boolean;
@@ -61,7 +61,7 @@ export type QueryState<TData> = {
       isError: true;
       data: undefined;
       dataUpdatedAt: undefined;
-      error: any;
+      error: TError;
       errorUpdatedAt: number;
     }
   | {
@@ -70,7 +70,7 @@ export type QueryState<TData> = {
       isError: false;
       data: TData;
       dataUpdatedAt: number;
-      error: any;
+      error: TError;
       errorUpdatedAt: number;
     }
 );
@@ -95,9 +95,11 @@ const INITIAL_STATE = {
  * @remarks
  * Controls caching, retry behavior, lifecycle, and side effects of an async operation.
  */
-export type QueryOptions<TData, TVariable extends Record<string, any>> = InitStoreOptions<
-  QueryState<TData>
-> & {
+export type QueryOptions<
+  TData,
+  TVariable extends Record<string, any>,
+  TError = Error,
+> = InitStoreOptions<QueryState<TData, TError>> & {
   /**
    * Time (in milliseconds) that data is considered fresh.
    *
@@ -133,17 +135,25 @@ export type QueryOptions<TData, TVariable extends Record<string, any>> = InitSto
   /**
    * Called when the query succeeds.
    */
-  onSuccess?: (data: TData, variable: TVariable, stateBeforeExecute: QueryState<TData>) => void;
+  onSuccess?: (
+    data: TData,
+    variable: TVariable,
+    stateBeforeExecute: QueryState<TData, TError>,
+  ) => void;
 
   /**
    * Called when the query fails and will not retry.
    */
-  onError?: (error: any, variable: TVariable, stateBeforeExecute: QueryState<TData>) => void;
+  onError?: (
+    error: TError,
+    variable: TVariable,
+    stateBeforeExecute: QueryState<TData, TError>,
+  ) => void;
 
   /**
    * Called after the query settles (success or final failure).
    */
-  onSettled?: (variable: TVariable, stateBeforeExecute: QueryState<TData>) => void;
+  onSettled?: (variable: TVariable, stateBeforeExecute: QueryState<TData, TError>) => void;
 
   /**
    * Determines whether a failed query should retry.
@@ -161,7 +171,10 @@ export type QueryOptions<TData, TVariable extends Record<string, any>> = InitSto
    *   return [false];
    * }
    */
-  shouldRetry?: (error: any, currentState: QueryState<TData>) => [true, number] | [false];
+  shouldRetry?: (
+    error: TError,
+    currentState: QueryState<TData, TError>,
+  ) => [true, number] | [false];
 };
 
 /**
@@ -199,9 +212,9 @@ export type QueryOptions<TData, TVariable extends Record<string, any>> = InitSto
  *   // ...
  * }
  */
-export const createQuery = <TData, TVariable extends Record<string, any> = never>(
-  queryFn: (variable: TVariable, currentState: QueryState<TData>) => Promise<TData>,
-  options: QueryOptions<TData, TVariable> = {},
+export const createQuery = <TData, TVariable extends Record<string, any> = never, TError = Error>(
+  queryFn: (variable: TVariable, currentState: QueryState<TData, TError>) => Promise<TData>,
+  options: QueryOptions<TData, TVariable, TError> = {},
 ) => {
   const {
     staleTime = 2500, // 2.5 seconds,
@@ -214,7 +227,7 @@ export const createQuery = <TData, TVariable extends Record<string, any> = never
     shouldRetry: shouldRetryFn = (_, s) => (s.retryCount === 0 ? [true, 1500] : [false]),
   } = options;
 
-  type TState = QueryState<TData>;
+  type TState = QueryState<TData, TError>;
 
   const initialState = INITIAL_STATE as TState;
 

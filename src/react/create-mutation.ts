@@ -16,7 +16,7 @@ import { useStoreState } from './use-store.ts';
  * - No retry mechanism
  * - No caching across executions
  */
-export type MutationState<TData, TVariable> = {
+export type MutationState<TData, TVariable, TError> = {
   isPending: boolean;
 } & (
   | {
@@ -46,7 +46,7 @@ export type MutationState<TData, TVariable> = {
       variable: TVariable;
       data: undefined;
       dataUpdatedAt: undefined;
-      error: any;
+      error: TError;
       errorUpdatedAt: number;
     }
 );
@@ -69,8 +69,8 @@ const INITIAL_STATE = {
  * @remarks
  * Lifecycle callbacks are triggered for each execution.
  */
-export type MutationOptions<TData, TVariable> = InitStoreOptions<
-  MutationState<TData, TVariable>
+export type MutationOptions<TData, TVariable, TError = Error> = InitStoreOptions<
+  MutationState<TData, TVariable, TError>
 > & {
   /**
    * Called when the mutation succeeds.
@@ -78,16 +78,16 @@ export type MutationOptions<TData, TVariable> = InitStoreOptions<
   onSuccess?: (
     data: TData,
     variable: TVariable,
-    stateBeforeExecute: MutationState<TData, TVariable>,
+    stateBeforeExecute: MutationState<TData, TVariable, TError>,
   ) => void;
 
   /**
    * Called when the mutation fails.
    */
   onError?: (
-    error: any,
+    error: TError,
     variable: TVariable,
-    stateBeforeExecute: MutationState<TData, TVariable>,
+    stateBeforeExecute: MutationState<TData, TVariable, TError>,
   ) => void;
 
   /**
@@ -95,7 +95,7 @@ export type MutationOptions<TData, TVariable> = InitStoreOptions<
    */
   onSettled?: (
     variable: TVariable,
-    stateBeforeExecute: MutationState<TData, TVariable>, //
+    stateBeforeExecute: MutationState<TData, TVariable, TError>, //
   ) => void;
 };
 
@@ -124,16 +124,16 @@ export type MutationOptions<TData, TVariable> = InitStoreOptions<
  * const { isPending } = useCreateUser();
  * const result = await useCreateUser.execute({ name: 'John' });
  */
-export const createMutation = <TData, TVariable = undefined>(
+export const createMutation = <TData, TVariable = undefined, TError = Error>(
   mutationFn: (
     variable: TVariable,
-    stateBeforeExecute: MutationState<TData, TVariable>,
+    stateBeforeExecute: MutationState<TData, TVariable, TError>,
   ) => Promise<TData>,
-  options: MutationOptions<TData, TVariable> = {},
+  options: MutationOptions<TData, TVariable, TError> = {},
 ) => {
   const { onSuccess = noop, onError, onSettled = noop } = options;
 
-  type TState = MutationState<TData, TVariable>;
+  type TState = MutationState<TData, TVariable, TError>;
 
   const initialState = INITIAL_STATE as TState;
 
@@ -149,7 +149,7 @@ export const createMutation = <TData, TVariable = undefined>(
     }
     store.setState({ isPending: true });
 
-    return new Promise<{ variable: TVariable; data?: TData; error?: any }>((resolve) => {
+    return new Promise<{ variable: TVariable; data?: TData; error?: TError }>((resolve) => {
       mutationFn(variable, stateBeforeExecute)
         .then((data) => {
           store.setState({
@@ -220,8 +220,8 @@ export const createMutation = <TData, TVariable = undefined>(
      * - The promise never rejects to simplify async handling.
      */
     execute: execute as TVariable extends undefined
-      ? () => Promise<{ variable: undefined; data?: TData; error?: any }>
-      : (variable: TVariable) => Promise<{ variable: TVariable; data?: TData; error?: any }>,
+      ? () => Promise<{ variable: undefined; data?: TData; error?: TError }>
+      : (variable: TVariable) => Promise<{ variable: TVariable; data?: TData; error?: TError }>,
 
     /**
      * Resets the mutation state back to its initial state.
