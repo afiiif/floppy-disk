@@ -22,7 +22,7 @@ jobs:
           pnpm i
           pnpm build
           cd build/client
-          printf "\n=== BEFORE ==="
+          printf "\n=== BEFORE ===\n"
           ls -R
           mkdir -p floppy-disk/assets
           mv assets/* floppy-disk/assets/
@@ -30,7 +30,7 @@ jobs:
           rm -rf assets
           cd floppy-disk
           cp ../../../../.gitignore .
-          printf "\n=== AFTER ==="
+          printf "\n=== AFTER ===\n"
           ls -R
           find . -name "*.html" -exec sed -i 's|/assets/|/floppy-disk/assets/|g' {} +
           find . -name "*.js" -exec sed -i 's|"/assets/|"/floppy-disk/assets/|g' {} +
