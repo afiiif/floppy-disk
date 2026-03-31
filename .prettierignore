@@ -3,3 +3,4 @@ pnpm-lock.yaml
 .next/
 out/
 build/
+README.md
