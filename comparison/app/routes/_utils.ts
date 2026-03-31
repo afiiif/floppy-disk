@@ -75,3 +75,31 @@ export const infQueryFn2 = async ({ cursor }: { cursor?: string }) => {
     },
   };
 };
+
+// ---
+
+let mutationFn1Attemp = 0;
+export const mutationFn1 = async ({ foo, bar }: { foo: number; bar?: string }) => {
+  console.info('[tanstack]', 'mutationFn called', { foo, bar });
+  await new Promise((r) => setTimeout(r, 2000));
+  if (++mutationFn1Attemp % 4 === 0) throw new Error('Mutation error');
+  return {
+    data: {
+      a: Math.random(),
+      b: randomString(),
+    },
+  };
+};
+
+let mutationFn2Attemp = 0;
+export const mutationFn2 = async ({ foo, bar }: { foo: number; bar?: string }) => {
+  console.info('[tanstack]', 'mutationFn called', { foo, bar });
+  await new Promise((r) => setTimeout(r, 2000));
+  if (++mutationFn2Attemp % 4 === 0) throw new Error('Mutation error');
+  return {
+    data: {
+      a: Math.random(),
+      b: randomString(),
+    },
+  };
+};

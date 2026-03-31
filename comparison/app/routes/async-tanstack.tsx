@@ -3,12 +3,14 @@ import {
   QueryClient,
   QueryClientProvider,
   useInfiniteQuery,
+  useMutation,
+  useMutationState,
   useQuery,
 } from '@tanstack/react-query';
-import { Fragment, useState } from 'react';
+import { useState } from 'react';
 
-import { basicQueryFn1, infQueryFn1, keyedQueryFn2 } from './_utils';
 import { CardWithReRenderHighlight, Tabs } from './_components';
+import { basicQueryFn1, infQueryFn1, keyedQueryFn2, mutationFn1 } from './_utils';
 
 export function meta() {
   return [
@@ -47,11 +49,11 @@ export default function AsyncStateTanstack() {
           },
           {
             label: 'Infinite Query',
-            content: <InfiniteQuery />,
+            content: <ExampleInfiniteQuery />,
           },
           {
             label: 'Mutation',
-            content: <div>Mutation</div>,
+            content: <ExampleMutation />,
           },
         ]}
       />
@@ -182,7 +184,7 @@ function KeyedQueryActions({ id }: { id: number }) {
 
 // ---
 
-function InfiniteQuery() {
+function ExampleInfiniteQuery() {
   const queryState = useInfiniteQuery({
     queryKey: ['inf-query'],
     queryFn: ({ pageParam }) => infQueryFn1({ cursor: pageParam }),
@@ -254,5 +256,116 @@ function InfiniteQuery() {
         )
       )}
     </>
+  );
+}
+
+// ---
+
+function ExampleMutation() {
+  return (
+    <>
+      <h2 className="pb-1">Global state</h2>
+      <div className="pb-3.5 opacity-50 text-xs">{'useMutation with mutationKey'}</div>
+      <ExampleMutationGlobal />
+      <ExampleMutationGlobal />
+      <GlobalMutationControl />
+
+      <h2 className="pt-5 pb-1">Local state</h2>
+      <div className="pb-3.5 opacity-50 text-xs">{'useMutation without mutationKey'}</div>
+      <ExampleMutationLocal />
+      <ExampleMutationLocal />
+    </>
+  );
+}
+
+function ExampleMutationGlobal() {
+  const mutations = useMutationState({
+    filters: { mutationKey: ['my-global-mutation'] },
+  });
+  const latestMutation = mutations.at(-1);
+  return (
+    <CardWithReRenderHighlight>
+      <h2>Global (useMutationState)</h2>
+      <pre className={latestMutation?.error ? 'text-red-400' : undefined}>
+        {JSON.stringify(latestMutation, null, 2) || 'undefined'}
+      </pre>
+    </CardWithReRenderHighlight>
+  );
+}
+function GlobalMutationControl() {
+  const { isPending, mutate } = useMutation({
+    mutationKey: ['my-global-mutation'],
+    mutationFn: mutationFn1,
+  });
+  return (
+    <CardWithReRenderHighlight>
+      <h2>Mutate Global</h2>
+      <div className="flex flex-wrap gap-3">
+        <button
+          type="button"
+          disabled={isPending}
+          onClick={() => {
+            mutate(
+              { foo: 7 },
+              { onSettled: (...result) => console.log('🌏 Hello from awaited promise', result) },
+            );
+          }}
+        >
+          Input: {'{ foo: 7 }'}
+        </button>
+        <button
+          type="button"
+          disabled={isPending}
+          onClick={() => {
+            mutate(
+              { foo: 33, bar: 'test' },
+              { onSettled: (...result) => console.log('🌏 Hello from awaited promise', result) },
+            );
+          }}
+        >
+          Input: {'{ foo: 33, bar: "test" }'}
+        </button>
+      </div>
+    </CardWithReRenderHighlight>
+  );
+}
+
+function ExampleMutationLocal() {
+  const mutation = useMutation({ mutationFn: mutationFn1 });
+  return (
+    <CardWithReRenderHighlight>
+      <h2>Local</h2>
+      <pre className={mutation.isError ? 'text-red-400' : undefined}>
+        {JSON.stringify(mutation, null, 2)}
+      </pre>
+      <hr className="border-dashed mt-3" />
+      <div className="pt-3 pb-2">Mutate:</div>
+      <div className="flex flex-wrap gap-3">
+        <button
+          type="button"
+          disabled={mutation.isPending}
+          onClick={() => {
+            mutation.mutate(
+              { foo: 7 },
+              { onSettled: (...result) => console.log('🏠 Hello from awaited promise', result) },
+            );
+          }}
+        >
+          Input: {'{ foo: 7 }'}
+        </button>
+        <button
+          type="button"
+          disabled={mutation.isPending}
+          onClick={() => {
+            mutation.mutate(
+              { foo: 33, bar: 'test' },
+              { onSettled: (...result) => console.log('🏠 Hello from awaited promise', result) },
+            );
+          }}
+        >
+          Input: {'{ foo: 33, bar: "test" }'}
+        </button>
+      </div>
+    </CardWithReRenderHighlight>
   );
 }

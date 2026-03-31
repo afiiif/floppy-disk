@@ -1,8 +1,8 @@
-import { createQuery } from 'floppy-disk/react';
+import { createMutation, createQuery, useMutation } from 'floppy-disk/react';
 import { useState } from 'react';
 
-import { basicQueryFn2, infQueryFn2, keyedQueryFn2 } from './_utils';
 import { CardWithReRenderHighlight, Tabs } from './_components';
+import { basicQueryFn2, infQueryFn2, keyedQueryFn2, mutationFn2 } from './_utils';
 
 export function meta() {
   return [
@@ -35,11 +35,11 @@ export default function AsyncStateFloppyDisk() {
           },
           {
             label: 'Infinite Query',
-            content: <InfiniteQuery />,
+            content: <ExampleInfiniteQuery />,
           },
           {
             label: 'Mutation',
-            content: <div>Mutation</div>,
+            content: <ExampleMutation />,
           },
         ]}
       />
@@ -164,7 +164,7 @@ const infQuery = createQuery(infQueryFn2, {
   revalidateOnReconnect: false,
 });
 
-function InfiniteQuery() {
+function ExampleInfiniteQuery() {
   return (
     <>
       <Page />
@@ -264,5 +264,116 @@ function LoadMoreButton({ nextCursor }: { nextCursor?: string }) {
       </button>
       <div className="text-xs">Next cursor: {nextCursor}</div>
     </div>
+  );
+}
+
+// ---
+
+const useMyGlobalMutation = createMutation(mutationFn2, {
+  onSuccess: (data) => console.info('🌏 Hello from onSuccess option (outside component)', data),
+});
+
+function ExampleMutation() {
+  return (
+    <>
+      <h2 className="pb-1">Global state</h2>
+      <div className="pb-3.5 opacity-50 text-xs">
+        {'const myGlobalMutation = createMutation(...)'}
+      </div>
+      <ExampleMutationGlobal />
+      <ExampleMutationGlobal />
+      <GlobalMutationControl />
+
+      <h2 className="pt-5 pb-1">Local state</h2>
+      <div className="pb-3.5 opacity-50 text-xs">
+        {'const [result, { execute }] = useMutation(...)'}
+      </div>
+      <ExampleMutationLocal />
+      <ExampleMutationLocal />
+    </>
+  );
+}
+
+function ExampleMutationGlobal() {
+  const result = useMyGlobalMutation();
+  return (
+    <CardWithReRenderHighlight>
+      <h2>Global</h2>
+      <pre className={result.isError ? 'text-red-400' : undefined}>
+        {JSON.stringify(result, null, 2)}
+      </pre>
+    </CardWithReRenderHighlight>
+  );
+}
+function GlobalMutationControl() {
+  const { isPending } = useMyGlobalMutation();
+  return (
+    <CardWithReRenderHighlight>
+      <h2>Mutate Global</h2>
+      <div className="flex flex-wrap gap-3">
+        <button
+          type="button"
+          disabled={isPending}
+          onClick={() => {
+            useMyGlobalMutation.execute({ foo: 7 }).then((result) => {
+              console.log('🌏 Hello from awaited promise', result);
+            });
+          }}
+        >
+          Input: {'{ foo: 7 }'}
+        </button>
+        <button
+          type="button"
+          disabled={isPending}
+          onClick={() => {
+            useMyGlobalMutation.execute({ foo: 33, bar: 'test' }).then((result) => {
+              console.log('🌏 Hello from awaited promise', result);
+            });
+          }}
+        >
+          Input: {'{ foo: 33, bar: "test" }'}
+        </button>
+      </div>
+    </CardWithReRenderHighlight>
+  );
+}
+
+function ExampleMutationLocal() {
+  const [result, { execute }] = useMutation(mutationFn2, {
+    onSuccess: (data) => console.info('🏠 Hello from onSuccess option', data),
+  });
+  return (
+    <CardWithReRenderHighlight>
+      <h2>Local</h2>
+      <pre className={result.isError ? 'text-red-400' : undefined}>
+        {JSON.stringify(result, null, 2)}
+      </pre>
+      <hr className="border-dashed mt-3" />
+      <div className="pt-3 pb-2">Mutate:</div>
+      <div className="flex flex-wrap gap-3">
+        <button
+          type="button"
+          disabled={result.isPending}
+          onClick={() => {
+            execute({ foo: 7 }).then((result) => {
+              console.log('🏠 Hello from awaited promise', result);
+            });
+          }}
+        >
+          Input: {'{ foo: 7 }'}
+        </button>
+        <button
+          type="button"
+          disabled={result.isPending}
+          onClick={() => {
+            execute({ foo: 33, bar: 'test' }).then((result) => {
+              console.log('🏠 Hello from awaited promise', result);
+            });
+          }}
+        >
+          Input: {'{ foo: 33, bar: "test" }'}
+        </button>
+      </div>
+    </CardWithReRenderHighlight>
   );
 }

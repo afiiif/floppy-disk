@@ -7,19 +7,19 @@ export function meta() {
 
 const buildOutput = `✓ 103 modules transformed.
 build/client/.vite/manifest.json                     3.24 kB │ gzip:  0.61 kB
-build/client/assets/root-BlUsBC2T.css               14.94 kB │ gzip:  3.67 kB
+build/client/assets/root-DS469DaY.css               15.33 kB │ gzip:  3.74 kB
 build/client/assets/_components-CApVxW6A.js          0.84 kB │ gzip:  0.49 kB
-build/client/assets/store-floppy-disk-BeU09L18.js    1.13 kB │ gzip:  0.52 kB
-build/client/assets/_utils-Bn6pSJv4.js               1.27 kB │ gzip:  0.51 kB
+build/client/assets/store-floppy-disk-BH2e5n5s.js    1.13 kB │ gzip:  0.52 kB
 build/client/assets/store-zustand-Dl0WYSha.js        1.68 kB │ gzip:  0.80 kB
-build/client/assets/root-DQjsmfBs.js                 2.34 kB │ gzip:  0.95 kB
-build/client/assets/home-Bp8v6wgh.js                 2.58 kB │ gzip:  1.16 kB
-build/client/assets/async-floppy-disk-BMF7LQRP.js    5.11 kB │ gzip:  1.57 kB
-build/client/assets/react-CTkfqRcW.js                7.45 kB │ gzip:  2.92 kB
-build/client/assets/async-tanstack-8uAwvYkR.js      39.40 kB │ gzip: 11.64 kB
+build/client/assets/_utils-B9M1Z8Ow.js               1.73 kB │ gzip:  0.59 kB
+build/client/assets/root-CdiRZxeF.js                 2.34 kB │ gzip:  0.95 kB
+build/client/assets/home-BfNfAtRH.js                 2.80 kB │ gzip:  1.19 kB
+build/client/assets/async-floppy-disk-CAeS0Sqn.js    7.14 kB │ gzip:  2.01 kB
+build/client/assets/react-B_GsbzAT.js               10.80 kB │ gzip:  3.64 kB
+build/client/assets/async-tanstack-XOg0CP-8.js      43.93 kB │ gzip: 12.64 kB
 build/client/assets/chunk-UVKPFVEO-BARWKRxW.js     125.42 kB │ gzip: 42.24 kB
 build/client/assets/entry.client-j5N2nWy6.js       190.57 kB │ gzip: 60.05 kB
-✓ built in 685ms`.split('\n');
+✓ built in 715ms`.split('\n');
 
 export default function Home() {
   return (
@@ -55,17 +55,15 @@ export default function Home() {
         <span className="inline-block font-bold">equivalent functionality</span>.
       </p>
 
-      <div className="pt-4">You can find the code here:</div>
+      <div className="pt-5">You can find the code here:</div>
       <a className="link" href="https://github.com/afiiif/floppy-disk/tree/beta/comparison">
         github.com/afiiif/floppy-disk/tree/beta/comparison
       </a>
 
-      {/*
-      <div className="pt-4">Documentation is available here:</div>
-      <a href="#" className="opacity-50">
-        TODO: Update docs link
+      <div className="pt-5">Documentation is available here:</div>
+      <a className="link" href="https://github.com/afiiif/floppy-disk/tree/beta#readme">
+        github.com/afiiif/floppy-disk/tree/beta#readme
       </a>
-      */}
     </div>
   );
 }
