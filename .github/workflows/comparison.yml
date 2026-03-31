@@ -16,13 +16,24 @@ jobs:
           node-version: 'lts/*'
           cache: 'pnpm'
 
-      - name: Install and Build 🔧
+      - name: Install and Build
         run: |
           cd comparison
           pnpm i
           pnpm build
+          cd build/client
+          printf "\n=== BEFORE ==="
+          ls -R
+          mkdir -p floppy-disk/assets
+          mv assets/* floppy-disk/assets/
+          mv favicon.ico floppy-disk/
+          rm -rf assets
+          printf "\n=== AFTER ==="
+          ls -R
+          find . -name "*.html" -exec sed -i 's|/assets/|/floppy-disk/assets/|g' {} +
+          find . -name "*.js" -exec sed -i 's|"/assets/|"/floppy-disk/assets/|g' {} +
 
       - name: Deploy 🚀
         uses: JamesIves/github-pages-deploy-action@v4
         with:
-          folder: comparison/build/client
+          folder: comparison/build/client/floppy-disk
