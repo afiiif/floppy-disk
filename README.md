@@ -5,8 +5,6 @@ A lightweight, simple, and powerful state management library.
 This library was highly-inspired by [Zustand](https://www.npmjs.com/package/zustand) and [TanStack-Query](https://tanstack.com/query), they're awesome state manager.
 FloppyDisk provides a very similar developer experience (DX), while introducing additional features and a smaller bundle size.
 
-Comparison: https://github.com/afiiif/floppy-disk/tree/beta/comparison
-
 Demo: https://afiiif.github.io/floppy-disk/
 
 **Installation:**
@@ -23,7 +21,7 @@ Here's how to create and use a store:
 import { createStore } from 'floppy-disk/react';
 
 const useDigimon = createStore({
-  age: 3,
+  age: 7,
   level: 'Rookie',
 });
 ```
@@ -41,10 +39,12 @@ function MyDigimon() {
 function Control() {
   return (
     <>
-      <button onClick={() => {
-        // You can setState directly
-        useDigimon.setState(prev => ({ age: prev.age + 1 }));
-      }}>
+      <button
+        onClick={() => {
+          // You can setState directly
+          useDigimon.setState((prev) => ({ age: prev.age + 1 }));
+        }}
+      >
         Increase digimon's age
       </button>
 
@@ -66,6 +66,43 @@ const evolve = () => {
 };
 ```
 
+### Store Subscription
+
+At its core, FloppyDisk is a **pub-sub store**.
+
+You can subscribe manually:
+
+```tsx
+const unsubscribe = useMyStore.subscribe((state, prev) => {
+  console.log('New state:', state);
+});
+
+// Later
+unsubscribe();
+```
+
+FloppyDisk provides lifecycle hooks tied to subscription count.
+
+```tsx
+const useTowerDefense = createStore(
+  { archers: 3, mages: 1, barracks: 2, artillery: 1 },
+  {
+    onFirstSubscribe: () => {
+      console.log('First subscriber! We’re officially popular 🎉');
+    },
+    onSubscribe: () => {
+      console.log('New subscriber joined. Welcome aboard 🫡');
+    },
+    onUnsubscribe: () => {
+      console.log('Subscriber left... was it something I said? 😭');
+    },
+    onLastUnsubscribe: () => {
+      console.log('Everyone left. Guess I’ll just exist quietly now...');
+    },
+  },
+);
+```
+
 ### Differences from Zustand
 
 If you're coming from Zustand, this should feel very familiar.\
@@ -80,28 +117,28 @@ Key differences:
 Zustand examples:
 
 ```tsx
-const useExample1 = create(123);
+const useDate = create(new Date(2021, 01, 11));
 
-const useExample2 = create(set => ({
+const useCounter = create((set) => ({
   value: 1,
-  inc: () => set(prev => ({ value: prev.value + 1 })),
+  increment: () => set((prev) => ({ value: prev.value + 1 })),
 }));
 ```
 
 FloppyDisk equivalents:
 
 ```tsx
-const useExample1 = createStore({ value: 123 });
+const useDate = createStore({ value: new Date(2021, 01, 11) });
 
+const useCounter = createStore({ value: 1 });
+const increment = () => useCounter.setState((prev) => ({ value: prev.value + 1 }));
 // Unlike Zustand, defining actions inside the store is **discouraged** in FloppyDisk.
 // This improves tree-shakeability and keeps your store minimal.
-const useExample2 = createStore({ value: 1 });
-const inc = () => useExample2.setState(prev => ({ value: prev.value + 1 }));
 
-// However, it's still possible if you understand how closures work:
-const useExample2Alt = createStore({
+// However, it's still possible to mix actions with the state if you understand how closures work:
+const useCounterAlt = createStore({
   value: 1,
-  inc: () => useExample2Alt.setState(prev => ({ value: prev.value + 1 })),
+  increment: () => useCounterAlt.setState((prev) => ({ value: prev.value + 1 })),
 });
 ```
 
@@ -272,14 +309,11 @@ type GetPostsResponse = {
   meta: { nextCursor: string };
 };
 
-const postsQuery = createQuery<GetPostsResponse, GetPostParams>(
-  getPosts,
-  {
-    staleTime: Infinity,
-    revalidateOnFocus: false,
-    revalidateOnReconnect: false,
-  },
-);
+const postsQuery = createQuery<GetPostsResponse, GetPostParams>(getPosts, {
+  staleTime: Infinity,
+  revalidateOnFocus: false,
+  revalidateOnReconnect: false,
+});
 
 function Main() {
   return <Page cursor={undefined} />;
@@ -294,12 +328,10 @@ function Page({ cursor }: { cursor?: string }) {
 
   return (
     <>
-      {data.posts.map(post => (
+      {data.posts.map((post) => (
         <PostCard key={post.id} post={post} />
       ))}
-      {data.meta.nextCursor && (
-        <LoadMore nextCursor={data.meta.nextCursor} />
-      )}
+      {data.meta.nextCursor && <LoadMore nextCursor={data.meta.nextCursor} />}
     </>
   );
 }
@@ -314,11 +346,7 @@ function LoadMore({ nextCursor }: { nextCursor?: string }) {
     return <Page cursor={nextCursor} />;
   }
 
-  return (
-    <ReachingBottomObserver
-      onReachBottom={() => setIsNextPageRequested(true)}
-    />
-  );
+  return <BottomObserver onReachBottom={() => setIsNextPageRequested(true)} />;
 }
 ```
 
