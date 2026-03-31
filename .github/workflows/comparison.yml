@@ -28,10 +28,13 @@ jobs:
           mv assets/* floppy-disk/assets/
           mv favicon.ico floppy-disk/
           rm -rf assets
+          cd floppy-disk
+          cp ../../../../.gitignore .
           printf "\n=== AFTER ==="
           ls -R
           find . -name "*.html" -exec sed -i 's|/assets/|/floppy-disk/assets/|g' {} +
           find . -name "*.js" -exec sed -i 's|"/assets/|"/floppy-disk/assets/|g' {} +
+          find . -name "*.map" -exec sed -i 's|/assets/|/floppy-disk/assets/|g' {} +
 
       - name: Deploy 🚀
         uses: JamesIves/github-pages-deploy-action@v4
