@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 
-import { CardWithReRenderHighlight } from './_components';
+import { CardWithReRenderHighlight } from '../shared/components';
 
 export function meta() {
   return [{ title: 'Zustand Store' }, { name: 'description', content: 'Zustand store' }];

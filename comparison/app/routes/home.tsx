@@ -6,17 +6,17 @@ export function meta() {
 }
 
 const buildOutput = `✓ 103 modules transformed.
-build/client/.vite/manifest.json                     3.24 kB │ gzip:  0.61 kB
+build/client/.vite/manifest.json                     3.23 kB │ gzip:  0.61 kB
 build/client/assets/root-DS469DaY.css               15.33 kB │ gzip:  3.74 kB
-build/client/assets/_components-CApVxW6A.js          0.84 kB │ gzip:  0.49 kB
-build/client/assets/store-floppy-disk-BH2e5n5s.js    1.13 kB │ gzip:  0.52 kB
-build/client/assets/store-zustand-Dl0WYSha.js        1.68 kB │ gzip:  0.80 kB
-build/client/assets/_utils-B9M1Z8Ow.js               1.73 kB │ gzip:  0.59 kB
-build/client/assets/root-CdiRZxeF.js                 2.34 kB │ gzip:  0.95 kB
-build/client/assets/home-BfNfAtRH.js                 2.80 kB │ gzip:  1.19 kB
-build/client/assets/async-floppy-disk-CAeS0Sqn.js    7.14 kB │ gzip:  2.01 kB
+build/client/assets/components-CApVxW6A.js           0.84 kB │ gzip:  0.49 kB
+build/client/assets/store-floppy-disk-DAYYhG7a.js    1.13 kB │ gzip:  0.52 kB
+build/client/assets/store-zustand-CwKqIspR.js        1.68 kB │ gzip:  0.79 kB
+build/client/assets/utils-B9M1Z8Ow.js                1.73 kB │ gzip:  0.59 kB
+build/client/assets/root-BxCThUSF.js                 2.39 kB │ gzip:  0.97 kB
+build/client/assets/home-B6mulJUQ.js                 2.80 kB │ gzip:  1.19 kB
+build/client/assets/async-floppy-disk-Zn4dzzTI.js    7.14 kB │ gzip:  2.01 kB
 build/client/assets/react-B_GsbzAT.js               10.80 kB │ gzip:  3.64 kB
-build/client/assets/async-tanstack-XOg0CP-8.js      43.93 kB │ gzip: 12.64 kB
+build/client/assets/async-tanstack-DYPYDTxr.js      43.93 kB │ gzip: 12.63 kB
 build/client/assets/chunk-UVKPFVEO-BARWKRxW.js     125.42 kB │ gzip: 42.24 kB
 build/client/assets/entry.client-j5N2nWy6.js       190.57 kB │ gzip: 60.05 kB
 ✓ built in 715ms`.split('\n');

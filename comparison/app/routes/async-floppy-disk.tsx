@@ -1,8 +1,8 @@
 import { createMutation, createQuery, useMutation } from 'floppy-disk/react';
 import { useState } from 'react';
 
-import { CardWithReRenderHighlight, Tabs } from './_components';
-import { basicQueryFn2, infQueryFn2, keyedQueryFn2, mutationFn2 } from './_utils';
+import { CardWithReRenderHighlight, Tabs } from '../shared/components';
+import { basicQueryFn2, infQueryFn2, keyedQueryFn2, mutationFn2 } from '../shared/utils';
 
 export function meta() {
   return [
