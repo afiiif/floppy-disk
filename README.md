@@ -24,7 +24,7 @@ import { createStore } from 'floppy-disk/react';
 
 const useDigimon = createStore({
   age: 3,
-  level: 'Rookie' as 'In-Training' | 'Rookie' | 'Champion' | 'Ultimate',
+  level: 'Rookie',
 });
 ```
 
@@ -54,18 +54,13 @@ function Control() {
 }
 
 // You can create a custom actions
-const evolve = (nextLevel: 'Rookie' | 'Champion' | 'Ultimate') => {
-  const { age, level } = useDigimon.getState();
+const evolve = () => {
+  const { level } = useDigimon.getState();
 
-  const minAge = {
-    Rookie: 3,
-    Champion: 6,
-    Ultimate: 11,
-  };
+  const order = ['In-Training', 'Rookie', 'Champion', 'Ultimate'];
+  const nextLevel = order[order.indexOf(level) + 1];
 
-  if (age < minAge[nextLevel]) {
-    return console.warn('Not enough age');
-  }
+  if (!nextLevel) return console.warn('Already at ultimate level');
 
   useDigimon.setState({ level: nextLevel });
 };
@@ -256,7 +251,7 @@ Each unique parameter creates its own cache entry.
 FloppyDisk does **not provide** a dedicated "infinite query" API.\
 Instead, it embraces a simpler and more flexible approach:
 
-> _Infinite queries are just **composition** + **recursion**._
+> Infinite queries are just **composition** + **recursion**.
 
 Why? Because async state is already powerful enough:
 
