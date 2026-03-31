@@ -7,6 +7,8 @@ FloppyDisk provides a very similar developer experience (DX), while introducing 
 
 Comparison: https://github.com/afiiif/floppy-disk/tree/beta/comparison
 
+Demo: https://afiiif.github.io/floppy-disk/
+
 **Installation:**
 
 ```
