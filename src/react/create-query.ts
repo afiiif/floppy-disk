@@ -229,7 +229,7 @@ export const createQuery = <TData, TVariable extends Record<string, any> = never
 
   type TState = QueryState<TData, TError>;
 
-  const initialState = INITIAL_STATE as TState;
+  const initialState = { ...INITIAL_STATE } as TState;
 
   const stores = new Map<string, StoreApi<TState>>();
 

@@ -142,7 +142,7 @@ export const createMutation = <TData, TVariable = undefined, TError = Error>(
   type PromiseResult = { variable: TVariable; data?: TData; error?: TError };
   type ResolveFn = (result: PromiseResult | PromiseLike<PromiseResult>) => void;
 
-  const initialState = INITIAL_STATE as TState;
+  const initialState = { ...INITIAL_STATE } as TState;
   let ongoingPromise: Promise<PromiseResult> | undefined;
   const resolveFns = new Set<ResolveFn>([]);
 
