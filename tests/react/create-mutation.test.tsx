@@ -140,19 +140,42 @@ describe('createMutation', () => {
 
   it('warns when executing while pending', async () => {
     const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
 
-    let resolveFn: any;
+    const settleFns: Array<[(v: number) => void, (err: any) => void]> = [];
     const mutationFn = vi.fn(
-      (_: number) => new Promise<number>((resolve) => (resolveFn = resolve)),
+      (_: number) => new Promise<number>((resolve, reject) => settleFns.push([resolve, reject])),
     );
 
     const useMutation = createMutation(mutationFn);
-    useMutation.execute(1);
-    useMutation.execute(2);
+    const p1 = useMutation.execute(1);
+    const p2 = useMutation.execute(2);
     expect(warnSpy).toHaveBeenCalledTimes(1);
 
-    resolveFn(123);
+    settleFns.shift()![0](111);
+    settleFns.shift()![0](222);
+
+    const res1 = await p1;
+    const res2 = await p2;
+    expect(res1).toEqual(res2);
+    expect(res1.data).toBe(222);
+    expect(res2.data).toBe(222);
+
+    const p3 = useMutation.execute(3);
+    const p4 = useMutation.execute(4);
+
+    settleFns.shift()![1](new Error('333'));
+    settleFns.shift()![1](new Error('444'));
+
+    const res3 = await p3;
+    const res4 = await p4;
+    expect(res3).toEqual(res4);
+    expect(res3.data).toBe(undefined);
+    expect(res3.error?.message).toBe('444');
+    expect(errorSpy).toHaveBeenCalledTimes(1);
+
     warnSpy.mockRestore();
+    errorSpy.mockRestore();
   });
 
   it('resets state correctly', async () => {

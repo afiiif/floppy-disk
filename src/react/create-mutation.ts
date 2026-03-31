@@ -73,7 +73,8 @@ export type MutationOptions<TData, TVariable, TError = Error> = InitStoreOptions
   MutationState<TData, TVariable, TError>
 > & {
   /**
-   * Called when the mutation succeeds.
+   * Called when the mutation succeeds.\
+   * If multiple concurrent executions happened, only the latest execution triggers this callback.
    */
   onSuccess?: (
     data: TData,
@@ -82,7 +83,8 @@ export type MutationOptions<TData, TVariable, TError = Error> = InitStoreOptions
   ) => void;
 
   /**
-   * Called when the mutation fails.
+   * Called when the mutation fails.\
+   * If multiple concurrent executions happened, only the latest execution triggers this callback.
    */
   onError?: (
     error: TError,
@@ -91,7 +93,8 @@ export type MutationOptions<TData, TVariable, TError = Error> = InitStoreOptions
   ) => void;
 
   /**
-   * Called after the mutation settles (either success or error).
+   * Called after the mutation settles (either success or error).\
+   * If multiple concurrent executions happened, only the latest execution triggers this callback.
    */
   onSettled?: (
     variable: TVariable,
@@ -113,8 +116,10 @@ export type MutationOptions<TData, TVariable, TError = Error> = InitStoreOptions
  * - Mutations are **not cached** and only track the latest execution.
  * - Designed for operations that change data (e.g. create, update, delete).
  * - No retry mechanism is provided by default.
- * - Each execution overwrites the previous state.
  * - The mutation always resolves (never throws): the result contains either `data` or `error`.
+ * - If multiple executions triggered at the same time:
+ *   - Only the latest execution is allowed to update the state.
+ *   - Results from previous executions are ignored if a newer one exists.
  *
  * @example
  * const useCreateUser = createMutation(async (input) => {
@@ -134,24 +139,35 @@ export const createMutation = <TData, TVariable = undefined, TError = Error>(
   const { onSuccess = noop, onError, onSettled = noop } = options;
 
   type TState = MutationState<TData, TVariable, TError>;
+  type PromiseResult = { variable: TVariable; data?: TData; error?: TError };
+  type ResolveFn = (result: PromiseResult | PromiseLike<PromiseResult>) => void;
 
   const initialState = INITIAL_STATE as TState;
+  let ongoingPromise: Promise<PromiseResult> | undefined;
+  const resolveFns = new Set<ResolveFn>([]);
 
   const store = initStore(initialState, options);
   const useStore = () => useStoreState(store.getState(), store.subscribe);
 
   const execute = (variable: TVariable) => {
+    let currentResolveFn: ResolveFn;
+
     const stateBeforeExecute = store.getState();
     if (stateBeforeExecute.isPending) {
       console.warn(
-        'Mutation executed while a previous execution is still pending. This may cause race conditions or unexpected state updates.',
+        'A mutation was executed while a previous execution is still pending. ' +
+          'The previous execution will be ignored (latest execution wins).',
       );
     }
     store.setState({ isPending: true });
 
-    return new Promise<{ variable: TVariable; data?: TData; error?: TError }>((resolve) => {
+    const promise = new Promise<PromiseResult>((resolve) => {
+      currentResolveFn = resolve;
       mutationFn(variable, stateBeforeExecute)
         .then((data) => {
+          if (promise !== ongoingPromise) {
+            return resolve({ data, variable });
+          }
           store.setState({
             state: 'SUCCESS',
             isPending: false,
@@ -164,9 +180,13 @@ export const createMutation = <TData, TVariable = undefined, TError = Error>(
             errorUpdatedAt: undefined,
           });
           resolve({ data, variable });
+          resolveFns.clear();
           onSuccess(data, variable, stateBeforeExecute);
         })
         .catch((error) => {
+          if (promise !== ongoingPromise) {
+            return resolve({ error, variable });
+          }
           store.setState({
             state: 'ERROR',
             isPending: false,
@@ -179,13 +199,22 @@ export const createMutation = <TData, TVariable = undefined, TError = Error>(
             errorUpdatedAt: Date.now(),
           });
           resolve({ error, variable });
+          resolveFns.clear();
           if (onError) onError(error, variable, stateBeforeExecute);
           else console.error(store.getState());
         })
         .finally(() => {
+          if (promise !== ongoingPromise) return;
           onSettled(variable, stateBeforeExecute);
+          ongoingPromise = undefined;
         });
     });
+
+    if (ongoingPromise) resolveFns.forEach((resolveFn) => resolveFn(promise));
+    resolveFns.add(currentResolveFn!);
+    ongoingPromise = promise;
+
+    return promise;
   };
 
   return Object.assign(useStore, {
@@ -215,9 +244,9 @@ export const createMutation = <TData, TVariable = undefined, TError = Error>(
      * - `{ error, variable }` on failure
      *
      * @remarks
-     * - If a mutation is already in progress, a warning is logged.
-     * - Concurrent executions are allowed but may lead to race conditions.
      * - The promise never rejects to simplify async handling.
+     * - If a mutation is already in progress, a warning is logged.
+     * - When a new execution starts, all previous pending executions will resolve with the result of the latest execution.
      */
     execute: execute as TVariable extends undefined
       ? () => Promise<{ variable: undefined; data?: TData; error?: TError }>
