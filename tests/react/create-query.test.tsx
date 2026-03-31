@@ -904,7 +904,7 @@ describe('createQuery', () => {
     const { result } = renderHook(() => {
       render++;
       const useQuery = query();
-      return useQuery({ enabled: false });
+      return useQuery({ revalidateOnMount: false });
     });
 
     expect(queryFn).toHaveBeenCalledTimes(0);

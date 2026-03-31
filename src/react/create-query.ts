@@ -624,11 +624,13 @@ export const createQuery = <TData, TVariable extends Record<string, any> = never
 
     type UseStoreOptions = {
       /**
-       * Whether the query should execute automatically on mount.
+       * Whether the query should be ravalidated automatically on mount.
+       *
+       * Revalidate means execute the queryFn **if stale/invalidated**.
        *
        * @default true
        */
-      enabled?: boolean;
+      revalidateOnMount?: boolean;
 
       /**
        * Whether to keep previous successful data while a new variable is loading.
@@ -672,7 +674,7 @@ export const createQuery = <TData, TVariable extends Record<string, any> = never
      * // Subscribes to `data.user.name`
      */
     const useStore = (options: UseStoreOptions = {}): TState => {
-      const { enabled = true, keepPreviousData } = options;
+      const { revalidateOnMount = true, keepPreviousData } = options;
 
       const storeState = store.getState();
       const prevState = useRef<Partial<TState>>({});
@@ -688,7 +690,7 @@ export const createQuery = <TData, TVariable extends Record<string, any> = never
       }
 
       const [trackedState, usedPathsRef] = useStoreStateProxy(
-        enabled && storeState.state === 'INITIAL'
+        revalidateOnMount && storeState.state === 'INITIAL'
           ? // Optimize rendering on initial state
             // Do { isPending: true } → result
             // instead of { isPending: false } → { isPending: true } → result
@@ -717,8 +719,8 @@ export const createQuery = <TData, TVariable extends Record<string, any> = never
 
       // Execute queryFn on mount & on re-render
       useIsomorphicLayoutEffect(() => {
-        if (enabled !== false) revalidate(store, variable, false);
-      }, [store, enabled]);
+        if (revalidateOnMount !== false) revalidate(store, variable, false);
+      }, [store, revalidateOnMount]);
 
       if (keepPreviousData) {
         // eslint-disable-next-line @typescript-eslint/no-unused-expressions
