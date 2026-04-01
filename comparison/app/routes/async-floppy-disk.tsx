@@ -6,15 +6,15 @@ import { basicQueryFn2, infQueryFn2, keyedQueryFn2, mutationFn2 } from '../share
 
 export function meta() {
   return [
-    { title: 'FloppyDisk.js for Async State Management' },
-    { name: 'description', content: 'FloppyDisk.js for async state management' },
+    { title: 'FloppyDisk.ts for Async State Management' },
+    { name: 'description', content: 'FloppyDisk.ts for async state management' },
   ];
 }
 
 export default function AsyncStateFloppyDisk() {
   return (
     <>
-      <h1 className="font-bold pb-4">FloppyDisk.js for Async State Management</h1>
+      <h1 className="font-bold pb-4">FloppyDisk.ts for Async State Management</h1>
       <Tabs
         storageId="FloppyDiskTab"
         menu={[

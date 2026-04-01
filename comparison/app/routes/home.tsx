@@ -1,7 +1,7 @@
 export function meta() {
   return [
-    { title: 'FloppyDisk.js Comparison' },
-    { name: 'description', content: 'FloppyDisk.js comparison with Zustand & TanStack-Query' },
+    { title: 'FloppyDisk.ts Comparison' },
+    { name: 'description', content: 'FloppyDisk.ts comparison with Zustand & TanStack-Query' },
   ];
 }
 
