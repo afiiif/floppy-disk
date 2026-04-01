@@ -97,4 +97,52 @@ describe('initStore', () => {
     isClientSpy.mockRestore();
     consoleErrorSpy.mockRestore();
   });
+
+  it('calls onStateChange when state changes', () => {
+    const spy = vi.fn();
+    const store = initStore({ count: 0, value: 42 }, { onStateChange: spy });
+
+    store.setState({ count: 1 });
+    expect(spy).toHaveBeenCalledTimes(1);
+    expect(spy.mock.calls[0][0]).toEqual({ count: 1, value: 42 }); // state
+    expect(spy.mock.calls[0][1]).toEqual({ count: 0, value: 42 }); // prevState
+    expect(spy.mock.calls[0][2]).toEqual(['count']); // changedKeys
+
+    store.setState((prev) => ({ value: prev.value + 1 }));
+    expect(spy).toHaveBeenCalledTimes(2);
+    expect(spy.mock.calls[1][0]).toEqual({ count: 1, value: 43 });
+    expect(spy.mock.calls[1][2]).toEqual(['value']);
+  });
+
+  it('does not call onStateChange if state is same', () => {
+    const spy = vi.fn();
+    const store = initStore({ a: 1 }, { onStateChange: spy });
+
+    store.setState({ a: 1 });
+    expect(spy).not.toHaveBeenCalled();
+  });
+
+  it('onStateChange does not count as subscriber', () => {
+    const spy = vi.fn();
+    const store = initStore({ count: 0 }, { onStateChange: spy });
+    const subscriber = vi.fn();
+
+    store.subscribe(subscriber);
+    store.setState({ count: 1 });
+
+    expect(subscriber).toHaveBeenCalledTimes(1);
+    expect(store.getSubscribers().size).toBe(1); // still only the real subscriber
+  });
+
+  it('handles multiple state changes correctly', () => {
+    const spy = vi.fn();
+    const store = initStore({ a: 0, b: 0 }, { onStateChange: spy });
+
+    store.setState({ a: 1, b: 2 });
+    expect(spy).toHaveBeenCalledTimes(1);
+    expect(spy.mock.calls[0][2]).toEqual(['a', 'b']);
+
+    store.setState({ a: 1, b: 2 }); // no change
+    expect(spy).toHaveBeenCalledTimes(1); // still 1 call
+  });
 });

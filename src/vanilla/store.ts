@@ -62,6 +62,13 @@ export type InitStoreOptions<TState extends Record<string, any>> = {
   onLastUnsubscribe?: (state: TState, store: StoreApi<TState>) => void;
 
   /**
+   * Called whenever the state changes, without counting as a subscriber.
+   * Acts like a "spy" on state updates.
+   * Useful for devtools, logging, or debugging state changes.
+   */
+  onStateChange?: (state: TState, prevState: TState, changedKeys: Array<keyof TState>) => void;
+
+  /**
    * By default, calling `setState` on the server is disallowed to prevent shared state across requests.
    * Set this to `true` only if you explicitly intend to mutate state during server execution.
    */
@@ -106,11 +113,14 @@ export const initStore = <TState extends Record<string, any>>(
     onSubscribe = noop,
     onUnsubscribe = noop,
     onLastUnsubscribe = noop,
+    onStateChange = noop,
     allowSetStateServerSide = false,
   } = options;
 
   const subscribers = new Set<Subscriber<TState>>();
+
   const getSubscribers = () => subscribers;
+
   const subscribe = (subscriber: Subscriber<TState>) => {
     subscribers.add(subscriber);
     if (subscribers.size === 1) onFirstSubscribe(state, storeApi);
@@ -123,7 +133,9 @@ export const initStore = <TState extends Record<string, any>>(
   };
 
   let state = initialState;
+
   const getState = () => state;
+
   const setState = (value: SetState<TState>) => {
     if (!isClient && !allowSetStateServerSide) {
       console.error(
@@ -144,6 +156,8 @@ export const initStore = <TState extends Record<string, any>>(
     if (changedKeys.length === 0) return;
 
     state = { ...prevState, ...newValue };
+
+    onStateChange(state, prevState, changedKeys);
     [...subscribers].forEach((subscriber) => subscriber(state, prevState, changedKeys));
   };
 
