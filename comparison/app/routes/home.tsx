@@ -12,12 +12,12 @@ build/client/a____s/root-DS469DaY.css               15.33 kB │ gzip:  3.74 kB
 build/client/a____s/components-DrxDq1-G.js           1.01 kB │ gzip:  0.59 kB
 build/client/a____s/store-floppy-disk-C4Wa1se3.js    1.13 kB │ gzip:  0.51 kB
 build/client/a____s/store-zustand-BJYVMYXp.js        1.68 kB │ gzip:  0.79 kB
-build/client/a____s/utils-B9M1Z8Ow.js                1.73 kB │ gzip:  0.59 kB
+build/client/a____s/utils-DpvILWFZ.js                1.95 kB │ gzip:  0.60 kB
 build/client/a____s/root-CB2-KCWF.js                 2.48 kB │ gzip:  1.01 kB
-build/client/a____s/home-Bvh4Zm7k.js                 2.81 kB │ gzip:  1.19 kB
-build/client/a____s/async-floppy-disk-ClTVk3qd.js    7.11 kB │ gzip:  1.99 kB
+build/client/a____s/home-DEeF5N6G.js                 2.81 kB │ gzip:  1.19 kB
+build/client/a____s/async-floppy-disk-ez0nrBv8.js    7.16 kB │ gzip:  2.01 kB
 build/client/a____s/react-B2fpI5mz.js               11.19 kB │ gzip:  3.80 kB
-build/client/a____s/async-tanstack-CdGfALV5.js      43.90 kB │ gzip: 12.62 kB
+build/client/a____s/async-tanstack-Bqi-YPia.js      43.94 kB │ gzip: 12.62 kB
 build/client/a____s/chunk-UVKPFVEO-BCVTWmlK.js     126.29 kB │ gzip: 42.59 kB
 build/client/a____s/entry.client-CMKBzKJ-.js       190.57 kB │ gzip: 60.05 kB
 ✓ built in 715ms`.split("\n");

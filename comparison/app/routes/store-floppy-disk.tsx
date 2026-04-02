@@ -1,6 +1,6 @@
 import { createStore } from "floppy-disk/react";
 
-import { CardWithReRenderHighlight } from "../shared/components";
+import { CardWithReRenderHighlight } from "~/shared/components";
 
 export function meta() {
   return [

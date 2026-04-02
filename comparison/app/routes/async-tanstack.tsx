@@ -6,11 +6,12 @@ import {
   useMutation,
   useMutationState,
   useQuery,
+  type UseQueryOptions,
 } from "@tanstack/react-query";
 import { useState } from "react";
 
-import { CardWithReRenderHighlight, Tabs } from "../shared/components";
-import { basicQueryFn1, infQueryFn1, keyedQueryFn2, mutationFn1 } from "../shared/utils";
+import { CardWithReRenderHighlight, Tabs } from "~/shared/components";
+import { basicQueryFn1, infQueryFn1, keyedQueryFn1, mutationFn1 } from "~/shared/utils";
 
 export function meta() {
   return [
@@ -33,14 +34,7 @@ export default function AsyncStateTanstack() {
         menu={[
           {
             label: "Single Query",
-            content: (
-              <>
-                <SimpleQueryState />
-                <SimpleQueryData />
-                <SimpleQueryDataSlice />
-                <SimpleQueryActions />
-              </>
-            ),
+            content: <MyQuery />,
           },
           {
             label: "Keyed Query",
@@ -62,17 +56,27 @@ export default function AsyncStateTanstack() {
 
 // ---
 
-const useBasicQuery = (
-  options?: any, // Too lazy to do type gymnastic
-) =>
-  useQuery<Awaited<ReturnType<typeof basicQueryFn1>>>({
+function MyQuery() {
+  return (
+    <>
+      <MyQueryState />
+      <MyQueryData />
+      <MyQueryDataSlice />
+      <MyQueryActions />
+    </>
+  );
+}
+
+type MyQueryResponse = Awaited<ReturnType<typeof basicQueryFn1>>;
+const useMyQuery = (options?: Partial<UseQueryOptions<MyQueryResponse>>) =>
+  useQuery<MyQueryResponse>({
     ...options,
     queryKey: ["basic"],
     queryFn: basicQueryFn1,
   });
 
-function SimpleQueryState() {
-  const queryState = useBasicQuery();
+function MyQueryState() {
+  const queryState = useMyQuery();
   return (
     <CardWithReRenderHighlight>
       <h2>queryState</h2>
@@ -81,8 +85,8 @@ function SimpleQueryState() {
   );
 }
 
-function SimpleQueryData() {
-  const queryState = useBasicQuery();
+function MyQueryData() {
+  const queryState = useMyQuery();
   return (
     <CardWithReRenderHighlight>
       <h2>queryState.data</h2>
@@ -90,8 +94,8 @@ function SimpleQueryData() {
     </CardWithReRenderHighlight>
   );
 }
-function SimpleQueryDataSlice() {
-  const queryState = useBasicQuery();
+function MyQueryDataSlice() {
+  const queryState = useMyQuery();
   return (
     <CardWithReRenderHighlight>
       <h2>queryState.data?.b</h2>
@@ -100,8 +104,8 @@ function SimpleQueryDataSlice() {
   );
 }
 
-function SimpleQueryActions() {
-  const { refetch } = useBasicQuery();
+function MyQueryActions() {
+  const { refetch } = useMyQuery();
   return (
     <CardWithReRenderHighlight className="flex gap-3">
       <button onClick={() => refetch()}>Refetch</button>
@@ -114,14 +118,12 @@ function SimpleQueryActions() {
 
 // ---
 
-const useKeyedQuery = (
-  id: number,
-  options?: any, // Too lazy to do type gymnastic
-) =>
-  useQuery<Awaited<ReturnType<typeof keyedQueryFn2>>>({
+type KeyedQueryResponse = Awaited<ReturnType<typeof keyedQueryFn1>>;
+const useKeyedQuery = (id: number, options?: Partial<UseQueryOptions<KeyedQueryResponse>>) =>
+  useQuery<KeyedQueryResponse>({
     ...options,
     queryKey: ["keyed", id],
-    queryFn: () => keyedQueryFn2({ id }),
+    queryFn: () => keyedQueryFn1({ id }),
     staleTime: 15_000,
   });
 

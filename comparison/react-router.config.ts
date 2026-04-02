@@ -5,5 +5,9 @@ export default {
   async prerender() {
     return ["/", "/store/zustand", "/store/floppy-disk", "/async/tanstack", "/async/floppy-disk"];
   },
-  basename: "/floppy-disk",
+  ...(process.env.NODE_ENV === "production"
+    ? {
+        basename: "/floppy-disk",
+      }
+    : {}),
 } satisfies Config;

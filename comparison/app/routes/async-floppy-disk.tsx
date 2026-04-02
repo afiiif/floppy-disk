@@ -1,8 +1,8 @@
 import { createMutation, createQuery, useMutation } from "floppy-disk/react";
 import { useState } from "react";
 
-import { CardWithReRenderHighlight, Tabs } from "../shared/components";
-import { basicQueryFn2, infQueryFn2, keyedQueryFn2, mutationFn2 } from "../shared/utils";
+import { CardWithReRenderHighlight, Tabs } from "~/shared/components";
+import { basicQueryFn2, infQueryFn2, keyedQueryFn2, mutationFn2 } from "~/shared/utils";
 
 export function meta() {
   return [
@@ -19,14 +19,7 @@ export default function AsyncStateFloppyDisk() {
         menu={[
           {
             label: "Single Query",
-            content: (
-              <>
-                <SimpleQueryState />
-                <SimpleQueryData />
-                <SimpleQueryDataSlice />
-                <SimpleQueryActions />
-              </>
-            ),
+            content: <MyQuery />,
           },
           {
             label: "Keyed Query",
@@ -48,13 +41,24 @@ export default function AsyncStateFloppyDisk() {
 
 // ---
 
-const basicQuery = createQuery(basicQueryFn2, {
+function MyQuery() {
+  return (
+    <>
+      <MyQueryState />
+      <MyQueryData />
+      <MyQueryDataSlice />
+      <MyQueryActions />
+    </>
+  );
+}
+
+const myQuery = createQuery(basicQueryFn2, {
   staleTime: 4000,
 });
-const useBasicQuery = basicQuery();
+const useMyQuery = myQuery();
 
-function SimpleQueryState() {
-  const queryState = useBasicQuery();
+function MyQueryState() {
+  const queryState = useMyQuery();
   return (
     <CardWithReRenderHighlight>
       <h2>queryState</h2>
@@ -63,8 +67,8 @@ function SimpleQueryState() {
   );
 }
 
-function SimpleQueryData() {
-  const queryState = useBasicQuery();
+function MyQueryData() {
+  const queryState = useMyQuery();
   return (
     <CardWithReRenderHighlight>
       <h2>queryState.data</h2>
@@ -72,8 +76,8 @@ function SimpleQueryData() {
     </CardWithReRenderHighlight>
   );
 }
-function SimpleQueryDataSlice() {
-  const queryState = useBasicQuery();
+function MyQueryDataSlice() {
+  const queryState = useMyQuery();
   return (
     <CardWithReRenderHighlight>
       <h2>queryState.data?.b</h2>
@@ -82,11 +86,11 @@ function SimpleQueryDataSlice() {
   );
 }
 
-function SimpleQueryActions() {
+function MyQueryActions() {
   return (
     <CardWithReRenderHighlight className="flex gap-3">
-      <button onClick={() => useBasicQuery.execute()}>Refetch</button>
-      <button onClick={() => useBasicQuery.invalidate()}>Invalidate</button>
+      <button onClick={() => useMyQuery.execute()}>Refetch</button>
+      <button onClick={() => useMyQuery.invalidate()}>Invalidate</button>
     </CardWithReRenderHighlight>
   );
 }
