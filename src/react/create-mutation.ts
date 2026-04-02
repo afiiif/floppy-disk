@@ -147,7 +147,7 @@ export const createMutation = <TData, TVariable = undefined, TError = Error>(
   const resolveFns = new Set<ResolveFn>([]);
 
   const store = initStore(initialState, options);
-  const useStore = () => useStoreState(store.getState(), store.subscribe);
+  const useStore = () => useStoreState(store);
 
   const execute = (variable: TVariable) => {
     let currentResolveFn: ResolveFn;

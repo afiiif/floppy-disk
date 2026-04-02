@@ -32,6 +32,6 @@ export const createStore = <TState extends Record<string, any>>(
   options?: InitStoreOptions<TState>,
 ) => {
   const store = initStore(initialState, options);
-  const useStore = () => useStoreState(store.getState(), store.subscribe);
+  const useStore = () => useStoreState(store);
   return Object.assign(useStore, store);
 };

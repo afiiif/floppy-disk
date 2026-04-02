@@ -80,15 +80,14 @@ export const useStoreStateProxy = <TState extends Record<string, any>>(storeStat
  * // Component will only re-render if `user.name` changes
  */
 export const useStoreState = <TState extends Record<string, any>>(
-  storeState: TState,
-  subscribe: StoreApi<TState>['subscribe'],
+  store: StoreApi<TState>,
 ): TState => {
-  const [trackedState, usedPathsRef] = useStoreStateProxy(storeState);
+  const [trackedState, usedPathsRef] = useStoreStateProxy(store.getState());
 
   const [, reRender] = useState({});
 
   useIsomorphicLayoutEffect(() => {
-    return subscribe((nextState, prevState, changedKeys) => {
+    return store.subscribe((nextState, prevState, changedKeys) => {
       const paths = compressPaths(usedPathsRef.current);
       for (const path of paths) {
         const rootKey = path[0] as keyof TState;
@@ -98,7 +97,7 @@ export const useStoreState = <TState extends Record<string, any>>(
         if (!Object.is(prevVal, nextVal)) return reRender({});
       }
     });
-  }, [subscribe]);
+  }, [store]);
 
   return trackedState;
 };
