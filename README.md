@@ -365,34 +365,39 @@ Revalidating dozens of previously viewed pages rarely provides value to the user
 
 ## SSR Guidance
 
-FloppyDisk is designed primarily for **client-side [sync/async] state**.
+Examples for using stores and queries in SSR with isolated data (no shared state between users).
 
-If your data is already fetched on the server (e.g. via SSR/ISR, Server Components, or Server Actions), then:
+### Initialize Store State from Server
 
-> **You most likely don't need this library.**
+```tsx
+const useCountStore = createStore({ count: 0 });
 
-This is the same philosophy as TanStack Query. 💡
+function Page({ initialCount }) {
+  const { count } = useCountStore({
+    initialState: { count: initialCount }, // e.g. 3
+  });
 
-In many cases, developers mix SSR/ISR with client-side state because they want:
+  return <>count is {count}</>; // Output: count is 3
+}
+```
 
-1. Data to be rendered into HTML on the server
-2. The ability to **revalidate it on the client**
+### Initialize Query Data from Server
 
-A common (but inefficient) approach is:
+```tsx
+async function MyServerComponent() {
+  const data = await getData(); // e.g. { count: 3 }
+  return <MyClientComponent initialData={data} />;
+}
 
-- fetch on the server
-- hydrate it into a client-side cache
-- then revalidate using a query library
+const myQuery = createQuery(getData);
+const useMyQuery = myQuery();
 
-While this works, it introduces additional complexity.
+function MyClientComponent({ initialData }) {
+  const { data } = useMyQuery({
+    initialData: initialData,
+    // initialDataIsStale: true <-- Optional, default to false (no immediate revalidation)
+  });
 
-Instead, we encourage a simpler approach:
-
-> If your data is fetched on the server, revalidate it using **your framework's built-in mechanism** (e.g. Next.js route revalidation).
-
-Because of this philosophy, FloppyDisk **does not support** hydrating server-fetched data into the client store.
-
-This keeps the mental model clean:
-
-- server data → handled by the framework
-- client async state → handled by FloppyDisk
+  return <>count is {data.count}</>; // Output: count is 3
+}
+```

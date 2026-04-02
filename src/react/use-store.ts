@@ -59,10 +59,35 @@ export const useStoreStateProxy = <TState extends Record<string, any>>(storeStat
   return [trackedState, usedPathsRef] as const;
 };
 
+export const NO_INITIAL_VALUE = {};
+
+export const useStoreStateWithInitializer = <TState extends Record<string, any>>(
+  store: StoreApi<TState>,
+  initialState = NO_INITIAL_VALUE as Partial<TState>,
+) => {
+  const initiatedAt = useRef(new WeakMap([[store, 0]]));
+  useIsomorphicLayoutEffect(() => {
+    if (initialState === NO_INITIAL_VALUE || initiatedAt.current.get(store)) return;
+    store.setState(initialState);
+    initiatedAt.current.set(store, Date.now());
+  }, [store, initialState]);
+
+  const storeState = store.getState();
+
+  const finalState =
+    initialState === NO_INITIAL_VALUE || initiatedAt.current.get(store)
+      ? storeState
+      : { ...storeState, ...initialState };
+
+  return [finalState, initiatedAt] as const;
+};
+
 /**
  * React hook for subscribing to a store using automatic dependency tracking.
  *
  * @param store - The store instance to subscribe to
+ * @param options - Optional configuration
+ * @param options.initialState - Initial state used on first render (and will also update the store state right after that)
  *
  * @returns A proxied version of the store state
  *
@@ -72,7 +97,7 @@ export const useStoreStateProxy = <TState extends Record<string, any>>(storeStat
  * - State must be treated as **immutable**:
  *   - Updates must replace objects rather than mutate them
  *   - Otherwise, changes may not be detected
- * - No selector or memoization is needed.
+ * - If provided, `initialState` will be applied **once per store instance**
  *
  * @example
  * const state = useStoreState(store);
@@ -81,8 +106,11 @@ export const useStoreStateProxy = <TState extends Record<string, any>>(storeStat
  */
 export const useStoreState = <TState extends Record<string, any>>(
   store: StoreApi<TState>,
+  options: { initialState?: Partial<TState> } = {},
 ): TState => {
-  const [trackedState, usedPathsRef] = useStoreStateProxy(store.getState());
+  const [state] = useStoreStateWithInitializer(store, options.initialState);
+
+  const [trackedState, usedPathsRef] = useStoreStateProxy(state);
 
   const [, reRender] = useState({});
 

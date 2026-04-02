@@ -49,7 +49,14 @@ export const createStores = <TState extends Record<string, any>, TKey extends Re
       stores.set(keyHash, store);
     }
 
-    const useStore = () => useStoreState(store);
+    const useStore = (options?: {
+      /**
+       * Initial state used on first render (and will also update the store state right after that)
+       *
+       *  If provided, `initialState` will be applied **once per store instance**
+       */
+      initialState?: Partial<TState>;
+    }) => useStoreState(store, options);
 
     return Object.assign(useStore, {
       ...store,

@@ -107,4 +107,61 @@ describe('createStore', () => {
     expect(bazRender).toBe(2);
     expect(fooAndBazRender).toBe(2);
   });
+
+  it('uses initialState on first render and initializes the store', () => {
+    const useStore = createStore({ foo: 0, bar: 'x' });
+
+    function MyComponent() {
+      const state = useStore({ initialState: { foo: 5 } });
+      return (
+        <div>
+          foo: {state.foo}, bar: {state.bar}
+        </div>
+      );
+    }
+
+    render(<MyComponent />);
+    expect(screen.getByText('foo: 5, bar: x')).toBeInTheDocument();
+    expect(useStore.getState().foo).toBe(5);
+    expect(useStore.getState().bar).toBe('x');
+  });
+
+  it('uses store state after initialization (not initialState)', () => {
+    const useStore = createStore({ count: 0 });
+
+    let renders = 0;
+    function Counter() {
+      const state = useStore({ initialState: { count: 5 } });
+      renders++;
+      return <div>count: {state.count}</div>;
+    }
+
+    render(<Counter />);
+    expect(renders).toBe(1);
+
+    act(() => {
+      useStore.setState({ count: 10 });
+    });
+    expect(screen.getByText('count: 10')).toBeInTheDocument();
+    expect(renders).toBe(2);
+  });
+
+  it('does not re-apply initialState on re-render', () => {
+    const useStore = createStore({ count: 0 });
+
+    function Counter({ value }: { value: number }) {
+      const state = useStore({ initialState: { count: value } });
+      return <div>count: {state.count}</div>;
+    }
+
+    const { rerender } = render(<Counter value={5} />);
+    expect(screen.getByText('count: 5')).toBeInTheDocument();
+
+    // Change initialState input
+    rerender(<Counter value={999} />);
+
+    // Should NOT override existing store state
+    expect(useStore.getState().count).toBe(5);
+    expect(screen.getByText('count: 5')).toBeInTheDocument();
+  });
 });

@@ -9,7 +9,13 @@ import {
   noop,
 } from '../vanilla.ts';
 import { useIsomorphicLayoutEffect } from './use-isomorphic-layout-effect.ts';
-import { compressPaths, getValueByPath, useStoreStateProxy } from './use-store.ts';
+import {
+  NO_INITIAL_VALUE,
+  compressPaths,
+  getValueByPath,
+  useStoreStateProxy,
+  useStoreStateWithInitializer,
+} from './use-store.ts';
 
 /**
  * Represents the state of a query.
@@ -622,7 +628,7 @@ export const createQuery = <TData, TVariable extends Record<string, any> = never
       internals.set(store, configureInternals(store, variable, variableHash));
     }
 
-    type UseStoreOptions = {
+    type UseQueryStoreOptions = {
       /**
        * Whether the query should be ravalidated automatically on mount.
        *
@@ -648,7 +654,37 @@ export const createQuery = <TData, TVariable extends Record<string, any> = never
        * // While loading userId=2, still show userId=1 data
        * useQuery({ id: userId }, { keepPreviousData: true });
        */ keepPreviousData?: boolean;
-    };
+    } & (
+      | {
+          /**
+           * Initial data used on first render (and will also update the store state right after that)
+           *
+           * If provided, `initialData` will be applied **once per query-store instance**
+           */
+          initialData: TData;
+
+          /**
+           * Whether the provided `initialData` should be treated as stale.
+           *
+           * @remarks
+           * - If `true`, a revalidation (refetch) will be triggered immediately.
+           * - If `false` (default), `initialData` is treated as fresh and will not be revalidated.
+           *
+           * @default false
+           *
+           * @example
+           * useQuery({
+           *   initialData: dataFromSSR,
+           *   initialDataIsStale: true, // force refetch
+           * });
+           */
+          initialDataIsStale?: boolean;
+        }
+      | {
+          initialData?: never;
+          initialDataIsStale?: never;
+        }
+    );
 
     /**
      * React hook for subscribing to query state.
@@ -673,10 +709,24 @@ export const createQuery = <TData, TVariable extends Record<string, any> = never
      * const { name } = useQuery().data.user;
      * // Subscribes to `data.user.name`
      */
-    const useStore = (options: UseStoreOptions = {}): TState => {
-      const { revalidateOnMount = true, keepPreviousData } = options;
+    const useStore = (options: UseQueryStoreOptions = {}): TState => {
+      const {
+        initialData = NO_INITIAL_VALUE as TData,
+        initialDataIsStale = false,
+        revalidateOnMount = true,
+        keepPreviousData,
+      } = options;
 
-      const storeState = store.getState();
+      const [storeState, initialDataInitiatedAt] = useStoreStateWithInitializer(
+        store,
+        initialData === NO_INITIAL_VALUE
+          ? undefined
+          : {
+              state: 'SUCCESS',
+              isSuccess: true,
+              data: initialData,
+            },
+      );
       const prevState = useRef<Partial<TState>>({});
 
       let storeStateToBeUsed = storeState;
@@ -719,8 +769,17 @@ export const createQuery = <TData, TVariable extends Record<string, any> = never
 
       // Execute queryFn on mount & on re-render
       useIsomorphicLayoutEffect(() => {
-        if (revalidateOnMount !== false) revalidate(store, variable, false);
-      }, [store, revalidateOnMount]);
+        if (revalidateOnMount !== false) {
+          if (!initialDataIsStale) {
+            const dataInitiatedAt = initialDataInitiatedAt.current.get(store);
+            if (dataInitiatedAt && dataInitiatedAt + staleTime > Date.now()) {
+              // Prevent immediate revalidation when initialData is set
+              return;
+            }
+          }
+          revalidate(store, variable, false);
+        }
+      }, [store, revalidateOnMount, initialDataIsStale]);
 
       if (keepPreviousData) {
         // eslint-disable-next-line @typescript-eslint/no-unused-expressions

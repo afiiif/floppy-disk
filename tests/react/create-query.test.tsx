@@ -972,4 +972,88 @@ describe('createQuery', () => {
 
     spy.mockRestore();
   });
+
+  it('uses initialData on first render and initializes the query-store', async () => {
+    const queryFn = vi.fn(async () => ({ x: 1 }));
+    const query = createQuery(queryFn);
+
+    const { result } = renderHook(() => {
+      const useQuery = query();
+      return useQuery({
+        initialData: { x: 3 },
+      });
+    });
+
+    expect(result.current).toMatchObject({
+      state: 'SUCCESS',
+      isSuccess: true,
+      data: { x: 3 },
+      dataUpdatedAt: undefined,
+      isError: false,
+      error: undefined,
+    });
+    expect(queryFn).not.toHaveBeenCalled(); // No revalidation triggered
+
+    expect(query().getState()).toMatchObject({
+      state: 'SUCCESS',
+      isSuccess: true,
+      data: { x: 3 },
+      dataUpdatedAt: undefined,
+      isError: false,
+      error: undefined,
+    });
+  });
+
+  it('uses initialData and revalidate', async () => {
+    let resolveFn: (value: { x: number }) => void;
+    const queryFn = vi.fn(() => new Promise<{ x: number }>((resolve) => (resolveFn = resolve)));
+    const query = createQuery(queryFn);
+
+    const { result } = renderHook(() => {
+      const useQuery = query();
+      return useQuery({
+        initialData: { x: 3 },
+        initialDataIsStale: true,
+      });
+    });
+
+    expect(result.current).toMatchObject({
+      state: 'SUCCESS',
+      isSuccess: true,
+      data: { x: 3 },
+      dataUpdatedAt: undefined,
+    });
+    expect(queryFn).toHaveBeenCalledTimes(1); // Revalidation triggered
+
+    await act(async () => {
+      resolveFn({ x: 33 });
+    });
+    expect(result.current).toMatchObject({
+      isPending: false,
+      isRevalidating: false,
+      isRetrying: false,
+      retryCount: 0,
+      state: 'SUCCESS',
+      isSuccess: true,
+      isError: false,
+      data: { x: 33 },
+      dataUpdatedAt: expect.any(Number),
+      error: undefined,
+      errorUpdatedAt: undefined,
+    });
+
+    expect(query().getState()).toMatchObject({
+      isPending: false,
+      isRevalidating: false,
+      isRetrying: false,
+      retryCount: 0,
+      state: 'SUCCESS',
+      isSuccess: true,
+      isError: false,
+      data: { x: 33 },
+      dataUpdatedAt: expect.any(Number),
+      error: undefined,
+      errorUpdatedAt: undefined,
+    });
+  });
 });
