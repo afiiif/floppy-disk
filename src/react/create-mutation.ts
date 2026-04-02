@@ -1,5 +1,5 @@
-import { type InitStoreOptions, type SetState, initStore, noop } from '../vanilla.ts';
-import { useStoreState } from './use-store.ts';
+import { type InitStoreOptions, type SetState, initStore, noop } from "../vanilla.ts";
+import { useStoreState } from "./use-store.ts";
 
 /**
  * Represents the state of a mutation.
@@ -20,7 +20,7 @@ export type MutationState<TData, TVariable, TError> = {
   isPending: boolean;
 } & (
   | {
-      state: 'INITIAL';
+      state: "INITIAL";
       isSuccess: false;
       isError: false;
       variable: undefined;
@@ -30,7 +30,7 @@ export type MutationState<TData, TVariable, TError> = {
       errorUpdatedAt: undefined;
     }
   | {
-      state: 'SUCCESS';
+      state: "SUCCESS";
       isSuccess: true;
       isError: false;
       variable: TVariable;
@@ -40,7 +40,7 @@ export type MutationState<TData, TVariable, TError> = {
       errorUpdatedAt: undefined;
     }
   | {
-      state: 'ERROR';
+      state: "ERROR";
       isSuccess: false;
       isError: true;
       variable: TVariable;
@@ -52,7 +52,7 @@ export type MutationState<TData, TVariable, TError> = {
 );
 
 export const INITIAL_STATE = {
-  state: 'INITIAL',
+  state: "INITIAL",
   isPending: false,
   isSuccess: false,
   isError: false,
@@ -155,8 +155,8 @@ export const createMutation = <TData, TVariable = undefined, TError = Error>(
     const stateBeforeExecute = store.getState();
     if (stateBeforeExecute.isPending) {
       console.warn(
-        'A mutation was executed while a previous execution is still pending. ' +
-          'The previous execution will be ignored (latest execution wins).',
+        "A mutation was executed while a previous execution is still pending. " +
+          "The previous execution will be ignored (latest execution wins).",
       );
     }
     store.setState({ isPending: true });
@@ -169,7 +169,7 @@ export const createMutation = <TData, TVariable = undefined, TError = Error>(
             return resolve({ data, variable });
           }
           store.setState({
-            state: 'SUCCESS',
+            state: "SUCCESS",
             isPending: false,
             isSuccess: true,
             isError: false,
@@ -188,7 +188,7 @@ export const createMutation = <TData, TVariable = undefined, TError = Error>(
             return resolve({ error, variable });
           }
           store.setState({
-            state: 'ERROR',
+            state: "ERROR",
             isPending: false,
             isSuccess: false,
             isError: true,
@@ -230,7 +230,7 @@ export const createMutation = <TData, TVariable = undefined, TError = Error>(
      * - Prefer using provided mutation actions (`execute`, `reset`) instead.
      */
     setState: (value: SetState<TState>) => {
-      console.debug('Manual setState (not via provided actions) on mutation store');
+      console.debug("Manual setState (not via provided actions) on mutation store");
       store.setState(value);
     },
 
@@ -262,7 +262,7 @@ export const createMutation = <TData, TVariable = undefined, TError = Error>(
     reset: () => {
       if (store.getState().isPending) {
         console.warn(
-          'Mutation state was reset while a request is still pending. The request will continue, but its result may override the reset state.',
+          "Mutation state was reset while a request is still pending. The request will continue, but its result may override the reset state.",
         );
       }
       store.setState(initialState);

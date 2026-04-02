@@ -1,17 +1,17 @@
-import { act, render, screen } from '@testing-library/react';
-import { describe, expect, it } from 'vitest';
-import { createStore } from 'floppy-disk/react';
+import { act, render, screen } from "@testing-library/react";
+import { describe, expect, it } from "vitest";
+import { createStore } from "floppy-disk/react";
 
-describe('createStore', () => {
-  it('creates a store hook and api object', () => {
+describe("createStore", () => {
+  it("creates a store hook and api object", () => {
     const store = createStore({ count: 0 });
-    expect(typeof store).toBe('function');
-    expect(typeof store.getState).toBe('function');
-    expect(typeof store.setState).toBe('function');
-    expect(typeof store.subscribe).toBe('function');
+    expect(typeof store).toBe("function");
+    expect(typeof store.getState).toBe("function");
+    expect(typeof store.setState).toBe("function");
+    expect(typeof store.subscribe).toBe("function");
   });
 
-  it('re-renders correctly for selector and non-selector usage (foo/bar)', () => {
+  it("re-renders correctly for selector and non-selector usage (foo/bar)", () => {
     const useStore = createStore({
       foo: 2,
       bar: 7,
@@ -73,10 +73,10 @@ describe('createStore', () => {
       </>,
     );
 
-    expect(screen.getByText('full: 2-7-99')).toBeInTheDocument();
-    expect(screen.getByText('foo: 2')).toBeInTheDocument();
-    expect(screen.getByText('bar: 7')).toBeInTheDocument();
-    expect(screen.getByText('baz.a.b: 99')).toBeInTheDocument();
+    expect(screen.getByText("full: 2-7-99")).toBeInTheDocument();
+    expect(screen.getByText("foo: 2")).toBeInTheDocument();
+    expect(screen.getByText("bar: 7")).toBeInTheDocument();
+    expect(screen.getByText("baz.a.b: 99")).toBeInTheDocument();
 
     expect(fullRender).toBe(1);
     expect(fooRender).toBe(1);
@@ -87,10 +87,10 @@ describe('createStore', () => {
     act(() => {
       useStore.setState({ foo: 3 });
     });
-    expect(screen.getByText('full: 3-7-99')).toBeInTheDocument();
-    expect(screen.getByText('foo: 3')).toBeInTheDocument();
-    expect(screen.getByText('bar: 7')).toBeInTheDocument();
-    expect(screen.getByText('baz.a.b: 99')).toBeInTheDocument();
+    expect(screen.getByText("full: 3-7-99")).toBeInTheDocument();
+    expect(screen.getByText("foo: 3")).toBeInTheDocument();
+    expect(screen.getByText("bar: 7")).toBeInTheDocument();
+    expect(screen.getByText("baz.a.b: 99")).toBeInTheDocument();
 
     expect(fullRender).toBe(2);
     expect(fooRender).toBe(2);
@@ -108,8 +108,8 @@ describe('createStore', () => {
     expect(fooAndBazRender).toBe(2);
   });
 
-  it('uses initialState on first render and initializes the store', () => {
-    const useStore = createStore({ foo: 0, bar: 'x' });
+  it("uses initialState on first render and initializes the store", () => {
+    const useStore = createStore({ foo: 0, bar: "x" });
 
     function MyComponent() {
       const state = useStore({ initialState: { foo: 5 } });
@@ -121,12 +121,12 @@ describe('createStore', () => {
     }
 
     render(<MyComponent />);
-    expect(screen.getByText('foo: 5, bar: x')).toBeInTheDocument();
+    expect(screen.getByText("foo: 5, bar: x")).toBeInTheDocument();
     expect(useStore.getState().foo).toBe(5);
-    expect(useStore.getState().bar).toBe('x');
+    expect(useStore.getState().bar).toBe("x");
   });
 
-  it('uses store state after initialization (not initialState)', () => {
+  it("uses store state after initialization (not initialState)", () => {
     const useStore = createStore({ count: 0 });
 
     let renders = 0;
@@ -142,11 +142,11 @@ describe('createStore', () => {
     act(() => {
       useStore.setState({ count: 10 });
     });
-    expect(screen.getByText('count: 10')).toBeInTheDocument();
+    expect(screen.getByText("count: 10")).toBeInTheDocument();
     expect(renders).toBe(2);
   });
 
-  it('does not re-apply initialState on re-render', () => {
+  it("does not re-apply initialState on re-render", () => {
     const useStore = createStore({ count: 0 });
 
     function Counter({ value }: { value: number }) {
@@ -155,13 +155,13 @@ describe('createStore', () => {
     }
 
     const { rerender } = render(<Counter value={5} />);
-    expect(screen.getByText('count: 5')).toBeInTheDocument();
+    expect(screen.getByText("count: 5")).toBeInTheDocument();
 
     // Change initialState input
     rerender(<Counter value={999} />);
 
     // Should NOT override existing store state
     expect(useStore.getState().count).toBe(5);
-    expect(screen.getByText('count: 5')).toBeInTheDocument();
+    expect(screen.getByText("count: 5")).toBeInTheDocument();
   });
 });

@@ -1,7 +1,7 @@
 /**
  * Check if this runs on browser.
  */
-export const isClient = typeof window !== 'undefined' && !('Deno' in window);
+export const isClient = typeof window !== "undefined" && !("Deno" in window);
 
 /**
  * Empty function.
@@ -16,7 +16,7 @@ export const getValue = <T, P extends any[]>(
   valueOrComputeValueFn: T | ((...params: P) => T),
   ...params: P
 ) => {
-  if (typeof valueOrComputeValueFn === 'function') {
+  if (typeof valueOrComputeValueFn === "function") {
     return (valueOrComputeValueFn as (...params: P) => T)(...params);
   }
   return valueOrComputeValueFn;

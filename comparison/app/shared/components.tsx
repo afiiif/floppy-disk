@@ -1,11 +1,11 @@
-import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react';
-import { useSearchParams } from 'react-router';
+import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from "react";
+import { useSearchParams } from "react-router";
 
-const initialRenderCount = process.env.NODE_ENV === 'development' ? -1 : 0;
+const initialRenderCount = process.env.NODE_ENV === "development" ? -1 : 0;
 
 export function CardWithReRenderHighlight({
   children,
-  className = '',
+  className = "",
 }: {
   children?: ReactNode;
   className?: string;
@@ -16,10 +16,10 @@ export function CardWithReRenderHighlight({
   useEffect(() => {
     renderCount.current++;
     const elm = ref.current;
-    elm.classList.remove('animate-render');
+    elm.classList.remove("animate-render");
     if (renderCount.current > 1) {
       void elm.offsetWidth; // force reflow
-      elm.classList.add('animate-render');
+      elm.classList.add("animate-render");
     }
   });
 
@@ -33,7 +33,7 @@ export function CardWithReRenderHighlight({
 
 export function Tabs({
   menu,
-  urlParamKey = 'activeTab',
+  urlParamKey = "activeTab",
 }: {
   menu: Array<{ label: string; content: ReactNode }>;
   urlParamKey?: string;
@@ -63,7 +63,7 @@ export function Tabs({
               setTabIndex(i);
               const url = new URL(window.location.href);
               setSearchParams(i ? { [urlParamKey]: menuItem.label } : {});
-              window.history.replaceState({}, '', url);
+              window.history.replaceState({}, "", url);
             }}
           >
             {menuItem.label}

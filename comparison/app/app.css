@@ -1,4 +1,4 @@
-@import 'tailwindcss';
+@import "tailwindcss";
 
 html,
 body {
@@ -86,7 +86,7 @@ button {
     &[aria-current] {
       @apply border-mist-400 border-b-transparent text-mist-400;
       &::before {
-        content: '';
+        content: "";
         @apply block absolute inset-x-0 -bottom-0.5 h-1 bg-[#21252b];
       }
     }

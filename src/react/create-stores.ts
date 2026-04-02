@@ -1,5 +1,5 @@
-import { type InitStoreOptions, type StoreApi, getHash, initStore } from '../vanilla.ts';
-import { useStoreState } from './use-store.ts';
+import { type InitStoreOptions, type StoreApi, getHash, initStore } from "../vanilla.ts";
+import { useStoreState } from "./use-store.ts";
 
 /**
  * Creates a factory for multiple stores identified by a key.
@@ -63,7 +63,7 @@ export const createStores = <TState extends Record<string, any>, TKey extends Re
       delete: () => {
         if (store.getSubscribers().size > 0) {
           console.warn(
-            'Cannot delete store while it still has active subscribers. Unsubscribe all listeners before deleting the store.',
+            "Cannot delete store while it still has active subscribers. Unsubscribe all listeners before deleting the store.",
           );
           return false;
         }

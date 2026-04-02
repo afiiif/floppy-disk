@@ -1,17 +1,17 @@
-import { create } from 'zustand';
+import { create } from "zustand";
 
-import { CardWithReRenderHighlight } from '../shared/components';
+import { CardWithReRenderHighlight } from "../shared/components";
 
 export function meta() {
-  return [{ title: 'Zustand Store' }, { name: 'description', content: 'Zustand store' }];
+  return [{ title: "Zustand Store" }, { name: "description", content: "Zustand store" }];
 }
 
 const useMyStore = create(() => ({
   foo: 0,
-  bar: 'lorem-ipsum',
+  bar: "lorem-ipsum",
 }));
 
-useMyStore.subscribe((state) => console.info('State updated', state));
+useMyStore.subscribe((state) => console.info("State updated", state));
 
 export default function StoreZustand() {
   return (
@@ -29,7 +29,7 @@ function StoreStateConsumer1() {
   const value = useMyStore();
   return (
     <CardWithReRenderHighlight>
-      <h2>{'useMyStore()'}</h2>
+      <h2>{"useMyStore()"}</h2>
       <pre>{JSON.stringify(value, null, 2)}</pre>
     </CardWithReRenderHighlight>
   );
@@ -39,7 +39,7 @@ function StoreStateConsumer2() {
   const value = useMyStore((state) => state.foo);
   return (
     <CardWithReRenderHighlight>
-      <h2>{'useMyStore(state => state.foo)'}</h2>
+      <h2>{"useMyStore(state => state.foo)"}</h2>
       <pre>{JSON.stringify(value)}</pre>
     </CardWithReRenderHighlight>
   );
@@ -49,7 +49,7 @@ function StoreStateConsumer3() {
   const value = useMyStore((state) => state.bar);
   return (
     <CardWithReRenderHighlight>
-      <h2>{'useMyStore(state => state.bar)'}</h2>
+      <h2>{"useMyStore(state => state.bar)"}</h2>
       <pre>{JSON.stringify(value)}</pre>
     </CardWithReRenderHighlight>
   );

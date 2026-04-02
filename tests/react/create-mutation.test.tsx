@@ -1,15 +1,15 @@
-import { act, render, renderHook } from '@testing-library/react';
-import { describe, expect, it, vi } from 'vitest';
-import { createMutation } from 'floppy-disk/react';
+import { act, render, renderHook } from "@testing-library/react";
+import { describe, expect, it, vi } from "vitest";
+import { createMutation } from "floppy-disk/react";
 
-describe('createMutation', () => {
-  it('returns initial state correctly', () => {
-    const useMutation = createMutation(async () => 'ok');
+describe("createMutation", () => {
+  it("returns initial state correctly", () => {
+    const useMutation = createMutation(async () => "ok");
 
     const { result } = renderHook(() => useMutation());
 
     expect(result.current).toMatchObject({
-      state: 'INITIAL',
+      state: "INITIAL",
       isPending: false,
       isSuccess: false,
       isError: false,
@@ -18,7 +18,7 @@ describe('createMutation', () => {
     });
   });
 
-  it('handles success flow correctly', async () => {
+  it("handles success flow correctly", async () => {
     let resolveFn: (value: string) => void;
     const mutationFn = vi.fn(() => new Promise<string>((resolve) => (resolveFn = resolve)));
     const onSuccess = vi.fn();
@@ -32,52 +32,52 @@ describe('createMutation', () => {
     });
 
     const { result } = renderHook(() => useMutation());
-    expect(result.current.state).toBe('INITIAL');
+    expect(result.current.state).toBe("INITIAL");
     expect(result.current.isPending).toBe(false);
 
     let promise: Promise<any>;
     act(() => {
-      promise = useMutation.execute('input');
+      promise = useMutation.execute("input");
     });
     expect(result.current.isPending).toBe(true);
-    expect(result.current.state).toBe('INITIAL');
+    expect(result.current.state).toBe("INITIAL");
 
     let res: any;
     await act(async () => {
-      resolveFn('output');
+      resolveFn("output");
       res = await promise;
     });
     expect(res).toEqual({
-      data: 'output',
-      variable: 'input',
+      data: "output",
+      variable: "input",
     });
 
     expect(result.current).toMatchObject({
-      state: 'SUCCESS',
+      state: "SUCCESS",
       isPending: false,
       isSuccess: true,
       isError: false,
-      data: 'output',
+      data: "output",
       dataUpdatedAt: expect.any(Number),
-      variable: 'input',
+      variable: "input",
     });
 
     const state = useMutation.getState();
     expect(state).toMatchObject({
-      state: 'SUCCESS',
+      state: "SUCCESS",
       isPending: false,
       isSuccess: true,
       isError: false,
-      data: 'output',
-      variable: 'input',
+      data: "output",
+      variable: "input",
     });
 
-    expect(onSuccess).toHaveBeenCalledWith('output', 'input', expect.any(Object));
+    expect(onSuccess).toHaveBeenCalledWith("output", "input", expect.any(Object));
     expect(onError).not.toHaveBeenCalled();
-    expect(onSettled).toHaveBeenCalledWith('input', expect.any(Object));
+    expect(onSettled).toHaveBeenCalledWith("input", expect.any(Object));
   });
 
-  it('handles error flow correctly', async () => {
+  it("handles error flow correctly", async () => {
     let rejectFn: (error: any) => void;
     const mutationFn = vi.fn(() => new Promise<string>((_, reject) => (rejectFn = reject)));
     const onSuccess = vi.fn();
@@ -91,17 +91,17 @@ describe('createMutation', () => {
     });
 
     const { result } = renderHook(() => useMutation());
-    expect(result.current.state).toBe('INITIAL');
+    expect(result.current.state).toBe("INITIAL");
     expect(result.current.isPending).toBe(false);
 
     let promise: Promise<any>;
     act(() => {
-      promise = useMutation.execute('input');
+      promise = useMutation.execute("input");
     });
     expect(result.current.isPending).toBe(true);
-    expect(result.current.state).toBe('INITIAL');
+    expect(result.current.state).toBe("INITIAL");
 
-    const error = new Error('boom');
+    const error = new Error("boom");
     let res: any;
     await act(async () => {
       rejectFn(error);
@@ -109,38 +109,38 @@ describe('createMutation', () => {
     });
     expect(res).toEqual({
       error,
-      variable: 'input',
+      variable: "input",
     });
 
     expect(result.current).toMatchObject({
-      state: 'ERROR',
+      state: "ERROR",
       isPending: false,
       isSuccess: false,
       isError: true,
       errorUpdatedAt: expect.any(Number),
-      variable: 'input',
+      variable: "input",
     });
     expect(result.current.error).toBeInstanceOf(Error);
-    expect(result.current.error).toHaveProperty('message', 'boom');
+    expect(result.current.error).toHaveProperty("message", "boom");
 
     const state = useMutation.getState();
     expect(state).toMatchObject({
-      state: 'ERROR',
+      state: "ERROR",
       isPending: false,
       isSuccess: false,
       isError: true,
       error,
-      variable: 'input',
+      variable: "input",
     });
 
     expect(onSuccess).not.toHaveBeenCalled();
-    expect(onError).toHaveBeenCalledWith(error, 'input', expect.any(Object));
-    expect(onSettled).toHaveBeenCalledWith('input', expect.any(Object));
+    expect(onError).toHaveBeenCalledWith(error, "input", expect.any(Object));
+    expect(onSettled).toHaveBeenCalledWith("input", expect.any(Object));
   });
 
-  it('supports promise chaining (latest execution wins)', async () => {
-    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
-    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+  it("supports promise chaining (latest execution wins)", async () => {
+    const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+    const errorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
 
     const settleFns: Array<[(v: number) => void, (err: any) => void]> = [];
     const mutationFn = vi.fn(
@@ -164,32 +164,32 @@ describe('createMutation', () => {
     const p3 = useMutation.execute(3);
     const p4 = useMutation.execute(4);
 
-    settleFns.shift()![1](new Error('333'));
-    settleFns.shift()![1](new Error('444'));
+    settleFns.shift()![1](new Error("333"));
+    settleFns.shift()![1](new Error("444"));
 
     const res3 = await p3;
     const res4 = await p4;
     expect(res3).toEqual(res4);
     expect(res3.data).toBe(undefined);
-    expect(res3.error?.message).toBe('444');
+    expect(res3.error?.message).toBe("444");
     expect(errorSpy).toHaveBeenCalledTimes(1);
 
     warnSpy.mockRestore();
     errorSpy.mockRestore();
   });
 
-  it('resets state correctly', async () => {
-    const mutation = createMutation(async (_: number) => 'ok');
+  it("resets state correctly", async () => {
+    const mutation = createMutation(async (_: number) => "ok");
 
     await act(async () => {
       await mutation.execute(1);
     });
-    expect(mutation.getState().state).toBe('SUCCESS');
+    expect(mutation.getState().state).toBe("SUCCESS");
 
     mutation.reset();
     const state = mutation.getState();
     expect(state).toMatchObject({
-      state: 'INITIAL',
+      state: "INITIAL",
       isPending: false,
       isSuccess: false,
       isError: false,
@@ -197,15 +197,15 @@ describe('createMutation', () => {
       error: undefined,
     });
 
-    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
     mutation.execute(2);
     mutation.reset();
     expect(warnSpy).toHaveBeenCalledTimes(1);
     warnSpy.mockRestore();
   });
 
-  it('allows manual setState with debug log', () => {
-    const debugSpy = vi.spyOn(console, 'debug').mockImplementation(() => {});
+  it("allows manual setState with debug log", () => {
+    const debugSpy = vi.spyOn(console, "debug").mockImplementation(() => {});
 
     const mutation = createMutation(async () => 1);
 
@@ -216,7 +216,7 @@ describe('createMutation', () => {
     debugSpy.mockRestore();
   });
 
-  it('avoids unnecessary re-renders', async () => {
+  it("avoids unnecessary re-renders", async () => {
     let resolveFn: (v: number) => void;
     const useMutation = createMutation(
       (_: number) => new Promise<number>((resolve) => (resolveFn = resolve)),
@@ -228,7 +228,7 @@ describe('createMutation', () => {
     function FullComp() {
       renderAllState++;
       const state = useMutation(); // no selector
-      return <div>{state.isPending ? 'pending' : state.data}</div>;
+      return <div>{state.isPending ? "pending" : state.data}</div>;
     }
 
     function SelectorComp() {
@@ -262,7 +262,7 @@ describe('createMutation', () => {
     expect(renderOnlyData).toBe(2); // data changed → re-render
   });
 
-  it('passes correct stateBeforeExecute across multiple executions', async () => {
+  it("passes correct stateBeforeExecute across multiple executions", async () => {
     const mutationFn = vi.fn(async (variable) => `ok-${variable}`);
     const onSuccess = vi.fn();
     const mutation = createMutation(mutationFn, { onSuccess });
@@ -271,41 +271,41 @@ describe('createMutation', () => {
     await act(async () => {
       res1 = await mutation.execute(111);
     });
-    expect(res1).toEqual({ data: 'ok-111', variable: 111 });
+    expect(res1).toEqual({ data: "ok-111", variable: 111 });
 
     expect(mutationFn).toHaveBeenNthCalledWith(
       1,
       111,
-      expect.objectContaining({ state: 'INITIAL' }),
+      expect.objectContaining({ state: "INITIAL" }),
     );
     expect(onSuccess).toHaveBeenCalledWith(
-      'ok-111',
+      "ok-111",
       111,
-      expect.objectContaining({ state: 'INITIAL' }),
+      expect.objectContaining({ state: "INITIAL" }),
     );
 
     let res2: any;
     await act(async () => {
       res2 = await mutation.execute(222);
     });
-    expect(res2).toEqual({ data: 'ok-222', variable: 222 });
+    expect(res2).toEqual({ data: "ok-222", variable: 222 });
 
     expect(mutationFn).toHaveBeenNthCalledWith(
       2,
       222,
-      expect.objectContaining({ state: 'SUCCESS' }),
+      expect.objectContaining({ state: "SUCCESS" }),
     );
     expect(onSuccess).toHaveBeenCalledWith(
-      'ok-222',
+      "ok-222",
       222,
-      expect.objectContaining({ state: 'SUCCESS' }),
+      expect.objectContaining({ state: "SUCCESS" }),
     );
   });
 
-  it('logs error when onError is not provided', async () => {
-    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+  it("logs error when onError is not provided", async () => {
+    const errorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
 
-    const error = new Error('boom');
+    const error = new Error("boom");
     const mutation = createMutation(async () => {
       throw error;
     });
@@ -319,7 +319,7 @@ describe('createMutation', () => {
     const loggedState = errorSpy.mock.calls[0][0];
     expect(loggedState).toMatchObject({
       variable: undefined,
-      state: 'ERROR',
+      state: "ERROR",
       isSuccess: false,
       isError: true,
       error,

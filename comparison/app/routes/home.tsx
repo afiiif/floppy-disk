@@ -1,7 +1,7 @@
 export function meta() {
   return [
-    { title: 'FloppyDisk.ts Comparison' },
-    { name: 'description', content: 'FloppyDisk.ts comparison with Zustand & TanStack-Query' },
+    { title: "FloppyDisk.ts Comparison" },
+    { name: "description", content: "FloppyDisk.ts comparison with Zustand & TanStack-Query" },
   ];
 }
 
@@ -20,13 +20,13 @@ build/client/a____s/react-B2fpI5mz.js               11.19 kB │ gzip:  3.80 kB
 build/client/a____s/async-tanstack-CdGfALV5.js      43.90 kB │ gzip: 12.62 kB
 build/client/a____s/chunk-UVKPFVEO-BCVTWmlK.js     126.29 kB │ gzip: 42.59 kB
 build/client/a____s/entry.client-CMKBzKJ-.js       190.57 kB │ gzip: 60.05 kB
-✓ built in 715ms`.split('\n');
+✓ built in 715ms`.split("\n");
 
 export default function Home() {
   return (
     <div className="leading-[20px]">
       <p className="pb-6">
-        I built a library that <strong>could replace</strong> Zustand and TanStack-Query.{' '}
+        I built a library that <strong>could replace</strong> Zustand and TanStack-Query.{" "}
         <span className="inline-block">Bold claim, I know.</span> Let's compare!
       </p>
 
@@ -34,16 +34,16 @@ export default function Home() {
         <div className="whitespace-pre min-w-[467px] space-y-1">
           {buildOutput.map((line, i) => {
             let className: string | undefined = undefined;
-            let emoji = '';
-            if (line.includes('floppy-disk')) {
-              className = 'bg-green-500/10 text-green-300';
-              emoji = ' 🎉';
-            } else if (line.includes('zustand') || line.includes('tanstack')) {
-              className = 'bg-orange-500/15 text-orange-400';
+            let emoji = "";
+            if (line.includes("floppy-disk")) {
+              className = "bg-green-500/10 text-green-300";
+              emoji = " 🎉";
+            } else if (line.includes("zustand") || line.includes("tanstack")) {
+              className = "bg-orange-500/15 text-orange-400";
             }
             return (
               <div key={i} className={className}>
-                {line.replace('____s', 'ssets').replace('build/client', '  ')}
+                {line.replace("____s", "ssets").replace("build/client", "  ")}
                 {emoji}
               </div>
             );
@@ -52,7 +52,7 @@ export default function Home() {
       </section>
 
       <p className="pt-6">
-        This site focuses on comparing bundle size while demonstrating{' '}
+        This site focuses on comparing bundle size while demonstrating{" "}
         <span className="inline-block font-bold">equivalent functionality</span>.
       </p>
 

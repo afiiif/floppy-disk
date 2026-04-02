@@ -1,5 +1,5 @@
-import { useEffect, useLayoutEffect } from 'react';
-import { isClient } from '../vanilla.ts';
+import { useEffect, useLayoutEffect } from "react";
+import { isClient } from "../vanilla.ts";
 
 /**
  * Does exactly same as `useLayoutEffect`.\

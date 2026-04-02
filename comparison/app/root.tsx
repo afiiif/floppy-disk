@@ -7,21 +7,21 @@ import {
   Scripts,
   ScrollRestoration,
   useSearchParams,
-} from 'react-router';
+} from "react-router";
 
-import type { Route } from './+types/root';
-import './app.css';
+import type { Route } from "./+types/root";
+import "./app.css";
 
 export const links: Route.LinksFunction = () => [
-  { rel: 'preconnect', href: 'https://fonts.googleapis.com' },
+  { rel: "preconnect", href: "https://fonts.googleapis.com" },
   {
-    rel: 'preconnect',
-    href: 'https://fonts.gstatic.com',
-    crossOrigin: 'anonymous',
+    rel: "preconnect",
+    href: "https://fonts.gstatic.com",
+    crossOrigin: "anonymous",
   },
   {
-    rel: 'stylesheet',
-    href: 'https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap',
+    rel: "stylesheet",
+    href: "https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap",
   },
 ];
 
@@ -33,7 +33,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <Meta />
         <Links />
-        {process.env.NODE_ENV === 'production' && (
+        {process.env.NODE_ENV === "production" && (
           <link rel="icon" href="/floppy-disk/favicon.ico" />
         )}
       </head>
@@ -63,9 +63,9 @@ export default function App() {
             </div>
             <div className="flex">
               <div>
-                {' '}
+                {" "}
                 <span className="sm:hidden">├</span>
-                <span className="hidden sm:inline">└</span>──{' '}
+                <span className="hidden sm:inline">└</span>──{" "}
               </div>
               <NavLink to="/store/floppy-disk">FloppyDisk's store</NavLink>
             </div>
@@ -74,13 +74,13 @@ export default function App() {
             <div className="hidden sm:block"> .</div>
             <div className="flex">
               <div> ├── </div>
-              <NavLink to={{ pathname: '/async/tanstack', search: searchParams.toString() }}>
+              <NavLink to={{ pathname: "/async/tanstack", search: searchParams.toString() }}>
                 TanStack's query & mutation
               </NavLink>
             </div>
             <div className="flex">
               <div> └── </div>
-              <NavLink to={{ pathname: '/async/floppy-disk', search: searchParams.toString() }}>
+              <NavLink to={{ pathname: "/async/floppy-disk", search: searchParams.toString() }}>
                 FloppyDisk's query & mutation
               </NavLink>
             </div>
@@ -96,14 +96,14 @@ export default function App() {
 }
 
 export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
-  let message = 'Oops!';
-  let details = 'An unexpected error occurred.';
+  let message = "Oops!";
+  let details = "An unexpected error occurred.";
   let stack: string | undefined;
 
   if (isRouteErrorResponse(error)) {
-    message = error.status === 404 ? '404' : 'Error';
+    message = error.status === 404 ? "404" : "Error";
     details =
-      error.status === 404 ? 'The requested page could not be found.' : error.statusText || details;
+      error.status === 404 ? "The requested page could not be found." : error.statusText || details;
   } else if (import.meta.env.DEV && error && error instanceof Error) {
     details = error.message;
     stack = error.stack;

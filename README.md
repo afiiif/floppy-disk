@@ -18,11 +18,11 @@ npm install floppy-disk
 Here's how to create and use a store:
 
 ```tsx
-import { createStore } from 'floppy-disk/react';
+import { createStore } from "floppy-disk/react";
 
 const useDigimon = createStore({
   age: 7,
-  level: 'Rookie',
+  level: "Rookie",
 });
 ```
 
@@ -57,10 +57,10 @@ function Control() {
 const evolve = () => {
   const { level } = useDigimon.getState();
 
-  const order = ['In-Training', 'Rookie', 'Champion', 'Ultimate'];
+  const order = ["In-Training", "Rookie", "Champion", "Ultimate"];
   const nextLevel = order[order.indexOf(level) + 1];
 
-  if (!nextLevel) return console.warn('Already at ultimate level');
+  if (!nextLevel) return console.warn("Already at ultimate level");
 
   useDigimon.setState({ level: nextLevel });
 };
@@ -74,7 +74,7 @@ You can subscribe manually:
 
 ```tsx
 const unsubscribe = useMyStore.subscribe((state, prev) => {
-  console.log('New state:', state);
+  console.log("New state:", state);
 });
 
 // Later
@@ -88,16 +88,16 @@ const useTowerDefense = createStore(
   { archers: 3, mages: 1, barracks: 2, artillery: 1 },
   {
     onFirstSubscribe: () => {
-      console.log('First subscriber! We’re officially popular 🎉');
+      console.log("First subscriber! We’re officially popular 🎉");
     },
     onSubscribe: () => {
-      console.log('New subscriber joined. Welcome aboard 🫡');
+      console.log("New subscriber joined. Welcome aboard 🫡");
     },
     onUnsubscribe: () => {
-      console.log('Subscriber left... was it something I said? 😭');
+      console.log("Subscriber left... was it something I said? 😭");
     },
     onLastUnsubscribe: () => {
-      console.log('Everyone left. Guess I’ll just exist quietly now...');
+      console.log("Everyone left. Guess I’ll just exist quietly now...");
     },
   },
 );
@@ -212,7 +212,7 @@ If you need retry mechanism, then you can always add it manually.
 Create a query using `createQuery`:
 
 ```tsx
-import { createQuery } from 'floppy-disk/react';
+import { createQuery } from "floppy-disk/react";
 
 const myCoolQuery = createQuery(
   myAsyncFn,
@@ -225,7 +225,7 @@ const useMyCoolQuery = myCoolQuery();
 
 function MyComponent() {
   const query = useMyCoolQuery();
-  if (query.state === 'INITIAL') return <div>Loading...</div>;
+  if (query.state === "INITIAL") return <div>Loading...</div>;
   if (query.error) return <div>Error: {query.error.message}</div>;
   return <div>{JSON.stringify(query.data)}</div>;
 }
@@ -259,7 +259,7 @@ const value = useMyQuery().data?.foo.bar.baz;
 You can create parameterized queries:
 
 ```tsx
-import { getUserById, type GetUserByIdResponse } from '../utils';
+import { getUserById, type GetUserByIdResponse } from "../utils";
 
 type MyQueryParam = { id: string };
 
@@ -275,7 +275,7 @@ Use it with parameters:
 function UserDetail({ id }) {
   const useUserQuery = userQuery({ id: 1 });
   const query = useUserQuery();
-  if (query.state === 'INITIAL') return <div>Loading...</div>;
+  if (query.state === "INITIAL") return <div>Loading...</div>;
   if (query.error) return <div>Error: {query.error.message}</div>;
   return <div>{JSON.stringify(query.data)}</div>;
 }
@@ -323,7 +323,7 @@ function Page({ cursor }: { cursor?: string }) {
   const usePostsQuery = postsQuery({ cursor });
   const { state, data, error } = usePostsQuery();
 
-  if (state === 'INITIAL') return <div>Loading...</div>;
+  if (state === "INITIAL") return <div>Loading...</div>;
   if (error) return <div>Error</div>;
 
   return (

@@ -1,6 +1,6 @@
-import { useMemo, useRef, useState } from 'react';
-import { type StoreApi } from '../vanilla.ts';
-import { useIsomorphicLayoutEffect } from './use-isomorphic-layout-effect.ts';
+import { useMemo, useRef, useState } from "react";
+import { type StoreApi } from "../vanilla.ts";
+import { useIsomorphicLayoutEffect } from "./use-isomorphic-layout-effect.ts";
 
 type Path = Array<string | number | symbol>;
 
@@ -35,7 +35,7 @@ export const useStoreStateProxy = <TState extends Record<string, any>>(storeStat
     const proxyCache = new WeakMap();
 
     const createDeepProxy = <T>(target: T, path: Path = []): T => {
-      if (typeof target !== 'object' || target === null) {
+      if (typeof target !== "object" || target === null) {
         return target;
       }
       if (proxyCache.has(target)) {

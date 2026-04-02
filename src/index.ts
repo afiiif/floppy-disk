@@ -1,1 +1,1 @@
-export * from './vanilla.ts';
+export * from "./vanilla.ts";

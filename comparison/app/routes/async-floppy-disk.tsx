@@ -1,13 +1,13 @@
-import { createMutation, createQuery, useMutation } from 'floppy-disk/react';
-import { useState } from 'react';
+import { createMutation, createQuery, useMutation } from "floppy-disk/react";
+import { useState } from "react";
 
-import { CardWithReRenderHighlight, Tabs } from '../shared/components';
-import { basicQueryFn2, infQueryFn2, keyedQueryFn2, mutationFn2 } from '../shared/utils';
+import { CardWithReRenderHighlight, Tabs } from "../shared/components";
+import { basicQueryFn2, infQueryFn2, keyedQueryFn2, mutationFn2 } from "../shared/utils";
 
 export function meta() {
   return [
-    { title: 'FloppyDisk.ts for Async State Management' },
-    { name: 'description', content: 'FloppyDisk.ts for async state management' },
+    { title: "FloppyDisk.ts for Async State Management" },
+    { name: "description", content: "FloppyDisk.ts for async state management" },
   ];
 }
 
@@ -18,7 +18,7 @@ export default function AsyncStateFloppyDisk() {
       <Tabs
         menu={[
           {
-            label: 'Single Query',
+            label: "Single Query",
             content: (
               <>
                 <SimpleQueryState />
@@ -29,15 +29,15 @@ export default function AsyncStateFloppyDisk() {
             ),
           },
           {
-            label: 'Keyed Query',
+            label: "Keyed Query",
             content: <KeyedQueryContainer />,
           },
           {
-            label: 'Infinite Query',
+            label: "Infinite Query",
             content: <ExampleInfiniteQuery />,
           },
           {
-            label: 'Mutation',
+            label: "Mutation",
             content: <ExampleMutation />,
           },
         ]}
@@ -68,7 +68,7 @@ function SimpleQueryData() {
   return (
     <CardWithReRenderHighlight>
       <h2>queryState.data</h2>
-      <pre className="text-xs">{JSON.stringify(queryState.data, null, 2) || 'undefined'}</pre>
+      <pre className="text-xs">{JSON.stringify(queryState.data, null, 2) || "undefined"}</pre>
     </CardWithReRenderHighlight>
   );
 }
@@ -77,7 +77,7 @@ function SimpleQueryDataSlice() {
   return (
     <CardWithReRenderHighlight>
       <h2>queryState.data?.b</h2>
-      <pre className="text-xs">{JSON.stringify(queryState.data?.b) || 'undefined'}</pre>
+      <pre className="text-xs">{JSON.stringify(queryState.data?.b) || "undefined"}</pre>
     </CardWithReRenderHighlight>
   );
 }
@@ -107,10 +107,10 @@ function KeyedQueryContainer() {
     <CardWithReRenderHighlight>
       <div className="flex gap-3 pb-4 items-center">
         <button onClick={() => setId((p) => p - 1)} disabled={!id}>
-          {'<'}
+          {"<"}
         </button>
         <div>id: {id}</div>
-        <button onClick={() => setId((p) => p + 1)}>{'>'}</button>
+        <button onClick={() => setId((p) => p + 1)}>{">"}</button>
         {id === 3 && <div className="text-rose-400 text-xs">Will simulate error</div>}
       </div>
       <KeyedQueryState id={id} />
@@ -136,9 +136,9 @@ function KeyedQueryDataSlice({ id }: { id: number }) {
   return (
     <CardWithReRenderHighlight>
       <h3>
-        queryState.data?.b with <span className="inline-block">{'{ keepPreviousData: true }'}</span>
+        queryState.data?.b with <span className="inline-block">{"{ keepPreviousData: true }"}</span>
       </h3>
-      <pre className="text-xs">{JSON.stringify(queryState.data?.b) || 'undefined'}</pre>
+      <pre className="text-xs">{JSON.stringify(queryState.data?.b) || "undefined"}</pre>
       {errMsg && (
         <pre className="text-xs opacity-50 pt-1">(error.message: {JSON.stringify(errMsg)})</pre>
       )}
@@ -187,7 +187,7 @@ function Page({ cursor }: { cursor?: string }) {
   const useQuery = infQuery({ cursor });
   const { state, data, error } = useQuery();
 
-  if (state === 'INITIAL') {
+  if (state === "INITIAL") {
     return (
       <div className="flex gap-5">
         <div className="flex-1">
@@ -201,7 +201,7 @@ function Page({ cursor }: { cursor?: string }) {
         </div>
         <div className="w-5 relative">
           <div
-            style={{ writingMode: 'vertical-lr' }}
+            style={{ writingMode: "vertical-lr" }}
             className="sticky top-20 sm:top-14 animate-pulse"
           >
             Cursor: {cursor || <span className="opacity-50">undefined</span>}
@@ -233,13 +233,13 @@ function Page({ cursor }: { cursor?: string }) {
           ))}
         </div>
         <div className="w-5 relative pb-12">
-          <div style={{ writingMode: 'vertical-lr' }} className="sticky top-20 sm:top-14">
-            Cursor:{' '}
+          <div style={{ writingMode: "vertical-lr" }} className="sticky top-20 sm:top-14">
+            Cursor:{" "}
             {cursor ? (
               <span className="text-sky-500">{cursor}</span>
             ) : (
               <span className="opacity-50">undefined</span>
-            )}{' '}
+            )}{" "}
             →
           </div>
         </div>
@@ -269,7 +269,7 @@ function LoadMoreButton({ nextCursor }: { nextCursor?: string }) {
 // ---
 
 const useMyGlobalMutation = createMutation(mutationFn2, {
-  onSuccess: (data) => console.info('🌏 Hello from onSuccess option (outside component)', data),
+  onSuccess: (data) => console.info("🌏 Hello from onSuccess option (outside component)", data),
 });
 
 function ExampleMutation() {
@@ -277,7 +277,7 @@ function ExampleMutation() {
     <>
       <h2 className="pb-1">Global state</h2>
       <div className="pb-3.5 opacity-50 text-xs">
-        {'const myGlobalMutation = createMutation(...)'}
+        {"const myGlobalMutation = createMutation(...)"}
       </div>
       <ExampleMutationGlobal />
       <ExampleMutationGlobal />
@@ -285,7 +285,7 @@ function ExampleMutation() {
 
       <h2 className="pt-5 pb-1">Local state</h2>
       <div className="pb-3.5 opacity-50 text-xs">
-        {'const [result, { execute }] = useMutation(...)'}
+        {"const [result, { execute }] = useMutation(...)"}
       </div>
       <ExampleMutationLocal />
       <ExampleMutationLocal />
@@ -298,7 +298,7 @@ function ExampleMutationGlobal() {
   return (
     <CardWithReRenderHighlight>
       <h2>Global</h2>
-      <pre className={result.isError ? 'text-red-400' : undefined}>
+      <pre className={result.isError ? "text-red-400" : undefined}>
         {JSON.stringify(result, null, 2)}
       </pre>
     </CardWithReRenderHighlight>
@@ -315,18 +315,18 @@ function GlobalMutationControl() {
           disabled={isPending}
           onClick={() => {
             useMyGlobalMutation.execute({ foo: 7 }).then((result) => {
-              console.log('🌏 Hello from awaited promise', result);
+              console.log("🌏 Hello from awaited promise", result);
             });
           }}
         >
-          Input: {'{ foo: 7 }'}
+          Input: {"{ foo: 7 }"}
         </button>
         <button
           type="button"
           disabled={isPending}
           onClick={() => {
-            useMyGlobalMutation.execute({ foo: 33, bar: 'test' }).then((result) => {
-              console.log('🌏 Hello from awaited promise', result);
+            useMyGlobalMutation.execute({ foo: 33, bar: "test" }).then((result) => {
+              console.log("🌏 Hello from awaited promise", result);
             });
           }}
         >
@@ -339,12 +339,12 @@ function GlobalMutationControl() {
 
 function ExampleMutationLocal() {
   const [result, { execute }] = useMutation(mutationFn2, {
-    onSuccess: (data) => console.info('🏠 Hello from onSuccess option', data),
+    onSuccess: (data) => console.info("🏠 Hello from onSuccess option", data),
   });
   return (
     <CardWithReRenderHighlight>
       <h2>Local</h2>
-      <pre className={result.isError ? 'text-red-400' : undefined}>
+      <pre className={result.isError ? "text-red-400" : undefined}>
         {JSON.stringify(result, null, 2)}
       </pre>
       <hr className="border-dashed mt-3" />
@@ -355,18 +355,18 @@ function ExampleMutationLocal() {
           disabled={result.isPending}
           onClick={() => {
             execute({ foo: 7 }).then((result) => {
-              console.log('🏠 Hello from awaited promise', result);
+              console.log("🏠 Hello from awaited promise", result);
             });
           }}
         >
-          Input: {'{ foo: 7 }'}
+          Input: {"{ foo: 7 }"}
         </button>
         <button
           type="button"
           disabled={result.isPending}
           onClick={() => {
-            execute({ foo: 33, bar: 'test' }).then((result) => {
-              console.log('🏠 Hello from awaited promise', result);
+            execute({ foo: 33, bar: "test" }).then((result) => {
+              console.log("🏠 Hello from awaited promise", result);
             });
           }}
         >

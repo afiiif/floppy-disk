@@ -1,4 +1,4 @@
-import { getValue, isClient, noop } from './basic.ts';
+import { getValue, isClient, noop } from "./basic.ts";
 
 /**
  * Represents a partial state update.
@@ -139,7 +139,7 @@ export const initStore = <TState extends Record<string, any>>(
   const setState = (value: SetState<TState>) => {
     if (!isClient && !allowSetStateServerSide) {
       console.error(
-        'setState on the server is not allowed by default. Set `allowSetStateServerSide: true` to allow it.',
+        "setState on the server is not allowed by default. Set `allowSetStateServerSide: true` to allow it.",
       );
       return;
     }

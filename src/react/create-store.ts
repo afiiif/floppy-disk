@@ -1,5 +1,5 @@
-import { type InitStoreOptions, initStore } from '../vanilla.ts';
-import { useStoreState } from './use-store.ts';
+import { type InitStoreOptions, initStore } from "../vanilla.ts";
+import { useStoreState } from "./use-store.ts";
 
 /**
  * Creates a single store with a bound React hook.

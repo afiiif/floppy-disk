@@ -1,6 +1,6 @@
-import { useCallback, useRef, useState } from 'react';
-import { noop } from '../vanilla.ts';
-import { INITIAL_STATE, type MutationOptions, type MutationState } from './create-mutation.ts';
+import { useCallback, useRef, useState } from "react";
+import { noop } from "../vanilla.ts";
+import { INITIAL_STATE, type MutationOptions, type MutationState } from "./create-mutation.ts";
 
 /**
  * A hook for managing async mutation state.
@@ -77,8 +77,8 @@ export const useMutation = <TData, TVariable = undefined, TError = Error>(
     const stateBeforeExecute = stateRef.current;
     if (stateBeforeExecute.isPending) {
       console.warn(
-        'A mutation was executed while a previous execution is still pending. ' +
-          'The previous execution will be ignored (latest execution wins).',
+        "A mutation was executed while a previous execution is still pending. " +
+          "The previous execution will be ignored (latest execution wins).",
       );
     }
     stateRef.current.isPending = true;
@@ -95,7 +95,7 @@ export const useMutation = <TData, TVariable = undefined, TError = Error>(
             }
 
             stateRef.current = {
-              state: 'SUCCESS',
+              state: "SUCCESS",
               isPending: false,
               isSuccess: true,
               isError: false,
@@ -116,7 +116,7 @@ export const useMutation = <TData, TVariable = undefined, TError = Error>(
             }
 
             stateRef.current = {
-              state: 'ERROR',
+              state: "ERROR",
               isPending: false,
               isSuccess: false,
               isError: true,
@@ -155,7 +155,7 @@ export const useMutation = <TData, TVariable = undefined, TError = Error>(
   const reset = useCallback(() => {
     if (stateRef.current.isPending) {
       console.warn(
-        'Mutation state was reset while a request is still pending. The request will continue, but its result may override the reset state.',
+        "Mutation state was reset while a request is still pending. The request will continue, but its result may override the reset state.",
       );
     }
     stateRef.current = { ...INITIAL_STATE } as TState;

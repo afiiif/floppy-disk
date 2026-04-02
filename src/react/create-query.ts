@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useRef, useState } from "react";
 import {
   type InitStoreOptions,
   type SetState,
@@ -7,15 +7,15 @@ import {
   initStore,
   isClient,
   noop,
-} from '../vanilla.ts';
-import { useIsomorphicLayoutEffect } from './use-isomorphic-layout-effect.ts';
+} from "../vanilla.ts";
+import { useIsomorphicLayoutEffect } from "./use-isomorphic-layout-effect.ts";
 import {
   NO_INITIAL_VALUE,
   compressPaths,
   getValueByPath,
   useStoreStateProxy,
   useStoreStateWithInitializer,
-} from './use-store.ts';
+} from "./use-store.ts";
 
 /**
  * Represents the state of a query.
@@ -44,7 +44,7 @@ export type QueryState<TData, TError> = {
   retryCount: number;
 } & (
   | {
-      state: 'INITIAL';
+      state: "INITIAL";
       isSuccess: false;
       isError: false;
       data: undefined;
@@ -53,7 +53,7 @@ export type QueryState<TData, TError> = {
       errorUpdatedAt: undefined;
     }
   | {
-      state: 'SUCCESS';
+      state: "SUCCESS";
       isSuccess: true;
       isError: false;
       data: TData;
@@ -62,7 +62,7 @@ export type QueryState<TData, TError> = {
       errorUpdatedAt: undefined;
     }
   | {
-      state: 'ERROR';
+      state: "ERROR";
       isSuccess: false;
       isError: true;
       data: undefined;
@@ -71,7 +71,7 @@ export type QueryState<TData, TError> = {
       errorUpdatedAt: number;
     }
   | {
-      state: 'SUCCESS_BUT_REVALIDATION_ERROR';
+      state: "SUCCESS_BUT_REVALIDATION_ERROR";
       isSuccess: true;
       isError: false;
       data: TData;
@@ -86,7 +86,7 @@ const INITIAL_STATE = {
   isRevalidating: false,
   isRetrying: false,
   retryCount: 0,
-  state: 'INITIAL',
+  state: "INITIAL",
   isSuccess: false,
   isError: false,
   data: undefined,
@@ -251,14 +251,14 @@ export const createQuery = <TData, TVariable extends Record<string, any> = never
         if (revalidateOnFocus) {
           focusListeners.add(revalidate);
           if (!focusListenersAdded) {
-            window.addEventListener('focus', onWindowFocus);
+            window.addEventListener("focus", onWindowFocus);
             focusListenersAdded = true;
           }
         }
         if (revalidateOnReconnect) {
           onlineListeners.add(revalidate);
           if (!onlineListenersAdded) {
-            window.addEventListener('online', onWindowOnline);
+            window.addEventListener("online", onWindowOnline);
             onlineListenersAdded = true;
           }
         }
@@ -280,14 +280,14 @@ export const createQuery = <TData, TVariable extends Record<string, any> = never
         if (revalidateOnFocus) {
           focusListeners.delete(revalidate);
           if (focusListeners.size === 0) {
-            window.removeEventListener('focus', onWindowFocus);
+            window.removeEventListener("focus", onWindowFocus);
             focusListenersAdded = false;
           }
         }
         if (revalidateOnReconnect) {
           onlineListeners.delete(revalidate);
           if (onlineListeners.size === 0) {
-            window.removeEventListener('online', onWindowOnline);
+            window.removeEventListener("online", onWindowOnline);
             onlineListenersAdded = false;
           }
         }
@@ -432,11 +432,11 @@ export const createQuery = <TData, TVariable extends Record<string, any> = never
     metadata: {},
     setInitialData: (data, revalidate = false) => {
       const state = store.getState();
-      if (state.state === 'INITIAL' && state.data === undefined) {
+      if (state.state === "INITIAL" && state.data === undefined) {
         const { metadata } = internals.get(store)!;
         if (revalidate) metadata.isInvalidated = true;
         store.setState({
-          state: 'SUCCESS',
+          state: "SUCCESS",
           isSuccess: true,
           data,
           dataUpdatedAt: Date.now(),
@@ -465,7 +465,7 @@ export const createQuery = <TData, TVariable extends Record<string, any> = never
       clearTimeout(metadata.retryTimeoutId);
       if (metadata.retryResolver || metadata.promiseResolver) {
         console.debug(
-          'Ongoing query execution was ignored due to reset(). The result will not update the store state.',
+          "Ongoing query execution was ignored due to reset(). The result will not update the store state.",
         );
         metadata.promiseResolver?.(initialState);
         metadata.retryResolver?.(initialState);
@@ -478,7 +478,7 @@ export const createQuery = <TData, TVariable extends Record<string, any> = never
     delete: () => {
       if (store.getSubscribers().size > 0) {
         console.warn(
-          'Cannot delete query store while it still has active subscribers. Unsubscribe all listeners before deleting the store.',
+          "Cannot delete query store while it still has active subscribers. Unsubscribe all listeners before deleting the store.",
         );
         return false;
       }
@@ -513,7 +513,7 @@ export const createQuery = <TData, TVariable extends Record<string, any> = never
         const stateBeforeExecute = store.getState();
         store.setState({
           isPending: true,
-          isRevalidating: stateBeforeExecute.state === 'SUCCESS',
+          isRevalidating: stateBeforeExecute.state === "SUCCESS",
           isRetrying: !!metadata.retryResolver,
           retryCount: metadata.retryResolver ? stateBeforeExecute.retryCount + 1 : 0,
         });
@@ -521,7 +521,7 @@ export const createQuery = <TData, TVariable extends Record<string, any> = never
           .then((data) => {
             if (data === undefined) {
               console.error(
-                'Query function returned undefined. Successful responses must not be undefined.',
+                "Query function returned undefined. Successful responses must not be undefined.",
               );
             }
             if (!metadata.promiseResolver) return; // Handle reset: should ignore ongoing execution
@@ -531,7 +531,7 @@ export const createQuery = <TData, TVariable extends Record<string, any> = never
               isRevalidating: false,
               isRetrying: false,
               retryCount: 0,
-              state: 'SUCCESS',
+              state: "SUCCESS",
               isSuccess: true,
               isError: false,
               data,
@@ -570,11 +570,11 @@ export const createQuery = <TData, TVariable extends Record<string, any> = never
                 errorUpdatedAt: Date.now(),
                 ...(store.getState().data
                   ? {
-                      state: 'SUCCESS_BUT_REVALIDATION_ERROR',
+                      state: "SUCCESS_BUT_REVALIDATION_ERROR",
                       isError: false,
                     }
                   : {
-                      state: 'ERROR',
+                      state: "ERROR",
                       isError: true,
                     }),
               });
@@ -722,7 +722,7 @@ export const createQuery = <TData, TVariable extends Record<string, any> = never
         initialData === NO_INITIAL_VALUE
           ? undefined
           : {
-              state: 'SUCCESS',
+              state: "SUCCESS",
               isSuccess: true,
               data: initialData,
             },
@@ -730,7 +730,7 @@ export const createQuery = <TData, TVariable extends Record<string, any> = never
       const prevState = useRef<Partial<TState>>({});
 
       let storeStateToBeUsed = storeState;
-      if (storeState.state !== 'INITIAL') {
+      if (storeState.state !== "INITIAL") {
         prevState.current = {
           data: storeState.data,
           dataUpdatedAt: storeState.dataUpdatedAt,
@@ -740,7 +740,7 @@ export const createQuery = <TData, TVariable extends Record<string, any> = never
       }
 
       const [trackedState, usedPathsRef] = useStoreStateProxy(
-        revalidateOnMount && storeState.state === 'INITIAL'
+        revalidateOnMount && storeState.state === "INITIAL"
           ? // Optimize rendering on initial state
             // Do { isPending: true } → result
             // instead of { isPending: false } → { isPending: true } → result
@@ -752,7 +752,7 @@ export const createQuery = <TData, TVariable extends Record<string, any> = never
 
       useIsomorphicLayoutEffect(() => {
         return store.subscribe((nextState, prevState, changedKeys) => {
-          if (prevState.state === 'INITIAL' && !prevState.isPending && nextState.isPending) {
+          if (prevState.state === "INITIAL" && !prevState.isPending && nextState.isPending) {
             // Prevent unnecessary re-render since the isPending already true on initial render
             return;
           }
@@ -794,7 +794,7 @@ export const createQuery = <TData, TVariable extends Record<string, any> = never
       getSubscribers: store.getSubscribers,
       getState: store.getState,
       setState: (value: SetState<TState>) => {
-        console.debug('Manual setState (not via provided actions) on query store');
+        console.debug("Manual setState (not via provided actions) on query store");
         store.setState(value);
       },
       ...internals.get(store)!,

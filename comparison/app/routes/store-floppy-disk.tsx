@@ -1,20 +1,20 @@
-import { createStore } from 'floppy-disk/react';
+import { createStore } from "floppy-disk/react";
 
-import { CardWithReRenderHighlight } from '../shared/components';
+import { CardWithReRenderHighlight } from "../shared/components";
 
 export function meta() {
   return [
-    { title: 'FloppyDisk.ts Store' },
-    { name: 'description', content: 'FloppyDisk.ts store' },
+    { title: "FloppyDisk.ts Store" },
+    { name: "description", content: "FloppyDisk.ts store" },
   ];
 }
 
 const useMyStore = createStore({
   foo: 0,
-  bar: 'lorem-ipsum',
+  bar: "lorem-ipsum",
 });
 
-useMyStore.subscribe((state) => console.info('State updated', state));
+useMyStore.subscribe((state) => console.info("State updated", state));
 
 export default function StoreFloppyDisk() {
   return (
@@ -32,7 +32,7 @@ function StoreStateConsumer1() {
   const value = useMyStore();
   return (
     <CardWithReRenderHighlight>
-      <h2>{'const value = useMyStore()'}</h2>
+      <h2>{"const value = useMyStore()"}</h2>
       <pre>{JSON.stringify(value, null, 2)}</pre>
     </CardWithReRenderHighlight>
   );
@@ -42,7 +42,7 @@ function StoreStateConsumer2() {
   const { foo } = useMyStore();
   return (
     <CardWithReRenderHighlight>
-      <h2>{'const { foo } = useMyStore()'}</h2>
+      <h2>{"const { foo } = useMyStore()"}</h2>
       <pre>{JSON.stringify(foo)}</pre>
     </CardWithReRenderHighlight>
   );
@@ -52,7 +52,7 @@ function StoreStateConsumer3() {
   const { bar } = useMyStore();
   return (
     <CardWithReRenderHighlight>
-      <h2>{'const { bar } = useMyStore()'}</h2>
+      <h2>{"const { bar } = useMyStore()"}</h2>
       <pre>{JSON.stringify(bar)}</pre>
     </CardWithReRenderHighlight>
   );
