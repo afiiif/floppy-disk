@@ -16,7 +16,6 @@ export default function AsyncStateFloppyDisk() {
     <>
       <h1 className="font-bold pb-4">FloppyDisk.ts for Async State Management</h1>
       <Tabs
-        storageId="FloppyDiskTab"
         menu={[
           {
             label: 'Single Query',

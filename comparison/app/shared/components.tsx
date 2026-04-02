@@ -1,4 +1,5 @@
 import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react';
+import { useSearchParams } from 'react-router';
 
 const initialRenderCount = process.env.NODE_ENV === 'development' ? -1 : 0;
 
@@ -32,17 +33,23 @@ export function CardWithReRenderHighlight({
 
 export function Tabs({
   menu,
-  storageId,
+  urlParamKey = 'activeTab',
 }: {
   menu: Array<{ label: string; content: ReactNode }>;
-  storageId: string;
+  urlParamKey?: string;
 }) {
+  const [_searchParams, setSearchParams] = useSearchParams();
+
   const [tabIndex, setTabIndex] = useState(-1);
+
   useLayoutEffect(() => {
-    const storedIndex = sessionStorage.getItem(storageId);
-    if (storedIndex) setTabIndex(Number(storedIndex));
-    else setTabIndex(0);
-  }, [storageId]);
+    const params = new URLSearchParams(window.location.search);
+    const initialActiveTab = params.get(urlParamKey);
+    if (initialActiveTab) {
+      const initialTabIndex = menu.findIndex((item) => item.label === initialActiveTab);
+      if (initialTabIndex) setTabIndex(Number(initialTabIndex));
+    } else setTabIndex(0);
+  }, [urlParamKey]);
 
   return (
     <>
@@ -54,7 +61,9 @@ export function Tabs({
             aria-current={tabIndex === i || undefined}
             onClick={() => {
               setTabIndex(i);
-              sessionStorage.setItem(storageId, String(i));
+              const url = new URL(window.location.href);
+              setSearchParams(i ? { [urlParamKey]: menuItem.label } : {});
+              window.history.replaceState({}, '', url);
             }}
           >
             {menuItem.label}

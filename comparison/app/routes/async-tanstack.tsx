@@ -30,7 +30,6 @@ export default function AsyncStateTanstack() {
     <QueryClientProvider client={queryClient}>
       <h1 className="font-bold pb-4">TanStack-Query for Async State Management</h1>
       <Tabs
-        storageId="TanStackTab"
         menu={[
           {
             label: 'Single Query',

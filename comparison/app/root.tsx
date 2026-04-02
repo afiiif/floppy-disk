@@ -6,6 +6,7 @@ import {
   Outlet,
   Scripts,
   ScrollRestoration,
+  useSearchParams,
 } from 'react-router';
 
 import type { Route } from './+types/root';
@@ -46,6 +47,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
 }
 
 export default function App() {
+  const [searchParams] = useSearchParams();
   return (
     <>
       <header>
@@ -72,11 +74,15 @@ export default function App() {
             <div className="hidden sm:block"> .</div>
             <div className="flex">
               <div> ├── </div>
-              <NavLink to="/async/tanstack">TanStack's query & mutation</NavLink>
+              <NavLink to={{ pathname: '/async/tanstack', search: searchParams.toString() }}>
+                TanStack's query & mutation
+              </NavLink>
             </div>
             <div className="flex">
               <div> └── </div>
-              <NavLink to="/async/floppy-disk">FloppyDisk's query & mutation</NavLink>
+              <NavLink to={{ pathname: '/async/floppy-disk', search: searchParams.toString() }}>
+                FloppyDisk's query & mutation
+              </NavLink>
             </div>
           </span>
         </nav>
