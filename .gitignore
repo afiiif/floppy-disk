@@ -19,3 +19,4 @@ build/
 *.tsbuildinfo
 next-env.d.ts
 .vercel
+.source/
