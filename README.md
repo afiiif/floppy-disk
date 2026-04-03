@@ -1,9 +1,12 @@
 # FloppyDisk.ts 💾
 
-A lightweight, simple, and powerful state management library.
+A unified state model for **sync & async** data.
 
-This library was highly-inspired by [Zustand](https://www.npmjs.com/package/zustand) and [TanStack-Query](https://tanstack.com/query), they're awesome state manager.
-FloppyDisk provides a very similar developer experience (DX), while introducing additional features and a smaller bundle size.
+If you know [Zustand](https://zustand.docs.pmnd.rs) & [TanStack-Query](https://tanstack.com/query), you already know FloppyDisk.\
+It keeps what works, removes unnecessary complexity, and unifies everything into a simpler API.\
+No relearning—just a better experience.
+
+_Smaller bundle. Zero dependencies._
 
 Demo: https://afiiif.github.io/floppy-disk/
 
