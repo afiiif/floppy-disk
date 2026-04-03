@@ -894,6 +894,41 @@ describe("createQuery", () => {
     vi.useRealTimers();
   });
 
+  it("garbage collects store with ongoing promise", async () => {
+    vi.useFakeTimers();
+
+    let resolveFn: (value: string) => void;
+    const queryFn = vi.fn(() => new Promise<string>((resolve) => (resolveFn = resolve)));
+    const query = createQuery<string>(queryFn, { gcTime: 1000 });
+
+    const { unmount } = renderHook(() => {
+      const useQuery = query();
+      return useQuery();
+    });
+
+    await act(async () => {
+      resolveFn("ok");
+    });
+    expect(queryFn).toHaveBeenCalledTimes(1);
+    expect(query().getState().data).toBe("ok");
+
+    unmount(); // unsubscribe
+
+    query().execute();
+
+    await act(async () => {
+      vi.advanceTimersByTime(1000);
+    });
+    expect(query().getState().data).toBe(undefined);
+
+    await act(async () => {
+      resolveFn("ok2");
+    });
+    expect(query().getState().data).toBe("ok2");
+
+    vi.useRealTimers();
+  });
+
   it("handles enabled option & shallow comparison correctly", async () => {
     const debugSpy = vi.spyOn(console, "debug").mockImplementation(() => {});
 

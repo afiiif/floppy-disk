@@ -239,7 +239,7 @@ export const createQuery = <TData, TVariable extends Record<string, any> = never
 
   const stores = new Map<string, StoreApi<TState>>();
 
-  const configureStoreEvents = (): InitStoreOptions<TState> => ({
+  const configureStoreEvents = (variableHash: string): InitStoreOptions<TState> => ({
     ...options,
     onFirstSubscribe: (state, store) => {
       options.onFirstSubscribe?.(state, store);
@@ -273,7 +273,11 @@ export const createQuery = <TData, TVariable extends Record<string, any> = never
       metadata.retryResolver = undefined;
       // Start garbage collection timeout
       metadata.garbageCollectionTimeoutId = setTimeout(() => {
-        store.setState(initialState);
+        if (metadata.promiseResolver || metadata.retryResolver) {
+          store.setState(initialState);
+        } else {
+          stores.delete(variableHash);
+        }
       }, gcTime);
       // Detach window events
       if (isClient) {
@@ -623,7 +627,7 @@ export const createQuery = <TData, TVariable extends Record<string, any> = never
     if (stores.has(variableHash)) {
       store = stores.get(variableHash)!;
     } else {
-      store = initStore(initialState, configureStoreEvents());
+      store = initStore(initialState, configureStoreEvents(variableHash));
       stores.set(variableHash, store);
       internals.set(store, configureInternals(store, variable, variableHash));
     }
