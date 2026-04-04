@@ -13,6 +13,7 @@ describe("createQuery", () => {
     expect(query().getState()).toMatchObject({
       isPending: false,
       isRevalidating: false,
+      willRetry: false,
       isRetrying: false,
       retryCount: 0,
       state: "INITIAL",
@@ -34,6 +35,7 @@ describe("createQuery", () => {
     expect(result.current).toMatchObject({
       isPending: true,
       isRevalidating: false,
+      willRetry: false,
       isRetrying: false,
       retryCount: 0,
       state: "INITIAL",
@@ -51,6 +53,7 @@ describe("createQuery", () => {
     expect(result.current).toMatchObject({
       isPending: false,
       isRevalidating: false,
+      willRetry: false,
       isRetrying: false,
       retryCount: 0,
       state: "SUCCESS",
@@ -119,6 +122,7 @@ describe("createQuery", () => {
 
     expect(result.current).toMatchObject({
       isPending: true,
+      willRetry: false,
       state: "INITIAL",
     });
 
@@ -129,6 +133,7 @@ describe("createQuery", () => {
 
     expect(result.current).toMatchObject({
       isPending: false,
+      willRetry: false,
       state: "ERROR",
       isSuccess: false,
       isError: true,
@@ -199,6 +204,7 @@ describe("createQuery", () => {
 
     expect(result.current).toMatchObject({
       state: "SUCCESS_BUT_REVALIDATION_ERROR",
+      willRetry: false,
       isSuccess: true,
       isError: false,
       data: "ok",
@@ -235,19 +241,38 @@ describe("createQuery", () => {
     });
 
     const store = query();
-    expect(store.getState().isRetrying).toBe(false);
+    expect(store.getState()).toMatchObject({
+      willRetry: true,
+      isRetrying: false,
+      retryCount: 0,
+    });
 
     await act(async () => {
       vi.advanceTimersByTime(100);
     });
 
     expect(queryFn).toHaveBeenCalledTimes(2);
-    expect(store.getState().isRetrying).toBe(true);
+    expect(store.getState()).toMatchObject({
+      willRetry: false,
+      isRetrying: true,
+      retryCount: 1,
+    });
 
     await act(async () => {
       resolveFn("ok");
     });
-    expect(store.getState().data).toBe("ok");
+    expect(store.getState()).toMatchObject({
+      willRetry: false,
+      isRetrying: false,
+      retryCount: 0,
+      state: "SUCCESS",
+      isSuccess: true,
+      isError: false,
+      data: "ok",
+      dataUpdatedAt: expect.any(Number),
+      error: undefined,
+      errorUpdatedAt: undefined,
+    });
 
     vi.useRealTimers();
   });
@@ -260,6 +285,7 @@ describe("createQuery", () => {
     let resolve2: any;
     let reject3: any;
     let reject4: any;
+    let reject5: any;
 
     const queryFn = vi
       .fn()
@@ -268,11 +294,13 @@ describe("createQuery", () => {
       .mockImplementationOnce(() => new Promise((resolve) => (resolve2 = resolve)))
       // next execute: fail → retry → fail again (should stop here)
       .mockImplementationOnce(() => new Promise((_, reject) => (reject3 = reject)))
-      .mockImplementationOnce(() => new Promise((_, reject) => (reject4 = reject)));
+      .mockImplementationOnce(() => new Promise((_, reject) => (reject4 = reject)))
+      // next execute: fail → test unsubscribe → retry cancelled
+      .mockImplementationOnce(() => new Promise((_, reject) => (reject5 = reject)));
 
     const query = createQuery(queryFn);
 
-    renderHook(() => {
+    const { unmount } = renderHook(() => {
       const useQuery = query();
       return useQuery();
     });
@@ -282,16 +310,29 @@ describe("createQuery", () => {
     await act(async () => {
       reject1(new Error("fail-1"));
     });
+    expect(store.getState()).toMatchObject({
+      willRetry: true,
+      isRetrying: false,
+    });
 
     await act(async () => {
       vi.advanceTimersByTime(1000);
     });
     expect(queryFn).toHaveBeenCalledTimes(1); // retry not yet triggered
+    expect(store.getState()).toMatchObject({
+      willRetry: true,
+      isRetrying: false,
+    });
 
     await act(async () => {
       vi.advanceTimersByTime(500);
     });
     expect(queryFn).toHaveBeenCalledTimes(2);
+    expect(store.getState()).toMatchObject({
+      willRetry: false,
+      isRetrying: true,
+      retryCount: 1,
+    });
 
     await act(async () => {
       resolve2("ok");
@@ -305,22 +346,59 @@ describe("createQuery", () => {
     await act(async () => {
       reject3(new Error("fail-2"));
     });
+    expect(store.getState()).toMatchObject({
+      willRetry: true,
+      isRetrying: false,
+      retryCount: 0,
+    });
+
     await act(async () => {
       vi.advanceTimersByTime(1500);
     });
     expect(queryFn).toHaveBeenCalledTimes(4);
+    expect(store.getState()).toMatchObject({
+      willRetry: false,
+      isRetrying: true,
+      retryCount: 1,
+    });
 
     await act(async () => {
       reject4(new Error("fail-3"));
     });
 
     const state = store.getState();
+
+    expect(store.getState()).toMatchObject({
+      willRetry: false,
+      isRetrying: false,
+      retryCount: 0,
+      state: "SUCCESS_BUT_REVALIDATION_ERROR",
+      isSuccess: true,
+      isError: false,
+    });
     expect(state.error).toBeDefined();
-    expect(state.state).toBe("SUCCESS_BUT_REVALIDATION_ERROR");
-    expect(state.isSuccess).toBe(true);
-    expect(state.isError).toBe(false);
 
     expect(errorSpy).toHaveBeenCalledTimes(1);
+
+    await act(async () => {
+      store.execute();
+    });
+    await act(async () => {
+      reject5(new Error("fail-4"));
+    });
+    expect(store.getState()).toMatchObject({
+      willRetry: true,
+      isRetrying: false,
+      retryCount: 0,
+    });
+
+    unmount();
+    expect(store.getState()).toMatchObject({
+      willRetry: false,
+      isRetrying: false,
+      retryCount: 0,
+    });
+
     errorSpy.mockRestore();
     vi.useRealTimers();
   });
@@ -353,6 +431,11 @@ describe("createQuery", () => {
     await act(async () => {
       reject1(new Error("fail"));
     });
+    expect(store.getState()).toMatchObject({
+      willRetry: false,
+      isRetrying: false,
+      retryCount: 0,
+    });
 
     // Advance time → should NOT retry
     await act(async () => {
@@ -365,8 +448,18 @@ describe("createQuery", () => {
     await act(async () => {
       resolve2("ok");
     });
-    expect(store.getState().data).toBe("ok");
-    expect(store.getState().isError).toBe(false);
+    expect(store.getState()).toMatchObject({
+      willRetry: false,
+      isRetrying: false,
+      retryCount: 0,
+      state: "SUCCESS",
+      isSuccess: true,
+      isError: false,
+      data: "ok",
+      dataUpdatedAt: expect.any(Number),
+      error: undefined,
+      errorUpdatedAt: undefined,
+    });
 
     vi.useRealTimers();
   });

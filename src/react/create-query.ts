@@ -40,6 +40,7 @@ import {
 export type QueryState<TData, TError> = {
   isPending: boolean;
   isRevalidating: boolean;
+  willRetry: boolean;
   isRetrying: boolean;
   retryCount: number;
 } & (
@@ -81,9 +82,10 @@ export type QueryState<TData, TError> = {
     }
 );
 
-const INITIAL_STATE = {
+const INITIAL_STATE: QueryState<any, any> = {
   isPending: false,
   isRevalidating: false,
+  willRetry: false,
   isRetrying: false,
   retryCount: 0,
   state: "INITIAL",
@@ -269,8 +271,11 @@ export const createQuery = <TData, TVariable extends Record<string, any> = never
       // Cancel retry
       const { metadata, revalidate } = internals.get(store)!;
       clearTimeout(metadata.retryTimeoutId);
-      metadata.retryResolver?.(state);
-      metadata.retryResolver = undefined;
+      if (metadata.retryResolver) {
+        store.setState({ willRetry: false });
+        metadata.retryResolver(store.getState());
+        metadata.retryResolver = undefined;
+      }
       // Start garbage collection timeout
       metadata.garbageCollectionTimeoutId = setTimeout(() => {
         if (metadata.promiseResolver || metadata.retryResolver) {
@@ -518,6 +523,7 @@ export const createQuery = <TData, TVariable extends Record<string, any> = never
         store.setState({
           isPending: true,
           isRevalidating: stateBeforeExecute.state === "SUCCESS",
+          willRetry: false,
           isRetrying: !!metadata.retryResolver,
           retryCount: metadata.retryResolver ? stateBeforeExecute.retryCount + 1 : 0,
         });
@@ -554,16 +560,23 @@ export const createQuery = <TData, TVariable extends Record<string, any> = never
           .catch((error) => {
             if (!metadata.promiseResolver && !metadata.retryResolver) return; // Handle reset: should ignore ongoing execution
             if (promise !== metadata.promise) return resolve(metadata.promise!); // Handle overwriteOngoingExecution
-            store.setState({
+            const nextState = {
+              ...store.getState(),
               isPending: false,
               isRevalidating: false,
               isRetrying: false,
-            });
-            const [shouldRetry, retryDelay] = shouldRetryFn(error, store.getState());
+            };
+            const [shouldRetry, retryDelay] = shouldRetryFn(error, nextState);
             const hasSubscriber = store.getSubscribers().size > 0;
             if (shouldRetry && hasSubscriber) {
               metadata.retryResolver = resolve;
               metadata.retryTimeoutId = setTimeout(createPromise, retryDelay);
+              store.setState({
+                isPending: false,
+                isRevalidating: false,
+                isRetrying: false,
+                willRetry: true,
+              });
             } else {
               store.setState({
                 isPending: false,
