@@ -13,7 +13,6 @@
     "declaration": true,
     "types": ["@testing-library/jest-dom/vitest"],
     "noEmit": true,
-    "baseUrl": ".",
     "paths": {
       "floppy-disk": ["./src/index.ts"],
       "floppy-disk/*": ["./src/*.ts"]
