@@ -50,6 +50,7 @@ export type QueryState<TData, TError> = {
       isError: false;
       data: undefined;
       dataUpdatedAt: undefined;
+      dataStaleAt: undefined;
       error: undefined;
       errorUpdatedAt: undefined;
     }
@@ -59,6 +60,7 @@ export type QueryState<TData, TError> = {
       isError: false;
       data: TData;
       dataUpdatedAt: number;
+      dataStaleAt: undefined | number;
       error: undefined;
       errorUpdatedAt: undefined;
     }
@@ -68,6 +70,7 @@ export type QueryState<TData, TError> = {
       isError: true;
       data: undefined;
       dataUpdatedAt: undefined;
+      dataStaleAt: undefined;
       error: TError;
       errorUpdatedAt: number;
     }
@@ -77,6 +80,7 @@ export type QueryState<TData, TError> = {
       isError: false;
       data: TData;
       dataUpdatedAt: number;
+      dataStaleAt: undefined | number;
       error: TError;
       errorUpdatedAt: number;
     }
@@ -93,6 +97,7 @@ const INITIAL_STATE: QueryState<any, any> = {
   isError: false,
   data: undefined,
   dataUpdatedAt: undefined,
+  dataStaleAt: undefined,
   error: undefined,
   errorUpdatedAt: undefined,
 };
@@ -539,6 +544,7 @@ export const createQuery = <TData, TVariable extends Record<string, any> = never
             }
             if (!metadata.promiseResolver) return; // Handle reset: should ignore ongoing execution
             if (promise !== metadata.promise) return resolve(metadata.promise!); // Handle overwriteOngoingExecution
+            const now = Date.now();
             store.setState({
               isPending: false,
               isRevalidating: false,
@@ -548,7 +554,8 @@ export const createQuery = <TData, TVariable extends Record<string, any> = never
               isSuccess: true,
               isError: false,
               data,
-              dataUpdatedAt: Date.now(),
+              dataUpdatedAt: now,
+              dataStaleAt: now + staleTime,
               error: undefined,
               errorUpdatedAt: undefined,
             });

@@ -3,6 +3,7 @@ import { describe, expect, it, vi } from "vitest";
 import { createQuery } from "floppy-disk/react";
 import * as basic from "../../src/vanilla/basic";
 
+const DEFAULT_STALE_TIME = 2500;
 const DEFAULT_RETRY_DELAY = 1500;
 
 describe("createQuery", () => {
@@ -23,6 +24,7 @@ describe("createQuery", () => {
       isError: false,
       data: undefined,
       dataUpdatedAt: undefined,
+      dataStaleAt: undefined,
       error: undefined,
       errorUpdatedAt: undefined,
     });
@@ -45,6 +47,7 @@ describe("createQuery", () => {
       isError: false,
       data: undefined,
       dataUpdatedAt: undefined,
+      dataStaleAt: undefined,
       error: undefined,
       errorUpdatedAt: undefined,
     });
@@ -63,6 +66,7 @@ describe("createQuery", () => {
       isError: false,
       data: "output",
       dataUpdatedAt: expect.any(Number),
+      dataStaleAt: result.current.dataUpdatedAt! + DEFAULT_STALE_TIME,
       error: undefined,
       errorUpdatedAt: undefined,
     });
@@ -140,6 +144,8 @@ describe("createQuery", () => {
       isSuccess: false,
       isError: true,
       data: undefined,
+      dataUpdatedAt: undefined,
+      dataStaleAt: undefined,
       errorUpdatedAt: expect.any(Number),
     });
     expect(result.current.error).toBeInstanceOf(Error);
@@ -187,11 +193,13 @@ describe("createQuery", () => {
       resolveFn("ok");
     });
 
+    const lastDataUpdatedAt = result.current.dataUpdatedAt!;
     expect(result.current).toMatchObject({
       state: "SUCCESS",
       isSuccess: true,
       isError: false,
       data: "ok",
+      dataStaleAt: lastDataUpdatedAt + DEFAULT_STALE_TIME,
     });
 
     expect(onSuccess).toHaveBeenCalledTimes(1);
@@ -210,6 +218,8 @@ describe("createQuery", () => {
       isSuccess: true,
       isError: false,
       data: "ok",
+      dataUpdatedAt: lastDataUpdatedAt,
+      dataStaleAt: lastDataUpdatedAt + DEFAULT_STALE_TIME,
       errorUpdatedAt: expect.any(Number),
     });
     expect(result.current.error).toBeInstanceOf(Error);
@@ -710,11 +720,17 @@ describe("createQuery", () => {
       { initialProps: { id: 1 } },
     );
 
+    let promiseSettledAt = 0;
     expect(result.current.isPending).toBe(true);
     await act(async () => {
+      promiseSettledAt = Date.now();
       resolveFn("first");
     });
-    expect(result.current.data).toBe("first");
+    expect(result.current).toMatchObject({
+      data: "first",
+      dataUpdatedAt: promiseSettledAt,
+      dataStaleAt: promiseSettledAt + DEFAULT_STALE_TIME,
+    });
 
     rerender({ id: 2 });
 
@@ -728,7 +744,11 @@ describe("createQuery", () => {
     expect(query({ id: 1 }).delete()).toBe(true);
 
     rerender({ id: 1 });
-    expect(result.current.data).toBe(undefined);
+    expect(result.current).toMatchObject({
+      data: undefined,
+      dataUpdatedAt: undefined,
+      dataStaleAt: undefined,
+    });
     expect(queryFn).toHaveBeenCalledTimes(3);
     expect(warnSpy).toHaveBeenCalledTimes(1);
     warnSpy.mockRestore();
