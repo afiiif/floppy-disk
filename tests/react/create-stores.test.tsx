@@ -13,6 +13,8 @@ describe("createStores", () => {
     expect(storeB.getState().foo).toBe(1);
     expect(storeA.setState).toBe(storeB.setState);
     expect(storeA.getSubscribers).toBe(storeB.getSubscribers);
+
+    expect(storeA.key).toBe(storeB.key);
   });
 
   it("isolates state between stores", () => {
@@ -25,6 +27,12 @@ describe("createStores", () => {
     });
     expect(storeA.getState().foo).toBe(1);
     expect(storeB.getState().foo).toBe(0);
+
+    expect(storeA.key).toEqual({ id: 1 });
+    expect(storeB.key).toEqual({ id: 2 });
+
+    expect(storeA.keyHash).toBe('{"id":1}');
+    expect(storeB.keyHash).toBe('{"id":2}');
   });
 
   it("hook subscribes to correct store based on key", () => {

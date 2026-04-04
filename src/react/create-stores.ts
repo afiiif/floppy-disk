@@ -36,16 +36,19 @@ export const createStores = <TState extends Record<string, any>, TKey extends Re
   initialState: TState,
   options?: InitStoreOptions<TState>,
 ) => {
-  const stores = new Map<string, StoreApi<TState>>();
+  type TStore = StoreApi<TState> & { key: TKey; keyHash: string };
+  const stores = new Map<string, TStore>();
 
   const getStore = (key: TKey = {} as TKey) => {
     const keyHash = getHash(key);
 
-    let store: StoreApi<TState>;
+    let store: TStore;
     if (stores.has(keyHash)) {
       store = stores.get(keyHash)!;
     } else {
-      store = initStore(initialState, options);
+      store = initStore(initialState, options) as TStore;
+      store.key = key;
+      store.keyHash = keyHash;
       stores.set(keyHash, store);
     }
 
