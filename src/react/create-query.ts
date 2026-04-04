@@ -40,7 +40,7 @@ import {
 export type QueryState<TData, TError> = {
   isPending: boolean;
   isRevalidating: boolean;
-  willRetry: boolean;
+  willRetryAt: undefined | number;
   isRetrying: boolean;
   retryCount: number;
 } & (
@@ -85,7 +85,7 @@ export type QueryState<TData, TError> = {
 const INITIAL_STATE: QueryState<any, any> = {
   isPending: false,
   isRevalidating: false,
-  willRetry: false,
+  willRetryAt: undefined,
   isRetrying: false,
   retryCount: 0,
   state: "INITIAL",
@@ -272,7 +272,7 @@ export const createQuery = <TData, TVariable extends Record<string, any> = never
       const { metadata, revalidate } = internals.get(store)!;
       clearTimeout(metadata.retryTimeoutId);
       if (metadata.retryResolver) {
-        store.setState({ willRetry: false });
+        store.setState({ willRetryAt: undefined });
         metadata.retryResolver(store.getState());
         metadata.retryResolver = undefined;
       }
@@ -307,6 +307,9 @@ export const createQuery = <TData, TVariable extends Record<string, any> = never
   // -------
 
   type Internal = {
+    /**
+     * Internal data, do not mutate!
+     */
     metadata: {
       isInvalidated?: boolean;
       promise?: Promise<TState> | undefined;
@@ -523,7 +526,7 @@ export const createQuery = <TData, TVariable extends Record<string, any> = never
         store.setState({
           isPending: true,
           isRevalidating: stateBeforeExecute.state === "SUCCESS",
-          willRetry: false,
+          willRetryAt: undefined,
           isRetrying: !!metadata.retryResolver,
           retryCount: metadata.retryResolver ? stateBeforeExecute.retryCount + 1 : 0,
         });
@@ -575,7 +578,7 @@ export const createQuery = <TData, TVariable extends Record<string, any> = never
                 isPending: false,
                 isRevalidating: false,
                 isRetrying: false,
-                willRetry: true,
+                willRetryAt: Date.now() + retryDelay,
               });
             } else {
               store.setState({

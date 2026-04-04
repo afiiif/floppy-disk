@@ -3,6 +3,8 @@ import { describe, expect, it, vi } from "vitest";
 import { createQuery } from "floppy-disk/react";
 import * as basic from "../../src/vanilla/basic";
 
+const DEFAULT_RETRY_DELAY = 1500;
+
 describe("createQuery", () => {
   it("fetches data on mount and updates state accordingly", async () => {
     let resolveFn: (value: any) => void;
@@ -13,7 +15,7 @@ describe("createQuery", () => {
     expect(query().getState()).toMatchObject({
       isPending: false,
       isRevalidating: false,
-      willRetry: false,
+      willRetryAt: undefined,
       isRetrying: false,
       retryCount: 0,
       state: "INITIAL",
@@ -35,7 +37,7 @@ describe("createQuery", () => {
     expect(result.current).toMatchObject({
       isPending: true,
       isRevalidating: false,
-      willRetry: false,
+      willRetryAt: undefined,
       isRetrying: false,
       retryCount: 0,
       state: "INITIAL",
@@ -53,7 +55,7 @@ describe("createQuery", () => {
     expect(result.current).toMatchObject({
       isPending: false,
       isRevalidating: false,
-      willRetry: false,
+      willRetryAt: undefined,
       isRetrying: false,
       retryCount: 0,
       state: "SUCCESS",
@@ -122,7 +124,7 @@ describe("createQuery", () => {
 
     expect(result.current).toMatchObject({
       isPending: true,
-      willRetry: false,
+      willRetryAt: undefined,
       state: "INITIAL",
     });
 
@@ -133,7 +135,7 @@ describe("createQuery", () => {
 
     expect(result.current).toMatchObject({
       isPending: false,
-      willRetry: false,
+      willRetryAt: undefined,
       state: "ERROR",
       isSuccess: false,
       isError: true,
@@ -204,7 +206,7 @@ describe("createQuery", () => {
 
     expect(result.current).toMatchObject({
       state: "SUCCESS_BUT_REVALIDATION_ERROR",
-      willRetry: false,
+      willRetryAt: undefined,
       isSuccess: true,
       isError: false,
       data: "ok",
@@ -222,6 +224,7 @@ describe("createQuery", () => {
 
     let rejectFn: any;
     let resolveFn: any;
+    let promiseSettledAt: number = undefined!;
     const queryFn = vi
       .fn()
       .mockImplementationOnce(() => new Promise((_, reject) => (rejectFn = reject)))
@@ -237,12 +240,13 @@ describe("createQuery", () => {
     });
 
     await act(async () => {
+      promiseSettledAt = Date.now();
       rejectFn(new Error("fail"));
     });
 
     const store = query();
     expect(store.getState()).toMatchObject({
-      willRetry: true,
+      willRetryAt: promiseSettledAt + 100,
       isRetrying: false,
       retryCount: 0,
     });
@@ -253,7 +257,7 @@ describe("createQuery", () => {
 
     expect(queryFn).toHaveBeenCalledTimes(2);
     expect(store.getState()).toMatchObject({
-      willRetry: false,
+      willRetryAt: undefined,
       isRetrying: true,
       retryCount: 1,
     });
@@ -262,7 +266,7 @@ describe("createQuery", () => {
       resolveFn("ok");
     });
     expect(store.getState()).toMatchObject({
-      willRetry: false,
+      willRetryAt: undefined,
       isRetrying: false,
       retryCount: 0,
       state: "SUCCESS",
@@ -286,6 +290,7 @@ describe("createQuery", () => {
     let reject3: any;
     let reject4: any;
     let reject5: any;
+    let promiseSettledAt: number = undefined!;
 
     const queryFn = vi
       .fn()
@@ -308,10 +313,11 @@ describe("createQuery", () => {
     const store = query();
 
     await act(async () => {
+      promiseSettledAt = Date.now();
       reject1(new Error("fail-1"));
     });
     expect(store.getState()).toMatchObject({
-      willRetry: true,
+      willRetryAt: promiseSettledAt + DEFAULT_RETRY_DELAY,
       isRetrying: false,
     });
 
@@ -320,7 +326,7 @@ describe("createQuery", () => {
     });
     expect(queryFn).toHaveBeenCalledTimes(1); // retry not yet triggered
     expect(store.getState()).toMatchObject({
-      willRetry: true,
+      willRetryAt: promiseSettledAt + DEFAULT_RETRY_DELAY,
       isRetrying: false,
     });
 
@@ -329,7 +335,7 @@ describe("createQuery", () => {
     });
     expect(queryFn).toHaveBeenCalledTimes(2);
     expect(store.getState()).toMatchObject({
-      willRetry: false,
+      willRetryAt: undefined,
       isRetrying: true,
       retryCount: 1,
     });
@@ -344,10 +350,11 @@ describe("createQuery", () => {
       store.execute();
     });
     await act(async () => {
+      promiseSettledAt = Date.now();
       reject3(new Error("fail-2"));
     });
     expect(store.getState()).toMatchObject({
-      willRetry: true,
+      willRetryAt: promiseSettledAt + DEFAULT_RETRY_DELAY,
       isRetrying: false,
       retryCount: 0,
     });
@@ -357,7 +364,7 @@ describe("createQuery", () => {
     });
     expect(queryFn).toHaveBeenCalledTimes(4);
     expect(store.getState()).toMatchObject({
-      willRetry: false,
+      willRetryAt: undefined,
       isRetrying: true,
       retryCount: 1,
     });
@@ -369,7 +376,7 @@ describe("createQuery", () => {
     const state = store.getState();
 
     expect(store.getState()).toMatchObject({
-      willRetry: false,
+      willRetryAt: undefined,
       isRetrying: false,
       retryCount: 0,
       state: "SUCCESS_BUT_REVALIDATION_ERROR",
@@ -384,17 +391,18 @@ describe("createQuery", () => {
       store.execute();
     });
     await act(async () => {
+      promiseSettledAt = Date.now();
       reject5(new Error("fail-4"));
     });
     expect(store.getState()).toMatchObject({
-      willRetry: true,
+      willRetryAt: promiseSettledAt + DEFAULT_RETRY_DELAY,
       isRetrying: false,
       retryCount: 0,
     });
 
     unmount();
     expect(store.getState()).toMatchObject({
-      willRetry: false,
+      willRetryAt: undefined,
       isRetrying: false,
       retryCount: 0,
     });
@@ -432,7 +440,7 @@ describe("createQuery", () => {
       reject1(new Error("fail"));
     });
     expect(store.getState()).toMatchObject({
-      willRetry: false,
+      willRetryAt: undefined,
       isRetrying: false,
       retryCount: 0,
     });
@@ -449,7 +457,7 @@ describe("createQuery", () => {
       resolve2("ok");
     });
     expect(store.getState()).toMatchObject({
-      willRetry: false,
+      willRetryAt: undefined,
       isRetrying: false,
       retryCount: 0,
       state: "SUCCESS",
