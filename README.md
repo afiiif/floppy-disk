@@ -84,7 +84,7 @@ const unsubscribe = useMyStore.subscribe((state, prev) => {
 unsubscribe();
 ```
 
-FloppyDisk provides lifecycle hooks tied to subscription count.
+FloppyDisk also provides lifecycle hooks tied to subscription count:
 
 ```tsx
 const useTowerDefense = createStore(
@@ -228,9 +228,11 @@ const useMyQuery = myQuery();
 
 function MyComponent() {
   const { data, error } = useMyQuery();
+
   if (!data && !error) return <div>Loading...</div>;
   if (error) return <div>Error: {error.message}</div>;
-  return <div>{JSON.stringify(data)}</div>;
+
+  return <div>{data.foo} {data.bar}</div>;
 }
 ```
 
@@ -238,31 +240,19 @@ function MyComponent() {
 
 FloppyDisk tracks two things separately:
 
-- Is it running? → `isPending`\
-  (value: `boolean`)
-- What's the result? → `state`\
-  (value: `INITIAL | 'SUCCESS' | 'ERROR' | 'SUCCESS_BUT_REVALIDATION_ERROR'`)
+- Is it running? → `isPending`
+- What's the result? → `state`
 
 They are **independent**.
-
-### Automatic Re-render Optimization
-
-Just like the global store, FloppyDisk tracks usage automatically:
-
-```tsx
-const { data } = useMyQuery();
-// ^Only data changes will trigger a re-render
-
-const value = useMyQuery().data?.foo.bar.baz;
-// ^Only data.foo.bar.baz changes will trigger a re-render
-```
 
 ### Keyed Query (Dynamic Params)
 
 You can create parameterized queries:
 
 ```tsx
-import { getUserById, type GetUserByIdResponse } from "../utils";
+import { createQuery } from "floppy-disk/react";
+
+import { getUserById, type GetUserByIdResponse } from "../utils"; // Your own module
 
 type MyQueryParam = { id: string };
 
@@ -276,15 +266,41 @@ Use it with parameters:
 
 ```tsx
 function UserDetail({ id }) {
-  const useUserQuery = userQuery({ id: 1 });
+  const useUserQuery = userQuery({ id });
   const { data, error } = useUserQuery();
+
   if (!data && !error) return <div>Loading...</div>;
   if (error) return <div>Error: {error.message}</div>;
-  return <div>{JSON.stringify(data)}</div>;
+
+  return <div>Name: {data.name}, email: {data.email}</div>;
 }
 ```
 
 Each unique parameter creates its own cache entry.
+
+### Store Inheritance
+
+Queries in FloppyDisk are built on top of the core store.
+This means every query inherits the same capabilities, such as `subscribe`, `getState`, and store events.
+It also gets **automatic reactivity** out of the box, so components rerender only when the state they use actually changes.
+
+```tsx
+const { data } = useMyQuery();
+// ^Only data changes will trigger a re-render
+
+const value = useMyQuery().data?.foo.bar.baz;
+// ^Only data.foo.bar.baz changes will trigger a re-render
+```
+
+Get state outside React:
+
+```tsx
+const myQuery = createQuery<AsyncResponse>(myAsyncFn); // Query without paramerer
+const userQuery = createQuery<UserDetail, { id: string }>(getUserById); // Parameterized query
+
+const getMyQueryData = () => myQuery().getState().data;
+const getUserQueryData = ({ id }) => userQuery({ id }).getState().data;
+```
 
 ### Infinite Query
 
