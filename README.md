@@ -56,7 +56,7 @@ function Control() {
   );
 }
 
-// You can create a custom actions
+// Create your own custom action
 const evolve = () => {
   const { level } = useDigimon.getState();
 
@@ -217,20 +217,20 @@ Create a query using `createQuery`:
 ```tsx
 import { createQuery } from "floppy-disk/react";
 
-const myCoolQuery = createQuery(
+const myQuery = createQuery(
   myAsyncFn,
   // { staleTime: 5000, revalidateOnFocus: false } <-- optional options
 );
 
-const useMyCoolQuery = myCoolQuery();
+const useMyQuery = myQuery();
 
 // Use it inside your component:
 
 function MyComponent() {
-  const query = useMyCoolQuery();
-  if (query.state === "INITIAL") return <div>Loading...</div>;
-  if (query.error) return <div>Error: {query.error.message}</div>;
-  return <div>{JSON.stringify(query.data)}</div>;
+  const { data, error } = useMyQuery();
+  if (!data && !error) return <div>Loading...</div>;
+  if (error) return <div>Error: {error.message}</div>;
+  return <div>{JSON.stringify(data)}</div>;
 }
 ```
 
@@ -277,10 +277,10 @@ Use it with parameters:
 ```tsx
 function UserDetail({ id }) {
   const useUserQuery = userQuery({ id: 1 });
-  const query = useUserQuery();
-  if (query.state === "INITIAL") return <div>Loading...</div>;
-  if (query.error) return <div>Error: {query.error.message}</div>;
-  return <div>{JSON.stringify(query.data)}</div>;
+  const { data, error } = useUserQuery();
+  if (!data && !error) return <div>Loading...</div>;
+  if (error) return <div>Error: {error.message}</div>;
+  return <div>{JSON.stringify(data)}</div>;
 }
 ```
 
@@ -326,7 +326,7 @@ function Page({ cursor }: { cursor?: string }) {
   const usePostsQuery = postsQuery({ cursor });
   const { state, data, error } = usePostsQuery();
 
-  if (state === "INITIAL") return <div>Loading...</div>;
+  if (!data && !error) return <div>Loading...</div>;
   if (error) return <div>Error</div>;
 
   return (

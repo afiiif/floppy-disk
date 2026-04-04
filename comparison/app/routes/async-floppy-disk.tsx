@@ -189,9 +189,9 @@ function ExampleInfiniteQuery() {
 
 function Page({ cursor }: { cursor?: string }) {
   const useQuery = infQuery({ cursor });
-  const { state, data, error } = useQuery();
+  const { data, error } = useQuery();
 
-  if (state === "INITIAL") {
+  if (!data && !error) {
     return (
       <div className="flex gap-5">
         <div className="flex-1">

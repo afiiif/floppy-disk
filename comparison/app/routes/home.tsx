@@ -14,8 +14,8 @@ build/client/a____s/store-floppy-disk-D634Gohp.js    1.13 kB │ gzip:  0.52 kB
 build/client/a____s/store-zustand-BJYVMYXp.js        1.68 kB │ gzip:  0.79 kB
 build/client/a____s/utils-DpvILWFZ.js                1.95 kB │ gzip:  0.60 kB
 build/client/a____s/root-CB2-KCWF.js                 2.48 kB │ gzip:  1.01 kB
-build/client/a____s/home-Bdztji3H.js                 2.81 kB │ gzip:  1.19 kB
-build/client/a____s/async-floppy-disk-CkZ-8SfO.js    7.16 kB │ gzip:  2.01 kB
+build/client/a____s/home-DkCzTYiQ.js                 2.81 kB │ gzip:  1.19 kB
+build/client/a____s/async-floppy-disk-C1Jq5CIc.js    7.15 kB │ gzip:  1.99 kB
 build/client/a____s/react-BaGhX6Iy.js               11.44 kB │ gzip:  3.87 kB
 build/client/a____s/async-tanstack-Bqi-YPia.js      43.94 kB │ gzip: 12.62 kB
 build/client/a____s/chunk-UVKPFVEO-BCVTWmlK.js     126.29 kB │ gzip: 42.59 kB
