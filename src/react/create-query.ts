@@ -224,6 +224,8 @@ export type QueryOptions<
  *   const state = useUserQuery();
  *   // ...
  * }
+ *
+ * @see https://floppy-disk.vercel.app/docs/async/query
  */
 export const createQuery = <TData, TVariable extends Record<string, any> = never, TError = Error>(
   queryFn: (

@@ -128,6 +128,8 @@ export type MutationOptions<TData, TVariable, TError = Error> = InitStoreOptions
  *
  * const { isPending } = useCreateUser();
  * const result = await useCreateUser.execute({ name: 'John' });
+ *
+ * @see https://floppy-disk.vercel.app/docs/async/mutation
  */
 export const createMutation = <TData, TVariable = undefined, TError = Error>(
   mutationFn: (

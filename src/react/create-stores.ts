@@ -31,6 +31,8 @@ import { useStoreState } from "./use-store.ts";
  *   const state = useUserStore();
  *   return <div>{state.name}</div>;
  * }
+ *
+ * @see https://floppy-disk.vercel.app/docs/sync/stores
  */
 export const createStores = <TState extends Record<string, any>, TKey extends Record<string, any>>(
   initialState: TState,
