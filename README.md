@@ -2,7 +2,7 @@
 
 A unified state model for **sync & async** data.
 
-If you know [Zustand](https://zustand.docs.pmnd.rs) & [TanStack-Query](https://tanstack.com/query), you already know FloppyDisk.\
+If you know [Zustand](https://zustand.docs.pmnd.rs) & [TanStack-Query](https://tanstack.com/query), you already know FloppyDisk(.ts).\
 It keeps what works, removes unnecessary complexity, and unifies everything into a simpler API.\
 No relearning—just a better experience.
 
@@ -16,79 +16,125 @@ Demo: https://afiiif.github.io/floppy-disk/
 npm install floppy-disk
 ```
 
-## Global Store
+## In short, it is:
 
-Here's how to create and use a store:
+- **Like Zustand, but has additional capability:**
+  - No selector: auto optimize re-render.
+  - Store events: `onSubscribe`, `onUnSubscribe`, etc.
+  - Easier to set initial state from server
+  - Smaller bundle
+- **Like TanStack Query, but:**
+  - DX is very similar to Zustand → One mental model for sync & async
+  - Extremely less bundle size → With almost the same capabilities
+
+## Store (Global State)
+
+A store is a global state container that can be used both **inside and outside** React.\
+With FloppyDisk, creating a store is simple:
 
 ```tsx
 import { createStore } from "floppy-disk/react";
 
-const useDigimon = createStore({
-  age: 7,
-  level: "Rookie",
+const useLawn = createStore({
+  plants: 3,
+  zombies: 1,
 });
 ```
 
-You can use the store both inside and outside of React components.
+Use it inside a component:
 
 ```tsx
-function MyDigimon() {
-  const { age } = useDigimon();
-  return <div>Digimon age: {age}</div>;
-  // This component will only re-render when `age` changes.
-  // Changes to `level` will NOT trigger a re-render.
+function MyPlants() {
+  const { plants } = useLawn(); // No selectors needed.
+
+  return <div>Plants: {plants}</div>; // Only re-render when plants state changes
 }
+```
 
-function Control() {
-  return (
-    <>
-      <button
-        onClick={() => {
-          // You can setState directly
-          useDigimon.setState((prev) => ({ age: prev.age + 1 }));
-        }}
-      >
-        Increase digimon's age
-      </button>
+Update the state **anywhere**:
 
-      <button onClick={evolve}>Evolve</button>
-    </>
-  );
-}
-
-// Create your own custom action
-const evolve = () => {
-  const { level } = useDigimon.getState();
-
-  const order = ["In-Training", "Rookie", "Champion", "Ultimate"];
-  const nextLevel = order[order.indexOf(level) + 1];
-
-  if (!nextLevel) return console.warn("Already at ultimate level");
-
-  useDigimon.setState({ level: nextLevel });
+```tsx
+const addPlant = () => {
+  useLawn.setState(prev => ({ plants: prev.plants + 1 }));
 };
 ```
 
-### Store Subscription
+### Updating State
 
-At its core, FloppyDisk is a **pub-sub store**.
-
-You can subscribe manually:
+You can update state using `setState`:
 
 ```tsx
-const unsubscribe = useMyStore.subscribe((state, prev) => {
-  console.log("New state:", state);
+const useLawn = createStore({ plants: 3, zombies: 1 });
+// Current state: { plants: 3, zombies: 1 }
+
+useLawn.setState({ plants: 5, zombies: 5 });
+// Current state: { plants: 5, zombies: 5 }
+
+useLawn.setState({ plants: 7 }); // 👈 Partial update
+// Current state: { plants: 7, zombies: 5 }
+
+useLawn.setState(prev => ({ plants: prev.plant + 2 })); // 👈 Using function
+// Current state: { plants: 9, zombies: 5 }
+```
+
+### Reading State Outside React
+
+Stores are not limited to React. You can access state **anywhere**:
+
+```tsx
+const state = useLawn.getState();
+console.log(state.plants);
+```
+
+### Subscribing to Changes
+
+You can subscribe to state changes:
+
+```tsx
+const unsubscribeLawn = useLawn.subscribe((currentState, prevState) => {
+  console.log("State changed:", currentState);
 });
 
 // Later
-unsubscribe();
+unsubscribeLawn(); // when you no longer need it
 ```
 
-FloppyDisk also provides lifecycle hooks tied to subscription count:
+### Transient Updates (No Re-render)
+
+Sometimes you want to listen to changes **without triggering re-renders**.
+You can do this by simply subscribing to the store:
 
 ```tsx
-const useTowerDefense = createStore(
-  { archers: 3, mages: 1, barracks: 2, artillery: 1 },
+function MyComponent() {
+
+  useEffect(() => useLawn.subscribe((currentState, prevState) => {
+    if (currentState.zombies !== prevState.zombies) {
+      console.log("Zombie updated");
+      // Do something ...
+    }
+  }), []);
+
+  ...
+}
+```
+
+## Store Events
+
+FloppyDisk provides lifecycle events to help you understand when **subscribers are added or removed**, and react accordingly.
+
+Each store exposes the following events:
+
+- `onFirstSubscribe` → triggered right after the first subscriber is added
+- `onSubscribe` → triggered after any subscriber is added (including the first)
+- `onUnsubscribe` → triggered right after a subscriber is removed
+- `onLastUnsubscribe` → triggered after the last subscriber is removed
+
+```tsx
+const useLawn = createStore(
+  {
+    plants: 3,
+    zombies: 1,
+  },
   {
     onFirstSubscribe: () => {
       console.log("First subscriber! We’re officially popular 🎉");
@@ -106,46 +152,47 @@ const useTowerDefense = createStore(
 );
 ```
 
-### Differences from Zustand
+### Use Cases
 
-If you're coming from Zustand, this should feel very familiar.\
-Key differences:
+These events let you control resource lifecycle based on usage.\
+You know exactly:
+- when something starts being used
+- when it's no longer needed
 
-1. **No Selectors Needed**\
-   You don't need selectors when using hooks.
-   FloppyDisk automatically tracks which parts of the state are used and optimizes re-renders accordingly.
-2. **Object-Only Store Initialization**\
-   In FloppyDisk, stores **must** be initialized with an object. Primitive values or function initializers are not allowed.
 
-Zustand examples:
+**Perfect for:**
+- opening / closing connections
+- starting / stopping polling
+- initializing expensive resources
+- adding / removing window event listeners
+
+### State Changes Event
+
+Sometimes you want to observe state changes **without becoming a subscriber**.
+
+In addition to lifecycle events, FloppyDisk provides `onStateChange` event.
+It listens to changes, but does NOT count as a subscriber.
+It Acts like a "**spy**" on state updates.
+
+Useful for devtools, logging, or debugging state changes.
 
 ```tsx
-const useDate = create(new Date(2021, 01, 11));
-
-const useCounter = create((set) => ({
-  value: 1,
-  increment: () => set((prev) => ({ value: prev.value + 1 })),
-}));
+const useLawn = createStore(
+  {
+    plants: 3,
+    zombies: 1,
+  },
+  {
+    onStateChange: (currentState, prevState) => {
+      if (currentState.zombies === 0 && prevState.zombies > 30) {
+        toast("🏆 Achievement unlocked! Clear more than 30 zombies at once!");
+      }
+    }
+  },
+);
 ```
 
-FloppyDisk equivalents:
-
-```tsx
-const useDate = createStore({ value: new Date(2021, 01, 11) });
-
-const useCounter = createStore({ value: 1 });
-const increment = () => useCounter.setState((prev) => ({ value: prev.value + 1 }));
-// Unlike Zustand, defining actions inside the store is **discouraged** in FloppyDisk.
-// This improves tree-shakeability and keeps your store minimal.
-
-// However, it's still possible to mix actions with the state if you understand how closures work:
-const useCounterAlt = createStore({
-  value: 1,
-  increment: () => useCounterAlt.setState((prev) => ({ value: prev.value + 1 })),
-});
-```
-
-## Async State (Query & Mutation)
+## Query & Mutation Store for Async State
 
 FloppyDisk also provides a powerful async state layer, inspired by [TanStack-Query](https://tanstack.com/query) but with a simpler API.
 
@@ -221,10 +268,12 @@ const myQuery = createQuery(
   myAsyncFn,
   // { staleTime: 5000, revalidateOnFocus: false } <-- optional options
 );
+```
 
+Use it inside your component:
+
+```tsx
 const useMyQuery = myQuery();
-
-// Use it inside your component:
 
 function MyComponent() {
   const { data, error } = useMyQuery();
@@ -252,12 +301,12 @@ You can create parameterized queries:
 ```tsx
 import { createQuery } from "floppy-disk/react";
 
-import { getUserById, type GetUserByIdResponse } from "../utils"; // Your own module
+import { getZombieById, type GetZombieByIdResponse } from "../utils"; // Your own module
 
-type MyQueryParam = { id: string };
+type ZombieQueryParam = { id: string };
 
-const userQuery = createQuery<GetUserByIdResponse, MyQueryParam>(
-  getUserById,
+const zombieQuery = createQuery<GetZombieByIdResponse, ZombieQueryParam>(
+  getZombieById,
   // { staleTime: 5000, revalidateOnFocus: false } <-- optional options
 );
 ```
@@ -265,14 +314,14 @@ const userQuery = createQuery<GetUserByIdResponse, MyQueryParam>(
 Use it with parameters:
 
 ```tsx
-function UserDetail({ id }) {
-  const useUserQuery = userQuery({ id });
-  const { data, error } = useUserQuery();
+function ZombieDetail({ id }) {
+  const useZombieQuery = zombieQuery({ id });
+  const { data, error } = useZombieQuery();
 
   if (!data && !error) return <div>Loading...</div>;
   if (error) return <div>Error: {error.message}</div>;
 
-  return <div>Name: {data.name}, email: {data.email}</div>;
+  return <div>Name: {data.name}, hp: {data.hp}</div>;
 }
 ```
 
@@ -295,11 +344,11 @@ const value = useMyQuery().data?.foo.bar.baz;
 Get state outside React:
 
 ```tsx
-const myQuery = createQuery<AsyncResponse>(myAsyncFn); // Query without paramerer
-const userQuery = createQuery<UserDetail, { id: string }>(getUserById); // Parameterized query
+const myPlantQuery = createQuery<MyPlantResponse>(getMyPlant); // Query without paramerer
+const zombieQuery = createQuery<GetZombieByIdResponse, { id: string }>(getZombieById); // Parameterized query
 
-const getMyQueryData = () => myQuery().getState().data;
-const getUserQueryData = ({ id }) => userQuery({ id }).getState().data;
+const getMyPlantQueryData = () => myPlantQuery().getState().data;
+const getUserQueryData = ({ id }) => zombieQuery({ id }).getState().data;
 ```
 
 ### Infinite Query
@@ -320,15 +369,15 @@ No special abstraction needed.
 Here is the example on how to implement infinite query properly:
 
 ```tsx
-type GetPostParams = {
+type GetPlantParams = {
   cursor?: string; // For pagination
 };
-type GetPostsResponse = {
-  posts: Post[];
+type GetPlantsResponse = {
+  plants: Plant[];
   meta: { nextCursor: string };
 };
 
-const postsQuery = createQuery<GetPostsResponse, GetPostParams>(getPosts, {
+const plantsQuery = createQuery<GetPlantsResponse, GetPlantParams>(getPlants, {
   staleTime: Infinity,
   revalidateOnFocus: false,
   revalidateOnReconnect: false,
@@ -339,16 +388,16 @@ function Main() {
 }
 
 function Page({ cursor }: { cursor?: string }) {
-  const usePostsQuery = postsQuery({ cursor });
-  const { state, data, error } = usePostsQuery();
+  const usePlantsQuery = plantsQuery({ cursor });
+  const { state, data, error } = usePlantsQuery();
 
   if (!data && !error) return <div>Loading...</div>;
   if (error) return <div>Error</div>;
 
   return (
     <>
-      {data.posts.map((post) => (
-        <PostCard key={post.id} post={post} />
+      {data.plants.map((plant) => (
+        <PlantCard key={plant.id} plant={plant} />
       ))}
       {data.meta.nextCursor && <LoadMore nextCursor={data.meta.nextCursor} />}
     </>
@@ -357,7 +406,7 @@ function Page({ cursor }: { cursor?: string }) {
 
 function LoadMore({ nextCursor }: { nextCursor?: string }) {
   const [isNextPageRequested, setIsNextPageRequested] = useState(() => {
-    const stateOfNextPageQuery = postsQuery({ cursor: nextCursor }).getState();
+    const stateOfNextPageQuery = plantsQuery({ cursor: nextCursor }).getState();
     return stateOfNextPageQuery.isPending || stateOfNextPageQuery.isSuccess;
   });
 
@@ -365,7 +414,7 @@ function LoadMore({ nextCursor }: { nextCursor?: string }) {
     return <Page cursor={nextCursor} />;
   }
 
-  return <BottomObserver onReachBottom={() => setIsNextPageRequested(true)} />;
+  return <DomObserver onReachBottom={() => setIsNextPageRequested(true)} />;
 }
 ```
 
@@ -381,6 +430,99 @@ If revalidation is triggered:
 
 This leads to a **confusing and unstable user experience**.\
 Revalidating dozens of previously viewed pages rarely provides value to the user.
+
+### Mutation
+
+Mutations are used to perform write operations—such as creating, updating, or deleting data.
+
+FloppyDisk provides two ways to use mutations:
+- Global mutation → shared state across components
+- Local mutation → isolated per component
+
+#### Global Mutation
+
+Create a global mutation using `createMutation`:
+
+```tsx
+import { createMutation } from "floppy-disk/react";
+
+const useUpdatePlant = createMutation(updatePlant, {
+  onSuccess: (data) => {
+    console.log("Global success:", data);
+  },
+});
+```
+
+Use it inside any component:
+
+```tsx
+function UpdateButton() {
+  const { isPending } = useUpdatePlant();
+
+  return (
+    <button
+      disabled={isPending}
+      onClick={() => {
+        useUpdatePlant.execute({ id: 1, name: "Sunflower", hp: 300 });
+      }}
+    >
+      Update User
+    </button>
+  );
+}
+```
+
+Characteristics:
+- Shared across all components
+- Single source of truth for mutation state
+- Can be triggered from anywhere using `.execute()`
+- Useful for global actions (e.g. forms, shared actions)
+
+#### Local Mutation
+
+Create a local mutation using `useMutation`:
+
+```tsx
+import { useMutation } from "floppy-disk/react";
+
+function UpdateForm() {
+  const [result, { execute }] = useMutation(updateZombie, {
+    onSuccess: (data) => {
+      console.log("Local success:", data);
+    },
+  });
+
+  return (
+    <div>
+      <button
+        disabled={result.isPending}
+        onClick={() => {
+          execute({ id: 27, name: "Gargantuar", hp: 3000 });
+        }}
+      >
+        Submit
+      </button>
+
+      {result.isError && <div>Error occurred</div>}
+    </div>
+  );
+}
+```
+
+Characteristics:
+- Isolated per component instance
+- Each usage has its own state
+- No shared side effects
+- Ideal for component-scoped interactions
+
+#### Execution
+
+Both global and local mutations:
+
+- Execute via `execute(input)`
+- Return a Promise that **never throw**.\
+  It returns `{ variable: TVariable; data?: TData; error?: TError }` instead.
+- Update state automatically (`isPending`, `isSuccess`, `isError`, etc.)
 
 ## SSR Guidance
 
@@ -428,17 +570,17 @@ This is how the query state transition flow looks like:
 ```
    initial                                                              failed, won't retry
  ┌────────────────────────────┐                                       ┌────────────────────────────┐
- │ isPending: false           │                                      Δ│ isPending: false           │
+ │ isPending: false           │                                      ■│ isPending: false           │
  │ isRevalidating: false      │                                       │ isRevalidating: false      │
  │                            │                  ┌──────────────────▶ │                            │
- │ state: "INITIAL"           │                  │                   Δ│ state: "ERROR"             │
+ │ state: "INITIAL"           │                  │                   ■│ state: "ERROR"             │
  │ isSuccess: false           │                  │                    │ isSuccess: false           │
  │ data: undefined            │                  │                    │ data: undefined            │
  │ dataUpdatedAt: undefined   │                  │                    │ dataUpdatedAt: undefined   │
  │ dataStaleAt: undefined     │                  │                    │ dataStaleAt: undefined     │
- │ isError: false             │                  │                   Δ│ isError: true              │
- │ error: undefined           │                  │                   Δ│ error: <TError>            │
- │ errorUpdatedAt: undefined  │                  │                   Δ│ errorUpdatedAt: <number>   │
+ │ isError: false             │                  │                   ■│ isError: true              │
+ │ error: undefined           │                  │                   ■│ error: <TError>            │
+ │ errorUpdatedAt: undefined  │                  │                   ■│ errorUpdatedAt: <number>   │
  │                            │                  │                    │                            │
  │ willRetryAt: undefined     │                  │                    │ willRetryAt: undefined     │
  │ isRetrying: false          │                  │                   •│ isRetrying: false          │
@@ -448,7 +590,7 @@ This is how the query state transition flow looks like:
                │ execute                         │
                ▼                                 │                      waiting retry delay
  ┌────────────────────────────┐                 (N)                   ┌────────────────────────────┐
-Δ│ isPending: true         [ƒ]│                  │                   Δ│ isPending: false           │
+■│ isPending: true         [ƒ]│                  │                   ■│ isPending: false           │
  │ isRevalidating: false      │    fail          │                    │ isRevalidating: false      │
  │                            ├──────────▶ Should retry? ────(Y)────▶ │                            │
  │ state: "INITIAL"           │                  ▲                    │ state: "INITIAL"           │
@@ -460,7 +602,7 @@ This is how the query state transition flow looks like:
  │ error: undefined           │                  │                    │ error: undefined           │
  │ errorUpdatedAt: undefined  │                  │                    │ errorUpdatedAt: undefined  │
  │                            │                  │                    │                            │
- │ willRetryAt: undefined     │                  │                   Δ│ willRetryAt: <number>      │
+ │ willRetryAt: undefined     │                  │                   ■│ willRetryAt: <number>      │
  │ isRetrying: false          │                  │                    │ isRetrying: false          │
  │ retryCount: 0              │                  │                    │ retryCount: <number>       │
  └─────────────┬──────────────┘                  │                    └─────────────┬──────────────┘
@@ -468,21 +610,21 @@ This is how the query state transition flow looks like:
                │ success                         │                                  │ retrying
                ▼                                 │                                  ▼
  ┌────────────────────────────┐                  │                    ┌────────────────────────────┐
-Δ│ isPending: false           │                  │                   Δ│ isPending: true         [ƒ]│
+■│ isPending: false           │                  │                   ■│ isPending: true         [ƒ]│
  │ isRevalidating: false      │                  │            fail    │ isRevalidating: false      │
  │                            │                  └────────────────────┤                            │
-Δ│ state: "SUCCESS"           │                                       │ state: "INITIAL"           │
-Δ│ isSuccess: true            │                                       │ isSuccess: false           │
-Δ│ data: <TData>              │                                       │ data: undefined            │
-Δ│ dataUpdatedAt: <number>    │                                       │ dataUpdatedAt: undefined   │
-Δ│ dataStaleAt: <number>      │                                       │ dataStaleAt: undefined     │
+■│ state: "SUCCESS"           │                                       │ state: "INITIAL"           │
+■│ isSuccess: true            │                                       │ isSuccess: false           │
+■│ data: <TData>              │                                       │ data: undefined            │
+■│ dataUpdatedAt: <number>    │                                       │ dataUpdatedAt: undefined   │
+■│ dataStaleAt: <number>      │                                       │ dataStaleAt: undefined     │
  │ isError: false             │                                       │ isError: false             │
  │ error: undefined           │                                       │ error: undefined           │
  │ errorUpdatedAt: undefined  │                            success    │ errorUpdatedAt: undefined  │
  │                            │ ◀─────────────────────────────────────┤                            │
- │ willRetryAt: undefined     │                                      Δ│ willRetryAt: undefined     │
-•│ isRetrying: false          │                                      Δ│ isRetrying: true           │
-•│ retryCount: 0 (reset)      │                                      Δ│ retryCount: <number> (+1)  │
+ │ willRetryAt: undefined     │                                      ■│ willRetryAt: undefined     │
+•│ isRetrying: false          │                                      ■│ isRetrying: true           │
+•│ retryCount: 0 (reset)      │                                      ■│ retryCount: <number> (+1)  │
  └────────────────────────────┘                                       └────────────────────────────┘
 ```
 
@@ -491,17 +633,17 @@ And then after success:
 ```
    success                                                              failed, won't retry
  ┌────────────────────────────┐                                       ┌─────────────────────────────────────────┐
- │ isPending: false           │                                      Δ│ isPending: false                        │
- │ isRevalidating: false      │                                      Δ│ isRevalidating: false                   │
+ │ isPending: false           │                                      ■│ isPending: false                        │
+ │ isRevalidating: false      │                                      ■│ isRevalidating: false                   │
  │                            │                  ┌──────────────────▶ │                                         │
- │ state: "SUCCESS"           │                  │                   Δ│ state: "SUCCESS_BUT_REVALIDATION_ERROR" │
+ │ state: "SUCCESS"           │                  │                   ■│ state: "SUCCESS_BUT_REVALIDATION_ERROR" │
  │ isSuccess: true            │                  │                    │ isSuccess: true                         │
  │ data: <TData>              │                  │                    │ data: <TData>                           │
  │ dataUpdatedAt: <number>    │                  │                    │ dataUpdatedAt: <number>                 │
  │ dataStaleAt: <number>      │                  │                    │ dataStaleAt: <number>                   │
  │ isError: false             │                  │                    │ isError: false                          │
- │ error: undefined           │                  │                   Δ│ error: <TError>                         │
- │ errorUpdatedAt: undefined  │                  │                   Δ│ errorUpdatedAt: <number>                │
+ │ error: undefined           │                  │                   ■│ error: <TError>                         │
+ │ errorUpdatedAt: undefined  │                  │                   ■│ errorUpdatedAt: <number>                │
  │                            │                  │                    │                                         │
  │ willRetryAt: undefined     │                  │                    │ willRetryAt: undefined                  │
  │ isRetrying: false          │                  │                   •│ isRetrying: false                       │
@@ -511,8 +653,8 @@ And then after success:
                │ revalidate                      │
                ▼                                 │                      waiting retry delay
  ┌────────────────────────────┐                 (N)                   ┌────────────────────────────┐
-Δ│ isPending: true         [ƒ]│                  │                   Δ│ isPending: false           │
-Δ│ isRevalidating: true       │    fail          │                   Δ│ isRevalidating: false      │
+■│ isPending: true         [ƒ]│                  │                   ■│ isPending: false           │
+■│ isRevalidating: true       │    fail          │                   ■│ isRevalidating: false      │
  │                            ├──────────▶ Should retry? ────(Y)────▶ │                            │
  │ state: "SUCCESS"           │                  ▲                    │ state: "SUCCESS"           │
  │ isSuccess: true            │                  │                    │ isSuccess: true            │
@@ -523,7 +665,7 @@ And then after success:
  │ error: undefined           │                  │                    │ error: undefined           │
  │ errorUpdatedAt: undefined  │                  │                    │ errorUpdatedAt: undefined  │
  │                            │                  │                    │                            │
- │ willRetryAt: undefined     │                  │                   Δ│ willRetryAt: <number>      │
+ │ willRetryAt: undefined     │                  │                   ■│ willRetryAt: <number>      │
  │ isRetrying: false          │                  │                    │ isRetrying: false          │
  │ retryCount: 0              │                  │                    │ retryCount: <number>       │
  └─────────────┬──────────────┘                  │                    └─────────────┬──────────────┘
@@ -531,20 +673,20 @@ And then after success:
                │ success                         │                                  │ retrying
                ▼                                 │                                  ▼
  ┌────────────────────────────┐                  │                    ┌────────────────────────────┐
-Δ│ isPending: false           │                  │                   Δ│ isPending: true         [ƒ]│
-Δ│ isRevalidating: false      │                  │            fail   Δ│ isRevalidating: true       │
+■│ isPending: false           │                  │                   ■│ isPending: true         [ƒ]│
+■│ isRevalidating: false      │                  │            fail   ■│ isRevalidating: true       │
  │                            │                  └────────────────────┤                            │
  │ state: "SUCCESS"           │                                       │ state: "SUCCESS"           │
  │ isSuccess: true            │                                       │ isSuccess: true            │
-Δ│ data: <TData>              │                                       │ data: <TData>              │
-Δ│ dataUpdatedAt: <number>    │                                       │ dataUpdatedAt: <number>    │
-Δ│ dataStaleAt: <number>      │                                       │ dataStaleAt: <number>      │
+■│ data: <TData>              │                                       │ data: <TData>              │
+■│ dataUpdatedAt: <number>    │                                       │ dataUpdatedAt: <number>    │
+■│ dataStaleAt: <number>      │                                       │ dataStaleAt: <number>      │
  │ isError: false             │                                       │ isError: false             │
  │ error: undefined           │                                       │ error: undefined           │
  │ errorUpdatedAt: undefined  │                            success    │ errorUpdatedAt: undefined  │
  │                            │ ◀─────────────────────────────────────┤                            │
- │ willRetryAt: undefined     │                                      Δ│ willRetryAt: undefined     │
-•│ isRetrying: false          │                                      Δ│ isRetrying: true           │
-•│ retryCount: 0 (reset)      │                                      Δ│ retryCount: <number> (+1)  │
+ │ willRetryAt: undefined     │                                      ■│ willRetryAt: undefined     │
+•│ isRetrying: false          │                                      ■│ isRetrying: true           │
+•│ retryCount: 0 (reset)      │                                      ■│ retryCount: <number> (+1)  │
  └────────────────────────────┘                                       └────────────────────────────┘
 ```
