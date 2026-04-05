@@ -27,7 +27,7 @@ npm install floppy-disk
   - DX is very similar to Zustand → One mental model for sync & async
   - Extremely less bundle size → With almost the same capabilities
 
-## Store (Global State)
+# Store (Global State)
 
 A store is a global state container that can be used both **inside and outside** React.\
 With FloppyDisk, creating a store is simple:
@@ -59,7 +59,7 @@ const addPlant = () => {
 };
 ```
 
-### Updating State
+## Updating State
 
 You can update state using `setState`:
 
@@ -77,7 +77,7 @@ useLawn.setState(prev => ({ plants: prev.plant + 2 })); // 👈 Using function
 // Current state: { plants: 9, zombies: 5 }
 ```
 
-### Reading State Outside React
+## Reading State Outside React
 
 Stores are not limited to React. You can access state **anywhere**:
 
@@ -86,7 +86,7 @@ const state = useLawn.getState();
 console.log(state.plants);
 ```
 
-### Subscribing to Changes
+## Subscribing to Changes
 
 You can subscribe to state changes:
 
@@ -99,7 +99,7 @@ const unsubscribeLawn = useLawn.subscribe((currentState, prevState) => {
 unsubscribeLawn(); // when you no longer need it
 ```
 
-### Transient Updates (No Re-render)
+## Transient Updates (No Re-render)
 
 Sometimes you want to listen to changes **without triggering re-renders**.
 You can do this by simply subscribing to the store:
@@ -118,7 +118,7 @@ function MyComponent() {
 }
 ```
 
-## Store Events
+# Store Events
 
 FloppyDisk provides lifecycle events to help you understand when **subscribers are added or removed**, and react accordingly.
 
@@ -152,7 +152,7 @@ const useLawn = createStore(
 );
 ```
 
-### Use Cases
+## Use Cases
 
 These events let you control resource lifecycle based on usage.\
 You know exactly:
@@ -166,7 +166,7 @@ You know exactly:
 - initializing expensive resources
 - adding / removing window event listeners
 
-### State Changes Event
+## State Changes Event
 
 Sometimes you want to observe state changes **without becoming a subscriber**.
 
@@ -192,7 +192,7 @@ const useLawn = createStore(
 );
 ```
 
-## Query & Mutation Store for Async State
+# Query & Mutation Store for Async State
 
 FloppyDisk also provides a powerful async state layer, inspired by [TanStack-Query](https://tanstack.com/query) but with a simpler API.
 
@@ -205,7 +205,7 @@ Instead, we use:
 - **execute** → run the async operation (same as "fetch" in TanStack-Query)
 - **revalidate** → re-run while keeping existing data (same as "refetch" in TanStack-Query)
 
-### Query vs Mutation
+## Query vs Mutation
 
 <details>
 
@@ -257,7 +257,7 @@ If you need retry mechanism, then you can always add it manually.
 
 </details>
 
-### Single Query
+## Single Query
 
 Create a query using `createQuery`:
 
@@ -285,7 +285,7 @@ function MyComponent() {
 }
 ```
 
-### Query State: Two Independent Dimensions
+## Query State: Two Independent Dimensions
 
 FloppyDisk tracks two things separately:
 
@@ -294,7 +294,7 @@ FloppyDisk tracks two things separately:
 
 They are **independent**.
 
-### Keyed Query (Dynamic Params)
+## Keyed Query (Dynamic Params)
 
 You can create parameterized queries:
 
@@ -327,7 +327,7 @@ function ZombieDetail({ id }) {
 
 Each unique parameter creates its own cache entry.
 
-### Store Inheritance
+## Store Inheritance
 
 Queries in FloppyDisk are built on top of the core store.
 This means every query inherits the same capabilities, such as `subscribe`, `getState`, and store events.
@@ -351,7 +351,7 @@ const getMyPlantQueryData = () => myPlantQuery().getState().data;
 const getUserQueryData = ({ id }) => zombieQuery({ id }).getState().data;
 ```
 
-### Infinite Query
+## Infinite Query
 
 FloppyDisk does **not provide** a dedicated "infinite query" API.\
 Instead, it embraces a simpler and more flexible approach:
@@ -431,7 +431,7 @@ If revalidation is triggered:
 This leads to a **confusing and unstable user experience**.\
 Revalidating dozens of previously viewed pages rarely provides value to the user.
 
-### Mutation
+## Mutation
 
 Mutations are used to perform write operations—such as creating, updating, or deleting data.
 
@@ -439,7 +439,7 @@ FloppyDisk provides two ways to use mutations:
 - Global mutation → shared state across components
 - Local mutation → isolated per component
 
-#### Global Mutation
+### Global Mutation
 
 Create a global mutation using `createMutation`:
 
@@ -478,7 +478,7 @@ Characteristics:
 - Can be triggered from anywhere using `.execute()`
 - Useful for global actions (e.g. forms, shared actions)
 
-#### Local Mutation
+### Local Mutation
 
 Create a local mutation using `useMutation`:
 
@@ -515,7 +515,7 @@ Characteristics:
 - No shared side effects
 - Ideal for component-scoped interactions
 
-#### Execution
+### Execution
 
 Both global and local mutations:
 
@@ -524,11 +524,11 @@ Both global and local mutations:
   It returns `{ variable: TVariable; data?: TData; error?: TError }` instead.
 - Update state automatically (`isPending`, `isSuccess`, `isError`, etc.)
 
-## SSR Guidance
+# SSR Guidance
 
 Examples for using stores and queries in SSR with isolated data (no shared state between users).
 
-### Initialize Store State from Server
+## Initialize Store State from Server
 
 ```tsx
 const useCountStore = createStore({ count: 0 });
@@ -542,7 +542,7 @@ function Page({ initialCount }) {
 }
 ```
 
-### Initialize Query Data from Server
+## Initialize Query Data from Server
 
 ```tsx
 async function MyServerComponent() {
@@ -563,7 +563,7 @@ function MyClientComponent({ initialData }) {
 }
 ```
 
-## Query State Machine
+# Query State Machine
 
 This is how the query state transition flow looks like:
 
