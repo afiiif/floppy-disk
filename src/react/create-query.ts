@@ -226,7 +226,11 @@ export type QueryOptions<
  * }
  */
 export const createQuery = <TData, TVariable extends Record<string, any> = never, TError = Error>(
-  queryFn: (variable: TVariable, currentState: QueryState<TData, TError>) => Promise<TData>,
+  queryFn: (
+    variable: TVariable,
+    currentState: QueryState<TData, TError>,
+    variableHash: string,
+  ) => Promise<TData>,
   options: QueryOptions<TData, TVariable, TError> = {},
 ) => {
   const {
@@ -316,6 +320,7 @@ export const createQuery = <TData, TVariable extends Record<string, any> = never
      * Internal data, do not mutate!
      */
     metadata: {
+      variableHash: string;
       isInvalidated?: boolean;
       promise?: Promise<TState> | undefined;
       promiseResolver?: ((value: TState | PromiseLike<TState>) => void) | undefined;
@@ -446,7 +451,7 @@ export const createQuery = <TData, TVariable extends Record<string, any> = never
     variable: TVariable,
     variableHash: string,
   ): Internal => ({
-    metadata: {},
+    metadata: { variableHash },
     setInitialData: (data, revalidate = false) => {
       const state = store.getState();
       if (state.state === "INITIAL" && state.data === undefined) {
@@ -535,7 +540,7 @@ export const createQuery = <TData, TVariable extends Record<string, any> = never
           isRetrying: !!metadata.retryResolver,
           retryCount: metadata.retryResolver ? stateBeforeExecute.retryCount + 1 : 0,
         });
-        queryFn(variable, stateBeforeExecute)
+        queryFn(variable, stateBeforeExecute, metadata.variableHash)
           .then((data) => {
             if (data === undefined) {
               console.error(

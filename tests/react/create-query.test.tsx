@@ -34,7 +34,9 @@ describe("createQuery", () => {
       return useQuery();
     });
 
+    const stateBeforeQueryFnCalled = { ...result.current, isPending: false };
     expect(queryFn).toHaveBeenCalledTimes(1);
+    expect(queryFn).toHaveBeenCalledWith({}, stateBeforeQueryFnCalled, "{}");
 
     expect(result.current).toMatchObject({
       isPending: true,
@@ -819,8 +821,18 @@ describe("createQuery", () => {
     await act(async () => {
       query.revalidateAll();
     });
-    expect(queryFn).toHaveBeenNthCalledWith(3, { id: 1 }, expect.objectContaining({ data: "ok1" }));
-    expect(queryFn).toHaveBeenNthCalledWith(4, { id: 2 }, expect.objectContaining({ data: "ok2" }));
+    expect(queryFn).toHaveBeenNthCalledWith(
+      3,
+      { id: 1 },
+      expect.objectContaining({ data: "ok1" }),
+      '{"id":1}',
+    );
+    expect(queryFn).toHaveBeenNthCalledWith(
+      4,
+      { id: 2 },
+      expect.objectContaining({ data: "ok2" }),
+      '{"id":2}',
+    );
 
     vi.useRealTimers();
   });
