@@ -84,6 +84,9 @@ describe("createStores", () => {
       getState: expect.any(Function),
       setState: expect.any(Function),
     });
+
+    expect(getStore({ id: "A" }).keyHash).toBe('{"id":"A"}');
+    expect(getStore({ id: "B" }).keyHash).toBe('{"id":"B"}');
   });
 
   it("does not re-subscribe on re-render with same key", () => {

@@ -830,6 +830,7 @@ export const createQuery = <TData, TVariable extends Record<string, any> = never
         store.setState(value);
       },
       ...internals.get(store)!,
+      variableHash,
     });
   };
 

@@ -1252,6 +1252,7 @@ describe("createQuery", () => {
       setState: expect.any(Function),
     });
     expect(onUnsubscribe).not.toHaveBeenCalled();
+    expect(query({ id: 1 }).variableHash).toBe('{"id":1}');
 
     rerender({ id: 2 });
     expect(onUnsubscribe.mock.calls[0][1]).toMatchObject({
@@ -1264,6 +1265,7 @@ describe("createQuery", () => {
       getState: expect.any(Function),
       setState: expect.any(Function),
     });
+    expect(query({ id: 2 }).variableHash).toBe('{"id":2}');
 
     expect(result.current.isPending).toBe(true);
     await act(async () => {
