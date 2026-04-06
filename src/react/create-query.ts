@@ -112,7 +112,7 @@ export type QueryOptions<
   TData,
   TVariable extends Record<string, any>,
   TError = Error,
-> = InitStoreOptions<QueryState<TData, TError>> & {
+> = InitStoreOptions<QueryState<TData, TError>, { variableHash: string }> & {
   /**
    * Time (in milliseconds) that data is considered fresh.
    *
@@ -247,12 +247,15 @@ export const createQuery = <TData, TVariable extends Record<string, any> = never
   } = options;
 
   type TState = QueryState<TData, TError>;
+  type TStore = StoreApi<TState> & { variableHash: string };
 
   const initialState = { ...INITIAL_STATE } as TState;
 
-  const stores = new Map<string, StoreApi<TState>>();
+  const stores = new Map<string, TStore>();
 
-  const configureStoreEvents = (variableHash: string): InitStoreOptions<TState> => ({
+  const configureStoreEvents = (
+    variableHash: string,
+  ): InitStoreOptions<TState, { variableHash: string }> => ({
     ...options,
     onFirstSubscribe: (state, store) => {
       options.onFirstSubscribe?.(state, store);
@@ -322,7 +325,6 @@ export const createQuery = <TData, TVariable extends Record<string, any> = never
      * Internal data, do not mutate!
      */
     metadata: {
-      variableHash: string;
       isInvalidated?: boolean;
       promise?: Promise<TState> | undefined;
       promiseResolver?: ((value: TState | PromiseLike<TState>) => void) | undefined;
@@ -446,14 +448,10 @@ export const createQuery = <TData, TVariable extends Record<string, any> = never
      */
     rollbackOptimisticUpdate: () => TData;
   };
-  const internals = new WeakMap<StoreApi<TState>, Internal>();
+  const internals = new WeakMap<TStore, Internal>();
 
-  const configureInternals = (
-    store: StoreApi<TState>,
-    variable: TVariable,
-    variableHash: string,
-  ): Internal => ({
-    metadata: { variableHash },
+  const configureInternals = (store: TStore, variable: TVariable): Internal => ({
+    metadata: {},
     setInitialData: (data, revalidate = false) => {
       const state = store.getState();
       if (state.state === "INITIAL" && state.data === undefined) {
@@ -507,7 +505,7 @@ export const createQuery = <TData, TVariable extends Record<string, any> = never
         return false;
       }
       internals.get(store)!.reset();
-      return stores.delete(variableHash);
+      return stores.delete(store.variableHash);
     },
     optimisticUpdate: (optimisticData) => {
       const { metadata, revalidate, rollbackOptimisticUpdate } = internals.get(store)!;
@@ -522,11 +520,7 @@ export const createQuery = <TData, TVariable extends Record<string, any> = never
     },
   });
 
-  const execute = async (
-    store: StoreApi<TState>,
-    variable: TVariable,
-    overwriteOngoingExecution = false,
-  ) => {
+  const execute = async (store: TStore, variable: TVariable, overwriteOngoingExecution = false) => {
     const { metadata } = internals.get(store)!;
     if (!overwriteOngoingExecution && metadata.promise) return metadata.promise;
     clearTimeout(metadata.retryTimeoutId);
@@ -542,7 +536,7 @@ export const createQuery = <TData, TVariable extends Record<string, any> = never
           isRetrying: !!metadata.retryResolver,
           retryCount: metadata.retryResolver ? stateBeforeExecute.retryCount + 1 : 0,
         });
-        queryFn(variable, stateBeforeExecute, metadata.variableHash)
+        queryFn(variable, stateBeforeExecute, store.variableHash)
           .then((data) => {
             if (data === undefined) {
               console.error(
@@ -635,7 +629,7 @@ export const createQuery = <TData, TVariable extends Record<string, any> = never
   };
 
   const revalidate = async (
-    store: StoreApi<TState>,
+    store: TStore,
     variable: TVariable,
     overwriteOngoingExecution?: boolean,
   ) => {
@@ -653,13 +647,17 @@ export const createQuery = <TData, TVariable extends Record<string, any> = never
 
   const getStore = (variable: TVariable = {} as TVariable) => {
     const variableHash = getHash(variable);
-    let store: StoreApi<TState>;
+    let store: TStore;
     if (stores.has(variableHash)) {
       store = stores.get(variableHash)!;
     } else {
-      store = initStore(initialState, configureStoreEvents(variableHash));
+      store = initStore(
+        initialState,
+        configureStoreEvents(variableHash) as any, // Intentionally using as any: don't want to add generic on `initStore`
+      ) as TStore;
+      store.variableHash = variableHash;
       stores.set(variableHash, store);
-      internals.set(store, configureInternals(store, variable, variableHash));
+      internals.set(store, configureInternals(store, variable));
     }
 
     type UseQueryStoreOptions = {

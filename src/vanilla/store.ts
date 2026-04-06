@@ -55,11 +55,14 @@ export type StoreApi<TState extends Record<string, any>> = {
  * - Cleanup (e.g. cancel timers, disconnect sockets)
  * - Resource management (e.g. garbage collection)
  */
-export type InitStoreOptions<TState extends Record<string, any>> = {
-  onFirstSubscribe?: (state: TState, store: StoreApi<TState>) => void;
-  onSubscribe?: (state: TState, store: StoreApi<TState>) => void;
-  onUnsubscribe?: (state: TState, store: StoreApi<TState>) => void;
-  onLastUnsubscribe?: (state: TState, store: StoreApi<TState>) => void;
+export type InitStoreOptions<
+  TState extends Record<string, any>,
+  TStoreProps extends Record<string, any> = object,
+> = {
+  onFirstSubscribe?: (state: TState, store: StoreApi<TState> & TStoreProps) => void;
+  onSubscribe?: (state: TState, store: StoreApi<TState> & TStoreProps) => void;
+  onUnsubscribe?: (state: TState, store: StoreApi<TState> & TStoreProps) => void;
+  onLastUnsubscribe?: (state: TState, store: StoreApi<TState> & TStoreProps) => void;
 
   /**
    * Called whenever the state changes, without counting as a subscriber.

@@ -36,7 +36,8 @@ describe("createStores", () => {
   });
 
   it("hook subscribes to correct store based on key", () => {
-    const getStore = createStores<{ count: number }, { id: string }>({ count: 0 });
+    const onSubscribe = vi.fn();
+    const getStore = createStores<{ count: number }, { id: string }>({ count: 0 }, { onSubscribe });
 
     let renderA = 0;
     let renderB = 0;
@@ -70,6 +71,19 @@ describe("createStores", () => {
     expect(screen.getByText("B: 0")).toBeInTheDocument();
     expect(renderA).toBe(2);
     expect(renderB).toBe(1);
+
+    expect(onSubscribe.mock.calls[0][1]).toMatchObject({
+      key: { id: "A" },
+      keyHash: '{"id":"A"}',
+      getState: expect.any(Function),
+      setState: expect.any(Function),
+    });
+    expect(onSubscribe.mock.calls[1][1]).toMatchObject({
+      key: { id: "B" },
+      keyHash: '{"id":"B"}',
+      getState: expect.any(Function),
+      setState: expect.any(Function),
+    });
   });
 
   it("does not re-subscribe on re-render with same key", () => {

@@ -36,7 +36,7 @@ import { useStoreState } from "./use-store.ts";
  */
 export const createStores = <TState extends Record<string, any>, TKey extends Record<string, any>>(
   initialState: TState,
-  options?: InitStoreOptions<TState>,
+  options?: InitStoreOptions<TState, { key: TKey; keyHash: string }>,
 ) => {
   type TStore = StoreApi<TState> & { key: TKey; keyHash: string };
   const stores = new Map<string, TStore>();
@@ -48,7 +48,10 @@ export const createStores = <TState extends Record<string, any>, TKey extends Re
     if (stores.has(keyHash)) {
       store = stores.get(keyHash)!;
     } else {
-      store = initStore(initialState, options) as TStore;
+      store = initStore(
+        initialState,
+        options as any, // Intentionally using as any: don't want to add generic on `initStore`
+      ) as TStore;
       store.key = key;
       store.keyHash = keyHash;
       stores.set(keyHash, store);

@@ -1224,4 +1224,60 @@ describe("createQuery", () => {
       errorUpdatedAt: undefined,
     });
   });
+
+  it("calls store events correctly", async () => {
+    let resolveFn: (v: string) => void;
+    const queryFn = vi.fn(() => new Promise<string>((resolve) => (resolveFn = resolve)));
+
+    const onSubscribe = vi.fn();
+    const onUnsubscribe = vi.fn();
+
+    const query = createQuery<string, { id: number }>(queryFn, { onSubscribe, onUnsubscribe });
+
+    const { result, rerender, unmount } = renderHook(
+      (props: { id: number }) => {
+        const useQuery = query(props);
+        return useQuery();
+      },
+      { initialProps: { id: 1 } },
+    );
+
+    expect(result.current.isPending).toBe(true);
+    await act(async () => {
+      resolveFn("first");
+    });
+    expect(onSubscribe.mock.calls[0][1]).toMatchObject({
+      variableHash: '{"id":1}',
+      getState: expect.any(Function),
+      setState: expect.any(Function),
+    });
+    expect(onUnsubscribe).not.toHaveBeenCalled();
+
+    rerender({ id: 2 });
+    expect(onUnsubscribe.mock.calls[0][1]).toMatchObject({
+      variableHash: '{"id":1}',
+      getState: expect.any(Function),
+      setState: expect.any(Function),
+    });
+    expect(onSubscribe.mock.calls[1][1]).toMatchObject({
+      variableHash: '{"id":2}',
+      getState: expect.any(Function),
+      setState: expect.any(Function),
+    });
+
+    expect(result.current.isPending).toBe(true);
+    await act(async () => {
+      resolveFn("second");
+    });
+
+    unmount();
+    expect(onUnsubscribe.mock.calls[1][1]).toMatchObject({
+      variableHash: '{"id":2}',
+      getState: expect.any(Function),
+      setState: expect.any(Function),
+    });
+
+    expect(onSubscribe).toHaveBeenCalledTimes(2);
+    expect(onUnsubscribe).toHaveBeenCalledTimes(2);
+  });
 });
