@@ -2,11 +2,10 @@
 
 A unified state model for **sync & async** data.
 
-If you know [Zustand](https://zustand.docs.pmnd.rs) & [TanStack-Query](https://tanstack.com/query), you already know FloppyDisk(.ts).\
-It keeps what works, removes unnecessary complexity, and unifies everything into a simpler API.\
-No relearning—just a better experience.
+Built on the patterns you know. Refined into something simpler.\
+Inspired by [Zustand](https://zustand.docs.pmnd.rs) & [TanStack-Query](https://tanstack.com/query).
 
-_Smaller bundle. Zero dependencies._
+_Fine-grained reactivity, minimal boilerplate, zero dependencies._
 
 Demo: https://afiiif.github.io/floppy-disk/
 
@@ -16,18 +15,25 @@ Demo: https://afiiif.github.io/floppy-disk/
 npm install floppy-disk
 ```
 
-## In short, it is:
+**Read the docs → https://floppy-disk.vercel.app**
 
-- **Like Zustand, but has additional capabilities:**
-  - No selectors: automatically optimizes re-renders
-  - Store events: `onFirstSubscribe`, `onSubscribe`, `onUnsubscribe`, `onLastUnsubscribe`
-  - Easier to set initial state on SSR/SSG
-  - Smaller bundle
-- **Like TanStack Query, but:**
-  - DX is very similar to Zustand → One mental model for sync & async
-  - Much smaller bundle than TanStack Query → With nearly the same capabilities
+<br>
 
-**Docs: https://floppy-disk.vercel.app**
+---
+
+**Like Zustand, but has additional capabilities:**
+- No selectors: automatically optimizes re-renders
+- Store events: `onFirstSubscribe`, `onSubscribe`, `onUnsubscribe`, `onLastUnsubscribe`
+- Easier to set initial state on SSR/SSG
+- Smaller bundle
+
+**Like TanStack Query, but:**
+- DX is very similar to Zustand → One mental model for sync & async
+- Much smaller bundle than TanStack Query → With nearly the same capabilities
+
+---
+
+<br>
 
 ## Store (Global State)
 
