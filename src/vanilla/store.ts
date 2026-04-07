@@ -31,9 +31,45 @@ export type Subscriber<TState> = (
  * - By default, `setState` is **disabled on the server** to prevent accidental shared state between requests.
  */
 export type StoreApi<TState extends Record<string, any>> = {
+  /**
+   * Updates the state.
+   *
+   * @param value - Partial state or updater function
+   *
+   * @remarks
+   * - Accepts either a partial object or a function `(state) => partial`
+   * - Updates are shallowly merged into the current state
+   */
   setState: (value: SetStateInput<TState>) => void;
+
+  /**
+   * Get the current state.
+   *
+   * @returns The latest state snapshot
+   */
   getState: () => TState;
+
+  /**
+   * Subscribes to state changes.
+   *
+   * @param subscriber - Function called when state updates
+   *
+   * @returns Unsubscribe function
+   *
+   * @remarks
+   * - Subscribers are only called when at least one root key changes
+   * - Receives `(state, prevState, changedKeys)`
+   */
   subscribe: (subscriber: Subscriber<TState>) => () => void;
+
+  /**
+   * Returns the number of active subscribers.
+   *
+   * @returns Total subscriber count
+   *
+   * @remarks
+   * - Can be used to determine if the store is currently in use
+   */
   getSubscriberCount: () => number;
 };
 
