@@ -8,6 +8,7 @@ import {
   isClient,
   noop,
 } from "../vanilla.ts";
+import type { StoreKey } from "./create-stores.ts";
 import { useIsomorphicLayoutEffect } from "./use-isomorphic-layout-effect.ts";
 import {
   NO_INITIAL_VALUE,
@@ -108,11 +109,10 @@ const INITIAL_STATE: QueryState<any, any> = {
  * @remarks
  * Controls caching, retry behavior, lifecycle, and side effects of an async operation.
  */
-export type QueryOptions<
-  TData,
-  TVariable extends Record<string, any>,
-  TError = Error,
-> = InitStoreOptions<QueryState<TData, TError>, { variableHash: string }> & {
+export type QueryOptions<TData, TVariable extends StoreKey, TError = Error> = InitStoreOptions<
+  QueryState<TData, TError>,
+  { variableHash: string }
+> & {
   /**
    * Time (in milliseconds) that data is considered fresh.
    *
@@ -227,7 +227,7 @@ export type QueryOptions<
  *
  * @see https://floppy-disk.vercel.app/docs/async/query
  */
-export const createQuery = <TData, TVariable extends Record<string, any> = never, TError = Error>(
+export const createQuery = <TData, TVariable extends StoreKey = never, TError = Error>(
   queryFn: (
     variable: TVariable,
     currentState: QueryState<TData, TError>,

@@ -56,6 +56,7 @@ describe("getHash", () => {
     expect(getHash(1)).toBe("1");
     expect(getHash("a")).toBe('"a"');
     expect(getHash(true)).toBe("true");
+    expect(getHash(null)).toBe("null");
   });
 
   it("produces same hash for objects with different key order", () => {

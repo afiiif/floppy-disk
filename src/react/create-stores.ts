@@ -1,6 +1,9 @@
 import { type InitStoreOptions, type StoreApi, getHash, initStore } from "../vanilla.ts";
 import { useStoreState } from "./use-store.ts";
 
+type GoodInputForHash = string | number | boolean | null | Date;
+export type StoreKey = GoodInputForHash | { [key: string | number]: StoreKey | StoreKey[] };
+
 /**
  * Creates a factory for multiple stores identified by a key.
  *
@@ -34,7 +37,7 @@ import { useStoreState } from "./use-store.ts";
  *
  * @see https://floppy-disk.vercel.app/docs/sync/stores
  */
-export const createStores = <TState extends Record<string, any>, TKey extends Record<string, any>>(
+export const createStores = <TState extends Record<string, any>, TKey extends StoreKey>(
   initialState: TState,
   options?: InitStoreOptions<TState, { key: TKey; keyHash: string }>,
 ) => {
