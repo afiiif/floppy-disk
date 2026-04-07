@@ -1,13 +1,6 @@
 import { getValue, isClient, noop } from "./basic.ts";
 
-/**
- * Represents a partial state update.
- *
- * Can be either:
- * - A partial object to merge into the current state
- * - A function that receives the current state and returns a partial update
- */
-export type SetState<TState> = Partial<TState> | ((state: TState) => Partial<TState>);
+export type SetStateInput<TState> = Partial<TState> | ((state: TState) => Partial<TState>);
 
 /**
  * A subscriber function that is called whenever the state updates.
@@ -38,7 +31,7 @@ export type Subscriber<TState> = (
  * - By default, `setState` is **disabled on the server** to prevent accidental shared state between requests.
  */
 export type StoreApi<TState extends Record<string, any>> = {
-  setState: (value: SetState<TState>) => void;
+  setState: (value: SetStateInput<TState>) => void;
   getState: () => TState;
   subscribe: (subscriber: Subscriber<TState>) => () => void;
   getSubscribers: () => Set<Subscriber<TState>>;
@@ -139,7 +132,7 @@ export const initStore = <TState extends Record<string, any>>(
 
   const getState = () => state;
 
-  const setState = (value: SetState<TState>) => {
+  const setState = (value: SetStateInput<TState>) => {
     if (!isClient && !allowSetStateServerSide) {
       console.error(
         "setState on the server is not allowed by default. Set `allowSetStateServerSide: true` to allow it.",

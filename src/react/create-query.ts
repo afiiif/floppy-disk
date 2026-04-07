@@ -1,7 +1,7 @@
 import { useRef, useState } from "react";
 import {
   type InitStoreOptions,
-  type SetState,
+  type SetStateInput,
   type StoreApi,
   getHash,
   initStore,
@@ -825,7 +825,7 @@ export const createQuery = <TData, TVariable extends StoreKey = never, TError = 
       subscribe: store.subscribe,
       getSubscribers: store.getSubscribers,
       getState: store.getState,
-      setState: (value: SetState<TState>) => {
+      setState: (value: SetStateInput<TState>) => {
         console.debug("Manual setState (not via provided actions) on query store");
         store.setState(value);
       },

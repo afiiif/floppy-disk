@@ -1,4 +1,4 @@
-import { type InitStoreOptions, type SetState, initStore, noop } from "../vanilla.ts";
+import { type InitStoreOptions, type SetStateInput, initStore, noop } from "../vanilla.ts";
 import { useStoreState } from "./use-store.ts";
 
 /**
@@ -231,7 +231,7 @@ export const createMutation = <TData, TVariable = undefined, TError = Error>(
      * - Intended for advanced use cases.
      * - Prefer using provided mutation actions (`execute`, `reset`) instead.
      */
-    setState: (value: SetState<TState>) => {
+    setState: (value: SetStateInput<TState>) => {
       console.debug("Manual setState (not via provided actions) on mutation store");
       store.setState(value);
     },
