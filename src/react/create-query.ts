@@ -476,7 +476,7 @@ export const createQuery = <TData, TVariable extends StoreKey = never, TError = 
     invalidate: (options) => {
       const { metadata } = internals.get(store)!;
       metadata.isInvalidated = true;
-      if (store.getSubscribers().size > 0) {
+      if (store.getSubscriberCount() > 0) {
         internals.get(store)!.execute(options);
         return true;
       }
@@ -498,7 +498,7 @@ export const createQuery = <TData, TVariable extends StoreKey = never, TError = 
       store.setState(initialState);
     },
     delete: () => {
-      if (store.getSubscribers().size > 0) {
+      if (store.getSubscriberCount() > 0) {
         console.warn(
           "Cannot delete query store while it still has active subscribers. Unsubscribe all listeners before deleting the store.",
         );
@@ -578,7 +578,7 @@ export const createQuery = <TData, TVariable extends StoreKey = never, TError = 
               isRetrying: false,
             };
             const [shouldRetry, retryDelay] = shouldRetryFn(error, nextState);
-            const hasSubscriber = store.getSubscribers().size > 0;
+            const hasSubscriber = store.getSubscriberCount() > 0;
             if (shouldRetry && hasSubscriber) {
               metadata.retryResolver = resolve;
               metadata.retryTimeoutId = setTimeout(createPromise, retryDelay);
@@ -823,7 +823,7 @@ export const createQuery = <TData, TVariable extends StoreKey = never, TError = 
 
     return Object.assign(useStore, {
       subscribe: store.subscribe,
-      getSubscribers: store.getSubscribers,
+      getSubscriberCount: store.getSubscriberCount,
       getState: store.getState,
       setState: (value: SetStateInput<TState>) => {
         console.debug("Manual setState (not via provided actions) on query store");

@@ -72,7 +72,7 @@ export const createStores = <TState extends Record<string, any>, TKey extends St
     return Object.assign(useStore, {
       ...store,
       delete: () => {
-        if (store.getSubscribers().size > 0) {
+        if (store.getSubscriberCount() > 0) {
           console.warn(
             "Cannot delete store while it still has active subscribers. Unsubscribe all listeners before deleting the store.",
           );

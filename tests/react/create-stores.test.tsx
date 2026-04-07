@@ -12,7 +12,7 @@ describe("createStores", () => {
     storeA.setState({ foo: 1 });
     expect(storeB.getState().foo).toBe(1);
     expect(storeA.setState).toBe(storeB.setState);
-    expect(storeA.getSubscribers).toBe(storeB.getSubscribers);
+    expect(storeA.getSubscriberCount).toBe(storeB.getSubscriberCount);
 
     expect(storeA.key).toBe(storeB.key);
   });

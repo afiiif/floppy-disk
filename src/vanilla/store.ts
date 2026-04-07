@@ -34,7 +34,7 @@ export type StoreApi<TState extends Record<string, any>> = {
   setState: (value: SetStateInput<TState>) => void;
   getState: () => TState;
   subscribe: (subscriber: Subscriber<TState>) => () => void;
-  getSubscribers: () => Set<Subscriber<TState>>;
+  getSubscriberCount: () => number;
 };
 
 /**
@@ -115,7 +115,7 @@ export const initStore = <TState extends Record<string, any>>(
 
   const subscribers = new Set<Subscriber<TState>>();
 
-  const getSubscribers = () => subscribers;
+  const getSubscriberCount = () => subscribers.size;
 
   const subscribe = (subscriber: Subscriber<TState>) => {
     subscribers.add(subscriber);
@@ -161,7 +161,7 @@ export const initStore = <TState extends Record<string, any>>(
     getState,
     setState,
     subscribe,
-    getSubscribers,
+    getSubscriberCount,
   };
   return storeApi;
 };

@@ -221,7 +221,7 @@ export const createMutation = <TData, TVariable = undefined, TError = Error>(
 
   return Object.assign(useStore, {
     subscribe: store.subscribe,
-    getSubscribers: store.getSubscribers,
+    getSubscriberCount: store.getSubscriberCount,
     getState: store.getState,
 
     /**

@@ -49,12 +49,23 @@ describe("initStore", () => {
     expect(fn).toHaveBeenCalledTimes(1);
   });
 
-  it("returns subscribers set", () => {
+  it("returns correct subscriber count", () => {
     const store = initStore({ count: 0 });
+
+    store.subscribe(() => {});
+    expect(store.getSubscriberCount()).toBe(1);
+
+    const unsub = store.subscribe(() => {});
+    expect(store.getSubscriberCount()).toBe(2);
+
+    unsub();
+    expect(store.getSubscriberCount()).toBe(1);
+
     const fn = () => {};
     store.subscribe(fn);
-    expect(store.getSubscribers().size).toBe(1);
-    expect(store.getSubscribers().has(fn)).toBe(true);
+    expect(store.getSubscriberCount()).toBe(2);
+    store.subscribe(fn);
+    expect(store.getSubscriberCount()).toBe(2);
   });
 
   it("calls onSubscribe & onFirstSubscribe correctly", () => {
@@ -131,7 +142,7 @@ describe("initStore", () => {
     store.setState({ count: 1 });
 
     expect(subscriber).toHaveBeenCalledTimes(1);
-    expect(store.getSubscribers().size).toBe(1); // still only the real subscriber
+    expect(store.getSubscriberCount()).toBe(1); // still only the real subscriber
   });
 
   it("handles multiple state changes correctly", () => {
