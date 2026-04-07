@@ -11,7 +11,7 @@ describe("createStore", () => {
     expect(typeof store.subscribe).toBe("function");
   });
 
-  it("re-renders correctly for selector and non-selector usage (foo/bar)", () => {
+  it("re-renders correctly based on store state usage", () => {
     const useStore = createStore({
       foo: 2,
       bar: 7,
@@ -106,6 +106,27 @@ describe("createStore", () => {
     expect(barRender).toBe(1);
     expect(bazRender).toBe(2);
     expect(fooAndBazRender).toBe(2);
+  });
+
+  it("react optimizes re-renders when setState multiple times", () => {
+    const useStore = createStore({ count: 7 });
+
+    let totalRender = 0;
+    function MyComponent() {
+      const state = useStore();
+      totalRender++;
+      return <div>count: {state.count}</div>;
+    }
+
+    render(<MyComponent />);
+    expect(totalRender).toBe(1);
+
+    act(() => {
+      useStore.setState({ count: 77 });
+      useStore.setState({ count: 777 });
+      useStore.setState({ count: 7777 });
+    });
+    expect(totalRender).toBe(2);
   });
 
   it("uses initialState on first render and initializes the store", () => {
