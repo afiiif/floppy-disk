@@ -24,7 +24,7 @@ import { INITIAL_STATE, type MutationOptions, type MutationState } from "./creat
  *   - Only the latest execution is allowed to update the state.
  *   - Results from previous executions are ignored if a newer one exists.
  *
- * @see https://floppy-disk.vercel.app/docs/async/mutation
+ * @see https://floppy-disk.vercel.app/docs/mutation
  */
 export const useMutation = <TData, TVariable = undefined, TError = Error>(
   /**

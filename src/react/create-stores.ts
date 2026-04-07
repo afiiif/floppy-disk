@@ -35,7 +35,7 @@ export type StoreKey = GoodInputForHash | { [key: string | number]: StoreKey | S
  *   return <div>{state.name}</div>;
  * }
  *
- * @see https://floppy-disk.vercel.app/docs/sync/stores
+ * @see https://floppy-disk.vercel.app/docs/stores
  */
 export const createStores = <TState extends Record<string, any>, TKey extends StoreKey>(
   initialState: TState,

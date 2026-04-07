@@ -27,7 +27,7 @@ import { useStoreState } from "./use-store.ts";
  *
  * useMyStore.setState({ foo: 2 }); // only components using foo will re-render
  *
- * @see https://floppy-disk.vercel.app/docs/sync/store
+ * @see https://floppy-disk.vercel.app/docs/store
  */
 export const createStore = <TState extends Record<string, any>>(
   initialState: TState,

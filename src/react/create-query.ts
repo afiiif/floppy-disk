@@ -225,7 +225,7 @@ export type QueryOptions<TData, TVariable extends StoreKey, TError = Error> = In
  *   // ...
  * }
  *
- * @see https://floppy-disk.vercel.app/docs/async/query
+ * @see https://floppy-disk.vercel.app/docs/query
  */
 export const createQuery = <TData, TVariable extends StoreKey = never, TError = Error>(
   queryFn: (
