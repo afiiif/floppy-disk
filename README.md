@@ -96,6 +96,8 @@ function PlantDetail({ id }) {
 }
 ```
 
+<br>
+
 ---
 
 Read the docs → https://floppy-disk.vercel.app
