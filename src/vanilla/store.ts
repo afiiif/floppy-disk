@@ -180,7 +180,8 @@ export const initStore = <TState extends Record<string, any>>(
     const newValue = getValue(value, state);
     const changedKeys: Array<keyof TState> = [];
 
-    for (const key in newValue) {
+    for (const key of Object.keys(newValue) as Array<keyof TState>) {
+      if (key === "__proto__" || key === "constructor" || key === "prototype") continue;
       if (!Object.is(prevState[key], newValue[key])) {
         changedKeys.push(key);
       }
