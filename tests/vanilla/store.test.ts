@@ -156,4 +156,77 @@ describe("initStore", () => {
     store.setState({ a: 1, b: 2 }); // no change
     expect(spy).toHaveBeenCalledTimes(1); // still 1 call
   });
+
+  it("does not include inherited keys from prototype chain in changedKeys", () => {
+    const store = initStore({ count: 0 });
+    const spy = vi.fn();
+
+    store.subscribe(spy);
+
+    // 🚨 simulate prototype pollution
+    (Object.prototype as any).polluted = "yes";
+
+    store.setState({ count: 1 });
+
+    expect(spy).toHaveBeenCalledTimes(1);
+    const changedKeys = spy.mock.calls[0][2];
+
+    expect(changedKeys).toEqual(["count"]);
+    expect(changedKeys).not.toContain("polluted");
+
+    delete (Object.prototype as any).polluted;
+  });
+
+  it("ignores __proto__ key from payload", () => {
+    const store = initStore({ name: "initial" });
+    const spy = vi.fn();
+
+    store.subscribe(spy);
+
+    const payload = JSON.parse(`
+      {
+        "__proto__": { "polluted": true },
+        "name": "updated"
+      }
+    `);
+
+    store.setState(payload);
+
+    expect(spy).toHaveBeenCalledTimes(1);
+    const changedKeys = spy.mock.calls[0][2];
+
+    expect(changedKeys).toEqual(["name"]);
+    expect(changedKeys).not.toContain("__proto__");
+  });
+
+  it("ignores dangerous keys like constructor and prototype", () => {
+    const store = initStore({ value: 1 });
+    const spy = vi.fn();
+
+    store.subscribe(spy);
+
+    store.setState({
+      value: 2,
+      constructor: "bad",
+      prototype: "bad",
+    } as any);
+
+    expect(spy).toHaveBeenCalledTimes(1);
+    const changedKeys = spy.mock.calls[0][2];
+
+    expect(changedKeys).toEqual(["value"]);
+    expect(changedKeys).not.toContain("constructor");
+    expect(changedKeys).not.toContain("prototype");
+  });
+
+  it("does not trigger update if only dangerous keys are provided", () => {
+    const spy = vi.fn();
+    const store = initStore({ a: 1 }, { onStateChange: spy });
+
+    store.setState({
+      __proto__: { hacked: true },
+    } as any);
+
+    expect(spy).not.toHaveBeenCalled();
+  });
 });
