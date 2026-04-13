@@ -180,6 +180,7 @@ describe("initStore", () => {
   it("ignores __proto__ key from payload", () => {
     const store = initStore({ name: "initial" });
     const spy = vi.fn();
+    const consoleWarnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
 
     store.subscribe(spy);
 
@@ -197,9 +198,16 @@ describe("initStore", () => {
 
     expect(changedKeys).toEqual(["name"]);
     expect(changedKeys).not.toContain("__proto__");
+
+    expect(consoleWarnSpy).toHaveBeenCalledExactlyOnceWith(
+      'Ignored unsafe key "__proto__" in setState(). This key is reserved and may indicate a prototype pollution attempt or malformed payload.',
+    );
+    consoleWarnSpy.mockRestore();
   });
 
   it("ignores dangerous keys like constructor and prototype", () => {
+    const consoleWarnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+
     const store = initStore({ value: 1 });
     const spy = vi.fn();
 
@@ -217,6 +225,9 @@ describe("initStore", () => {
     expect(changedKeys).toEqual(["value"]);
     expect(changedKeys).not.toContain("constructor");
     expect(changedKeys).not.toContain("prototype");
+
+    expect(consoleWarnSpy).toHaveBeenCalledTimes(2);
+    consoleWarnSpy.mockRestore();
   });
 
   it("does not trigger update if only dangerous keys are provided", () => {

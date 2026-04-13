@@ -181,7 +181,13 @@ export const initStore = <TState extends Record<string, any>>(
     const changedKeys: Array<keyof TState> = [];
 
     for (const key of Object.keys(newValue) as Array<keyof TState>) {
-      if (key === "__proto__" || key === "constructor" || key === "prototype") continue;
+      if (key === "__proto__" || key === "constructor" || key === "prototype") {
+        console.warn(
+          `Ignored unsafe key "${String(key)}" in setState().` +
+            " This key is reserved and may indicate a prototype pollution attempt or malformed payload.",
+        );
+        continue;
+      }
       if (!Object.is(prevState[key], newValue[key])) {
         changedKeys.push(key);
       }
