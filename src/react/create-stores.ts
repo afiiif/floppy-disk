@@ -39,9 +39,20 @@ export type StoreKey = GoodInputForHash | { [key: string | number]: StoreKey | S
  */
 export const createStores = <TState extends Record<string, any>, TKey extends StoreKey>(
   initialState: TState,
-  options?: InitStoreOptions<TState, { key: TKey; keyHash: string }>,
+  options?: InitStoreOptions<
+    TState,
+    {
+      key: TKey;
+      keyHash: string;
+      delete: () => boolean;
+    }
+  >,
 ) => {
-  type TStore = StoreApi<TState> & { key: TKey; keyHash: string };
+  type TStore = StoreApi<TState> & {
+    key: TKey;
+    keyHash: string;
+    delete: () => boolean;
+  };
   const stores = new Map<string, TStore>();
 
   const getStore = (key: TKey = {} as TKey) => {
@@ -55,8 +66,20 @@ export const createStores = <TState extends Record<string, any>, TKey extends St
         initialState,
         options as any, // Intentionally using as any: don't want to add generic on `initStore`
       ) as TStore;
+
       store.key = key;
       store.keyHash = keyHash;
+      store.delete = () => {
+        if (store.getSubscriberCount() > 0) {
+          console.warn(
+            "Cannot delete store while it still has active subscribers. Unsubscribe all listeners before deleting the store.",
+          );
+          return false;
+        }
+        store.setState(initialState);
+        return stores.delete(keyHash);
+      };
+
       stores.set(keyHash, store);
     }
 
@@ -69,19 +92,7 @@ export const createStores = <TState extends Record<string, any>, TKey extends St
       initialState?: Partial<TState>;
     }) => useStoreState(store, options);
 
-    return Object.assign(useStore, {
-      ...store,
-      delete: () => {
-        if (store.getSubscriberCount() > 0) {
-          console.warn(
-            "Cannot delete store while it still has active subscribers. Unsubscribe all listeners before deleting the store.",
-          );
-          return false;
-        }
-        store.setState(initialState);
-        return stores.delete(keyHash);
-      },
-    });
+    return Object.assign(useStore, store);
   };
 
   return getStore;

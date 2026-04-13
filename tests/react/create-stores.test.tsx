@@ -75,12 +75,14 @@ describe("createStores", () => {
     expect(onSubscribe.mock.calls[0][1]).toMatchObject({
       key: { id: "A" },
       keyHash: '{"id":"A"}',
+      delete: expect.any(Function),
       getState: expect.any(Function),
       setState: expect.any(Function),
     });
     expect(onSubscribe.mock.calls[1][1]).toMatchObject({
       key: { id: "B" },
       keyHash: '{"id":"B"}',
+      delete: expect.any(Function),
       getState: expect.any(Function),
       setState: expect.any(Function),
     });
