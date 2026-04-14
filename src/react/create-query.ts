@@ -103,7 +103,7 @@ const INITIAL_STATE: QueryState<any, any> = {
   errorUpdatedAt: undefined,
 };
 
-type Metadata<TData, TError> = {
+type Internal<TData, TError> = {
   isInvalidated?: boolean;
   promise?: Promise<QueryState<TData, TError>> | undefined;
   promiseResolver?:
@@ -249,7 +249,7 @@ type AdditionalStoreApi<TData, TError> = {
   /**
    * Internal data, do not mutate!
    */
-  metadata: Readonly<Metadata<TData, TError>>;
+  internal: Readonly<Internal<TData, TError>>;
 };
 
 /**
@@ -409,8 +409,8 @@ export const createQuery = <TData, TVariable extends StoreKey = never, TError = 
     onFirstSubscribe: (state, store) => {
       options.onFirstSubscribe?.(state, store);
       // Cancel garbage collection timeout
-      const { metadata, revalidate } = store;
-      clearTimeout(metadata.garbageCollectionTimeoutId);
+      const { internal, revalidate } = store;
+      clearTimeout(internal.garbageCollectionTimeoutId);
       // Attach window events
       if (isClient) {
         if (revalidateOnFocus) {
@@ -432,17 +432,17 @@ export const createQuery = <TData, TVariable extends StoreKey = never, TError = 
     onLastUnsubscribe: (state, store) => {
       options.onLastUnsubscribe?.(state, store);
       // Cancel retry
-      const { metadata, revalidate } = store;
-      clearTimeout(metadata.retryTimeoutId);
-      if (metadata.retryResolver) {
+      const { internal, revalidate } = store;
+      clearTimeout(internal.retryTimeoutId);
+      if (internal.retryResolver) {
         store.setState({ willRetryAt: undefined });
-        metadata.retryResolver(store.getState());
+        internal.retryResolver(store.getState());
         // @ts-expect-error - User-facing readonly, internally writable
-        metadata.retryResolver = undefined;
+        internal.retryResolver = undefined;
       }
       // @ts-expect-error - User-facing readonly, internally writable
-      metadata.garbageCollectionTimeoutId = setTimeout(() => {
-        if (metadata.promiseResolver || metadata.retryResolver) {
+      internal.garbageCollectionTimeoutId = setTimeout(() => {
+        if (internal.promiseResolver || internal.retryResolver) {
           store.setState(initialState);
         } else {
           stores.delete(variableHash);
@@ -474,13 +474,13 @@ export const createQuery = <TData, TVariable extends StoreKey = never, TError = 
     store: TStore,
     variable: TVariable,
   ): Omit<TAdditionalStoreApi, "variableHash"> => ({
-    metadata: {},
+    internal: {},
     setInitialData: (data, revalidate = false) => {
       const state = store.getState();
       if (state.state === "INITIAL" && state.data === undefined) {
-        const { metadata } = store;
+        const { internal } = store;
         // @ts-expect-error - User-facing readonly, internally writable
-        if (revalidate) metadata.isInvalidated = true;
+        if (revalidate) internal.isInvalidated = true;
         store.setState({
           state: "SUCCESS",
           isSuccess: true,
@@ -498,9 +498,9 @@ export const createQuery = <TData, TVariable extends StoreKey = never, TError = 
       return revalidate(store, variable, overwriteOngoingExecution);
     },
     invalidate: (options) => {
-      const { metadata } = store;
+      const { internal } = store;
       // @ts-expect-error - User-facing readonly, internally writable
-      metadata.isInvalidated = true;
+      internal.isInvalidated = true;
       if (store.getSubscriberCount() > 0) {
         store.execute(options);
         return true;
@@ -508,21 +508,21 @@ export const createQuery = <TData, TVariable extends StoreKey = never, TError = 
       return false;
     },
     reset: () => {
-      const { metadata } = store;
-      clearTimeout(metadata.retryTimeoutId);
-      if (metadata.retryResolver || metadata.promiseResolver) {
+      const { internal } = store;
+      clearTimeout(internal.retryTimeoutId);
+      if (internal.retryResolver || internal.promiseResolver) {
         console.debug(
           "Ongoing query execution was ignored due to reset(). The result will not update the store state.",
         );
-        metadata.promiseResolver?.(initialState);
-        metadata.retryResolver?.(initialState);
+        internal.promiseResolver?.(initialState);
+        internal.retryResolver?.(initialState);
         // @ts-expect-error - User-facing readonly, internally writable
-        metadata.promiseResolver = undefined;
+        internal.promiseResolver = undefined;
         // @ts-expect-error - User-facing readonly, internally writable
-        metadata.retryResolver = undefined;
+        internal.retryResolver = undefined;
       }
       // @ts-expect-error - User-facing readonly, internally writable
-      metadata.promise = undefined;
+      internal.promise = undefined;
       store.setState(initialState);
     },
     delete: () => {
@@ -536,35 +536,35 @@ export const createQuery = <TData, TVariable extends StoreKey = never, TError = 
       return stores.delete(store.variableHash);
     },
     optimisticUpdate: (optimisticData) => {
-      const { metadata, revalidate, rollbackOptimisticUpdate } = store;
+      const { internal, revalidate, rollbackOptimisticUpdate } = store;
       // @ts-expect-error - User-facing readonly, internally writable
-      metadata.rollbackData = store.getState().data;
+      internal.rollbackData = store.getState().data;
       store.setState({ data: optimisticData });
       return { revalidate, rollback: rollbackOptimisticUpdate };
     },
     rollbackOptimisticUpdate: () => {
-      const { metadata } = store;
-      store.setState({ data: metadata.rollbackData! });
-      return metadata.rollbackData!;
+      const { internal } = store;
+      store.setState({ data: internal.rollbackData! });
+      return internal.rollbackData!;
     },
   });
 
   const execute = async (store: TStore, variable: TVariable, overwriteOngoingExecution = false) => {
-    const { metadata: _metadata } = store;
-    const metadata = _metadata as Metadata<TData, TError>; // User-facing readonly, internally writable
-    if (!overwriteOngoingExecution && metadata.promise) return metadata.promise;
-    clearTimeout(metadata.retryTimeoutId);
+    const { internal: _internal } = store;
+    const internal = _internal as Internal<TData, TError>; // User-facing readonly, internally writable
+    if (!overwriteOngoingExecution && internal.promise) return internal.promise;
+    clearTimeout(internal.retryTimeoutId);
 
     const createPromise = () => {
       const promise = new Promise<TState>((resolve) => {
-        metadata.promiseResolver = resolve;
+        internal.promiseResolver = resolve;
         const stateBeforeExecute = store.getState();
         store.setState({
           isPending: true,
           isRevalidating: stateBeforeExecute.state === "SUCCESS",
           willRetryAt: undefined,
-          isRetrying: !!metadata.retryResolver,
-          retryCount: metadata.retryResolver ? stateBeforeExecute.retryCount + 1 : 0,
+          isRetrying: !!internal.retryResolver,
+          retryCount: internal.retryResolver ? stateBeforeExecute.retryCount + 1 : 0,
         });
         queryFn(variable, stateBeforeExecute, store.variableHash)
           .then((data) => {
@@ -573,8 +573,8 @@ export const createQuery = <TData, TVariable extends StoreKey = never, TError = 
                 "Query function returned undefined. Successful responses must not be undefined.",
               );
             }
-            if (!metadata.promiseResolver) return; // Handle reset: should ignore ongoing execution
-            if (promise !== metadata.promise) return resolve(metadata.promise!); // Handle overwriteOngoingExecution
+            if (!internal.promiseResolver) return; // Handle reset: should ignore ongoing execution
+            if (promise !== internal.promise) return resolve(internal.promise!); // Handle overwriteOngoingExecution
             const now = Date.now();
             store.setState({
               isPending: false,
@@ -590,17 +590,17 @@ export const createQuery = <TData, TVariable extends StoreKey = never, TError = 
               error: undefined,
               errorUpdatedAt: undefined,
             });
-            metadata.isInvalidated = false;
-            metadata.rollbackData = data;
+            internal.isInvalidated = false;
+            internal.rollbackData = data;
             resolve(store.getState());
-            metadata.retryResolver?.(store.getState());
-            metadata.retryResolver = undefined;
+            internal.retryResolver?.(store.getState());
+            internal.retryResolver = undefined;
             onSuccess(data, variable, stateBeforeExecute);
             onSettled(variable, stateBeforeExecute);
           })
           .catch((error) => {
-            if (!metadata.promiseResolver && !metadata.retryResolver) return; // Handle reset: should ignore ongoing execution
-            if (promise !== metadata.promise) return resolve(metadata.promise!); // Handle overwriteOngoingExecution
+            if (!internal.promiseResolver && !internal.retryResolver) return; // Handle reset: should ignore ongoing execution
+            if (promise !== internal.promise) return resolve(internal.promise!); // Handle overwriteOngoingExecution
             const nextState = {
               ...store.getState(),
               isPending: false,
@@ -610,8 +610,8 @@ export const createQuery = <TData, TVariable extends StoreKey = never, TError = 
             const [shouldRetry, retryDelay] = shouldRetryFn(error, nextState);
             const hasSubscriber = store.getSubscriberCount() > 0;
             if (shouldRetry && hasSubscriber) {
-              metadata.retryResolver = resolve;
-              metadata.retryTimeoutId = setTimeout(createPromise, retryDelay);
+              internal.retryResolver = resolve;
+              internal.retryTimeoutId = setTimeout(createPromise, retryDelay);
               store.setState({
                 isPending: false,
                 isRevalidating: false,
@@ -638,21 +638,21 @@ export const createQuery = <TData, TVariable extends StoreKey = never, TError = 
               });
               const state = store.getState();
               resolve(state);
-              metadata.retryResolver?.(state);
-              metadata.retryResolver = undefined;
+              internal.retryResolver?.(state);
+              internal.retryResolver = undefined;
               if (onError) onError(error, variable, stateBeforeExecute);
               else console.error(state);
               onSettled(variable, stateBeforeExecute);
             }
           })
           .finally(() => {
-            if (metadata.promise === promise) {
-              metadata.promise = undefined;
-              metadata.promiseResolver = undefined;
+            if (internal.promise === promise) {
+              internal.promise = undefined;
+              internal.promiseResolver = undefined;
             }
           });
       });
-      metadata.promise = promise;
+      internal.promise = promise;
       return promise;
     };
     return createPromise();
@@ -663,12 +663,12 @@ export const createQuery = <TData, TVariable extends StoreKey = never, TError = 
     variable: TVariable,
     overwriteOngoingExecution?: boolean,
   ) => {
-    const { metadata } = store;
-    if (!overwriteOngoingExecution && metadata.promise) return metadata.promise;
+    const { internal } = store;
+    if (!overwriteOngoingExecution && internal.promise) return internal.promise;
     const state = store.getState();
     if (state.dataUpdatedAt) {
       const isFresh = state.dataUpdatedAt + staleTime > Date.now();
-      if (isFresh && !metadata.isInvalidated) return state;
+      if (isFresh && !internal.isInvalidated) return state;
     }
     return execute(store, variable, overwriteOngoingExecution);
   };
@@ -698,7 +698,7 @@ export const createQuery = <TData, TVariable extends StoreKey = never, TError = 
       store.delete = apis.delete;
       store.optimisticUpdate = apis.optimisticUpdate;
       store.rollbackOptimisticUpdate = apis.rollbackOptimisticUpdate;
-      store.metadata = apis.metadata;
+      store.internal = apis.internal;
     }
 
     type UseQueryStoreOptions = {

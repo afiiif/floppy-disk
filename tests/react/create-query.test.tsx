@@ -1258,7 +1258,7 @@ describe("createQuery", () => {
       delete: expect.any(Function),
       optimisticUpdate: expect.any(Function),
       rollbackOptimisticUpdate: expect.any(Function),
-      metadata: expect.any(Object),
+      internal: expect.any(Object),
     });
     expect(onUnsubscribe).not.toHaveBeenCalled();
     expect(query({ id: 1 }).variableHash).toBe('{"id":1}');
@@ -1276,7 +1276,7 @@ describe("createQuery", () => {
       delete: expect.any(Function),
       optimisticUpdate: expect.any(Function),
       rollbackOptimisticUpdate: expect.any(Function),
-      metadata: expect.any(Object),
+      internal: expect.any(Object),
     });
     expect(onSubscribe.mock.calls[1][1]).toMatchObject({
       variableHash: '{"id":2}',
@@ -1290,7 +1290,7 @@ describe("createQuery", () => {
       delete: expect.any(Function),
       optimisticUpdate: expect.any(Function),
       rollbackOptimisticUpdate: expect.any(Function),
-      metadata: expect.any(Object),
+      internal: expect.any(Object),
     });
     expect(query({ id: 2 }).variableHash).toBe('{"id":2}');
 
@@ -1312,7 +1312,7 @@ describe("createQuery", () => {
       delete: expect.any(Function),
       optimisticUpdate: expect.any(Function),
       rollbackOptimisticUpdate: expect.any(Function),
-      metadata: expect.any(Object),
+      internal: expect.any(Object),
     });
 
     expect(onSubscribe).toHaveBeenCalledTimes(2);
