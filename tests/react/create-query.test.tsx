@@ -1250,6 +1250,15 @@ describe("createQuery", () => {
       variableHash: '{"id":1}',
       getState: expect.any(Function),
       setState: expect.any(Function),
+      setInitialData: expect.any(Function),
+      execute: expect.any(Function),
+      revalidate: expect.any(Function),
+      invalidate: expect.any(Function),
+      reset: expect.any(Function),
+      delete: expect.any(Function),
+      optimisticUpdate: expect.any(Function),
+      rollbackOptimisticUpdate: expect.any(Function),
+      metadata: expect.any(Object),
     });
     expect(onUnsubscribe).not.toHaveBeenCalled();
     expect(query({ id: 1 }).variableHash).toBe('{"id":1}');
@@ -1259,11 +1268,29 @@ describe("createQuery", () => {
       variableHash: '{"id":1}',
       getState: expect.any(Function),
       setState: expect.any(Function),
+      setInitialData: expect.any(Function),
+      execute: expect.any(Function),
+      revalidate: expect.any(Function),
+      invalidate: expect.any(Function),
+      reset: expect.any(Function),
+      delete: expect.any(Function),
+      optimisticUpdate: expect.any(Function),
+      rollbackOptimisticUpdate: expect.any(Function),
+      metadata: expect.any(Object),
     });
     expect(onSubscribe.mock.calls[1][1]).toMatchObject({
       variableHash: '{"id":2}',
       getState: expect.any(Function),
       setState: expect.any(Function),
+      setInitialData: expect.any(Function),
+      execute: expect.any(Function),
+      revalidate: expect.any(Function),
+      invalidate: expect.any(Function),
+      reset: expect.any(Function),
+      delete: expect.any(Function),
+      optimisticUpdate: expect.any(Function),
+      rollbackOptimisticUpdate: expect.any(Function),
+      metadata: expect.any(Object),
     });
     expect(query({ id: 2 }).variableHash).toBe('{"id":2}');
 
@@ -1277,6 +1304,15 @@ describe("createQuery", () => {
       variableHash: '{"id":2}',
       getState: expect.any(Function),
       setState: expect.any(Function),
+      setInitialData: expect.any(Function),
+      execute: expect.any(Function),
+      revalidate: expect.any(Function),
+      invalidate: expect.any(Function),
+      reset: expect.any(Function),
+      delete: expect.any(Function),
+      optimisticUpdate: expect.any(Function),
+      rollbackOptimisticUpdate: expect.any(Function),
+      metadata: expect.any(Object),
     });
 
     expect(onSubscribe).toHaveBeenCalledTimes(2);

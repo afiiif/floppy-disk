@@ -103,6 +103,140 @@ const INITIAL_STATE: QueryState<any, any> = {
   errorUpdatedAt: undefined,
 };
 
+type Metadata<TData, TError> = {
+  isInvalidated?: boolean;
+  promise?: Promise<QueryState<TData, TError>> | undefined;
+  promiseResolver?:
+    | ((value: QueryState<TData, TError> | PromiseLike<QueryState<TData, TError>>) => void)
+    | undefined;
+  retryTimeoutId?: number;
+  retryResolver?:
+    | ((value: QueryState<TData, TError> | PromiseLike<QueryState<TData, TError>>) => void)
+    | undefined;
+  garbageCollectionTimeoutId?: number;
+  rollbackData?: TData | undefined;
+};
+
+type AdditionalStoreApi<TData, TError> = {
+  /**
+   * Sets initial data for the query if it has not been initialized.
+   *
+   * @param data - Initial data
+   * @param revalidate - Whether to mark the data as invalidated (will trigger revalidation)
+   *
+   * @returns `true` if the data was set, `false` otherwise
+   *
+   * @remarks
+   * - Only applies when the query is in the `INITIAL` state.
+   * - Useful for hydration or preloaded data.
+   */
+  setInitialData: (data: TData, revalidate?: boolean) => boolean;
+
+  /**
+   * Executes the query function.
+   *
+   * @param options - Execution options
+   * @param options.overwriteOngoingExecution - Whether to start a new execution instead of reusing an ongoing one (default: `true`)
+   *
+   * @returns A promise resolving to the latest query state
+   *
+   * @remarks
+   * - By default, each call **starts a new execution** even if one is already in progress.
+   * - Set `overwriteOngoingExecution: false` to reuse an ongoing execution (deduplication).
+   * - Handles:
+   *   - Pending state
+   *   - Success state
+   *   - Error state
+   *   - Retry logic
+   */
+  execute: (options?: {
+    overwriteOngoingExecution?: boolean;
+  }) => Promise<QueryState<TData, TError>>;
+
+  /**
+   * Re-executes the query if needed based on freshness or invalidation.
+   *
+   * @param options - Revalidation options
+   * @param options.overwriteOngoingExecution - Whether to overwrite an ongoing execution (default: `true`)
+   *
+   * @returns The current state if still fresh, otherwise a promise of the new state
+   *
+   * @remarks
+   * - Skips execution if data is still fresh (`staleTime`) **AND** the query has not been invalidated.
+   * - If execution is not skipped, by default it will start a new execution even if one is already in progress.
+   * - Set `overwriteOngoingExecution: false` to reuse an ongoing execution (deduplication).
+   */
+  revalidate: (options?: {
+    overwriteOngoingExecution?: boolean;
+  }) => Promise<QueryState<TData, TError>>;
+
+  /**
+   * Marks the query as invalidated and optionally triggers re-execution.
+   *
+   * @param options - Invalidation options
+   * @param options.overwriteOngoingExecution - Whether to overwrite an ongoing execution (default: `true`)
+   *
+   * @returns `true` if execution was triggered, `false` otherwise
+   *
+   * @remarks
+   * - Invalidated queries are treated as stale regardless of `staleTime`.
+   * - The next `revalidate` will always execute until a successful result clears the invalidation.
+   * - If there are active subscribers: Execution is triggered immediately.
+   * - Otherwise: The query remains invalidated and will execute on the next revalidation.
+   * - By default, starts a new execution even if one is already in progress.
+   * - Set `overwriteOngoingExecution: false` to reuse an ongoing execution (deduplication).
+   */
+  invalidate: (options?: { overwriteOngoingExecution?: boolean }) => boolean;
+
+  /**
+   * Resets the query state to its initial state.
+   *
+   * @remarks
+   * - Cancels retry logic and ignores any ongoing execution results.
+   */
+  reset: () => void;
+
+  /**
+   * Deletes the query store for the current variable.
+   *
+   * @returns `true` if deleted, `false` otherwise
+   *
+   * @remarks
+   * - Cannot delete while there are active subscribers.
+   */
+  delete: () => boolean;
+
+  /**
+   * Performs an optimistic update on the query data.
+   *
+   * @param data - Optimistic data to set
+   *
+   * @returns Controls for managing the optimistic update
+   *
+   * @remarks
+   * - Temporarily replaces the current data.
+   * - Stores previous data for rollback.
+   * - Commonly used with mutations for instant UI updates.
+   *
+   * @example
+   * const { rollback, revalidate } = query.optimisticUpdate(newData);
+   */
+  optimisticUpdate: (data: TData) => {
+    revalidate: () => Promise<QueryState<TData, TError>>;
+    rollback: () => TData;
+  };
+
+  /**
+   * Restores the data before the last optimistic update.
+   *
+   * @returns The restored data
+   *
+   * @remarks
+   * - Should be used if an optimistic update fails.
+   */
+  rollbackOptimisticUpdate: () => TData;
+};
+
 /**
  * Configuration options for a query.
  *
@@ -111,7 +245,22 @@ const INITIAL_STATE: QueryState<any, any> = {
  */
 export type QueryOptions<TData, TVariable extends StoreKey, TError = Error> = InitStoreOptions<
   QueryState<TData, TError>,
-  { variableHash: string }
+  AdditionalStoreApi<TData, TError> & {
+    /**
+     * A deterministic hash string derived from the query variable.
+     *
+     * Used as the unique identifier for this query instance in the internal cache.
+     *
+     * @remarks
+     * - Structurally identical variables will produce the same hash.
+     */
+    variableHash: string;
+
+    /**
+     * Internal data, do not mutate!
+     */
+    metadata: Readonly<Metadata<TData, TError>>;
+  }
 > & {
   /**
    * Time (in milliseconds) that data is considered fresh.
@@ -247,7 +396,25 @@ export const createQuery = <TData, TVariable extends StoreKey = never, TError = 
   } = options;
 
   type TState = QueryState<TData, TError>;
-  type TStore = StoreApi<TState> & { variableHash: string };
+
+  type TAdditionalStoreApi = AdditionalStoreApi<TData, TError> & {
+    /**
+     * Internal data, do not mutate!
+     */
+    metadata: Metadata<TData, TError>;
+  };
+
+  type TStore = StoreApi<TState> & {
+    /**
+     * A deterministic hash string derived from the query variable.
+     *
+     * Used as the unique identifier for this query instance in the internal cache.
+     *
+     * @remarks
+     * - Structurally identical variables will produce the same hash.
+     */
+    variableHash: string;
+  } & TAdditionalStoreApi;
 
   const initialState = { ...INITIAL_STATE } as TState;
 
@@ -255,12 +422,12 @@ export const createQuery = <TData, TVariable extends StoreKey = never, TError = 
 
   const configureStoreEvents = (
     variableHash: string,
-  ): InitStoreOptions<TState, { variableHash: string }> => ({
+  ): InitStoreOptions<TState, { variableHash: string } & TAdditionalStoreApi> => ({
     ...options,
     onFirstSubscribe: (state, store) => {
       options.onFirstSubscribe?.(state, store);
       // Cancel garbage collection timeout
-      const { metadata, revalidate } = internals.get(store)!;
+      const { metadata, revalidate } = store;
       clearTimeout(metadata.garbageCollectionTimeoutId);
       // Attach window events
       if (isClient) {
@@ -283,7 +450,7 @@ export const createQuery = <TData, TVariable extends StoreKey = never, TError = 
     onLastUnsubscribe: (state, store) => {
       options.onLastUnsubscribe?.(state, store);
       // Cancel retry
-      const { metadata, revalidate } = internals.get(store)!;
+      const { metadata, revalidate } = store;
       clearTimeout(metadata.retryTimeoutId);
       if (metadata.retryResolver) {
         store.setState({ willRetryAt: undefined });
@@ -320,142 +487,12 @@ export const createQuery = <TData, TVariable extends StoreKey = never, TError = 
 
   // -------
 
-  type Internal = {
-    /**
-     * Internal data, do not mutate!
-     */
-    metadata: {
-      isInvalidated?: boolean;
-      promise?: Promise<TState> | undefined;
-      promiseResolver?: ((value: TState | PromiseLike<TState>) => void) | undefined;
-      retryTimeoutId?: number;
-      retryResolver?: ((value: TState | PromiseLike<TState>) => void) | undefined;
-      garbageCollectionTimeoutId?: number;
-      rollbackData?: TData | undefined;
-    };
-
-    /**
-     * Sets initial data for the query if it has not been initialized.
-     *
-     * @param data - Initial data
-     * @param revalidate - Whether to mark the data as invalidated (will trigger revalidation)
-     *
-     * @returns `true` if the data was set, `false` otherwise
-     *
-     * @remarks
-     * - Only applies when the query is in the `INITIAL` state.
-     * - Useful for hydration or preloaded data.
-     */
-    setInitialData: (data: TData, revalidate?: boolean) => boolean;
-
-    /**
-     * Executes the query function.
-     *
-     * @param options - Execution options
-     * @param options.overwriteOngoingExecution - Whether to start a new execution instead of reusing an ongoing one (default: `true`)
-     *
-     * @returns A promise resolving to the latest query state
-     *
-     * @remarks
-     * - By default, each call **starts a new execution** even if one is already in progress.
-     * - Set `overwriteOngoingExecution: false` to reuse an ongoing execution (deduplication).
-     * - Handles:
-     *   - Pending state
-     *   - Success state
-     *   - Error state
-     *   - Retry logic
-     */
-    execute: (options?: { overwriteOngoingExecution?: boolean }) => Promise<TState>;
-
-    /**
-     * Re-executes the query if needed based on freshness or invalidation.
-     *
-     * @param options - Revalidation options
-     * @param options.overwriteOngoingExecution - Whether to overwrite an ongoing execution (default: `true`)
-     *
-     * @returns The current state if still fresh, otherwise a promise of the new state
-     *
-     * @remarks
-     * - Skips execution if data is still fresh (`staleTime`) **AND** the query has not been invalidated.
-     * - If execution is not skipped, by default it will start a new execution even if one is already in progress.
-     * - Set `overwriteOngoingExecution: false` to reuse an ongoing execution (deduplication).
-     */
-    revalidate: (options?: { overwriteOngoingExecution?: boolean }) => Promise<TState>;
-
-    /**
-     * Marks the query as invalidated and optionally triggers re-execution.
-     *
-     * @param options - Invalidation options
-     * @param options.overwriteOngoingExecution - Whether to overwrite an ongoing execution (default: `true`)
-     *
-     * @returns `true` if execution was triggered, `false` otherwise
-     *
-     * @remarks
-     * - Invalidated queries are treated as stale regardless of `staleTime`.
-     * - The next `revalidate` will always execute until a successful result clears the invalidation.
-     * - If there are active subscribers: Execution is triggered immediately.
-     * - Otherwise: The query remains invalidated and will execute on the next revalidation.
-     * - By default, starts a new execution even if one is already in progress.
-     * - Set `overwriteOngoingExecution: false` to reuse an ongoing execution (deduplication).
-     */
-    invalidate: (options?: { overwriteOngoingExecution?: boolean }) => boolean;
-
-    /**
-     * Resets the query state to its initial state.
-     *
-     * @remarks
-     * - Cancels retry logic and ignores any ongoing execution results.
-     */
-    reset: () => void;
-
-    /**
-     * Deletes the query store for the current variable.
-     *
-     * @returns `true` if deleted, `false` otherwise
-     *
-     * @remarks
-     * - Cannot delete while there are active subscribers.
-     */
-    delete: () => boolean;
-
-    /**
-     * Performs an optimistic update on the query data.
-     *
-     * @param data - Optimistic data to set
-     *
-     * @returns Controls for managing the optimistic update
-     *
-     * @remarks
-     * - Temporarily replaces the current data.
-     * - Stores previous data for rollback.
-     * - Commonly used with mutations for instant UI updates.
-     *
-     * @example
-     * const { rollback, revalidate } = query.optimisticUpdate(newData);
-     */
-    optimisticUpdate: (data: TData) => {
-      revalidate: () => Promise<TState>;
-      rollback: () => TData;
-    };
-
-    /**
-     * Restores the data before the last optimistic update.
-     *
-     * @returns The restored data
-     *
-     * @remarks
-     * - Should be used if an optimistic update fails.
-     */
-    rollbackOptimisticUpdate: () => TData;
-  };
-  const internals = new WeakMap<TStore, Internal>();
-
-  const configureInternals = (store: TStore, variable: TVariable): Internal => ({
+  const getApis = (store: TStore, variable: TVariable): TAdditionalStoreApi => ({
     metadata: {},
     setInitialData: (data, revalidate = false) => {
       const state = store.getState();
       if (state.state === "INITIAL" && state.data === undefined) {
-        const { metadata } = internals.get(store)!;
+        const { metadata } = store;
         if (revalidate) metadata.isInvalidated = true;
         store.setState({
           state: "SUCCESS",
@@ -474,16 +511,16 @@ export const createQuery = <TData, TVariable extends StoreKey = never, TError = 
       return revalidate(store, variable, overwriteOngoingExecution);
     },
     invalidate: (options) => {
-      const { metadata } = internals.get(store)!;
+      const { metadata } = store;
       metadata.isInvalidated = true;
       if (store.getSubscriberCount() > 0) {
-        internals.get(store)!.execute(options);
+        store.execute(options);
         return true;
       }
       return false;
     },
     reset: () => {
-      const { metadata } = internals.get(store)!;
+      const { metadata } = store;
       clearTimeout(metadata.retryTimeoutId);
       if (metadata.retryResolver || metadata.promiseResolver) {
         console.debug(
@@ -504,24 +541,24 @@ export const createQuery = <TData, TVariable extends StoreKey = never, TError = 
         );
         return false;
       }
-      internals.get(store)!.reset();
+      store.reset();
       return stores.delete(store.variableHash);
     },
     optimisticUpdate: (optimisticData) => {
-      const { metadata, revalidate, rollbackOptimisticUpdate } = internals.get(store)!;
+      const { metadata, revalidate, rollbackOptimisticUpdate } = store;
       metadata.rollbackData = store.getState().data;
       store.setState({ data: optimisticData });
       return { revalidate, rollback: rollbackOptimisticUpdate };
     },
     rollbackOptimisticUpdate: () => {
-      const { metadata } = internals.get(store)!;
+      const { metadata } = store;
       store.setState({ data: metadata.rollbackData! });
       return metadata.rollbackData!;
     },
   });
 
   const execute = async (store: TStore, variable: TVariable, overwriteOngoingExecution = false) => {
-    const { metadata } = internals.get(store)!;
+    const { metadata } = store;
     if (!overwriteOngoingExecution && metadata.promise) return metadata.promise;
     clearTimeout(metadata.retryTimeoutId);
 
@@ -633,7 +670,7 @@ export const createQuery = <TData, TVariable extends StoreKey = never, TError = 
     variable: TVariable,
     overwriteOngoingExecution?: boolean,
   ) => {
-    const { metadata } = internals.get(store)!;
+    const { metadata } = store;
     if (!overwriteOngoingExecution && metadata.promise) return metadata.promise;
     const state = store.getState();
     if (state.dataUpdatedAt) {
@@ -657,7 +694,16 @@ export const createQuery = <TData, TVariable extends StoreKey = never, TError = 
       ) as TStore;
       store.variableHash = variableHash;
       stores.set(variableHash, store);
-      internals.set(store, configureInternals(store, variable));
+      const apis = getApis(store, variable);
+      store.setInitialData = apis.setInitialData;
+      store.execute = apis.execute;
+      store.revalidate = apis.revalidate;
+      store.invalidate = apis.invalidate;
+      store.reset = apis.reset;
+      store.delete = apis.delete;
+      store.optimisticUpdate = apis.optimisticUpdate;
+      store.rollbackOptimisticUpdate = apis.rollbackOptimisticUpdate;
+      store.metadata = apis.metadata;
     }
 
     type UseQueryStoreOptions = {
@@ -822,15 +868,11 @@ export const createQuery = <TData, TVariable extends StoreKey = never, TError = 
     };
 
     return Object.assign(useStore, {
-      subscribe: store.subscribe,
-      getSubscriberCount: store.getSubscriberCount,
-      getState: store.getState,
+      ...store,
       setState: (value: SetStateInput<TState>) => {
         console.debug("Manual setState (not via provided actions) on query store");
         store.setState(value);
       },
-      ...internals.get(store)!,
-      variableHash,
     });
   };
 
@@ -842,7 +884,7 @@ export const createQuery = <TData, TVariable extends StoreKey = never, TError = 
      * - Useful for bulk refetching.
      */
     executeAll: (options?: { overwriteOngoingExecution?: boolean }) => {
-      stores.forEach((store) => internals.get(store)!.execute(options));
+      stores.forEach((store) => store.execute(options));
     },
 
     /**
@@ -852,7 +894,7 @@ export const createQuery = <TData, TVariable extends StoreKey = never, TError = 
      * - Only re-fetches stale queries.
      */
     revalidateAll: (options?: { overwriteOngoingExecution?: boolean }) => {
-      stores.forEach((store) => internals.get(store)!.revalidate(options));
+      stores.forEach((store) => store.revalidate(options));
     },
 
     /**
@@ -863,14 +905,14 @@ export const createQuery = <TData, TVariable extends StoreKey = never, TError = 
      * - Invalidated queries bypass `staleTime` until successfully executed again.
      */
     invalidateAll: (options?: { overwriteOngoingExecution?: boolean }) => {
-      stores.forEach((store) => internals.get(store)!.invalidate(options));
+      stores.forEach((store) => store.invalidate(options));
     },
 
     /**
      * Resets all query instances.
      */
     resetAll: () => {
-      stores.forEach((store) => internals.get(store)!.reset());
+      stores.forEach((store) => store.reset());
     },
   });
 };
