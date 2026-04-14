@@ -83,8 +83,8 @@ export const createStores = <TState extends Record<string, any>, TKey extends St
 
   const getStore = (key: TKey = {} as TKey) => {
     const keyHash = getHash(key);
-
     let store: TStore;
+
     if (stores.has(keyHash)) {
       store = stores.get(keyHash)!;
     } else {
@@ -92,9 +92,10 @@ export const createStores = <TState extends Record<string, any>, TKey extends St
         initialState,
         options as any, // Intentionally using as any: don't want to add generic on `initStore`
       ) as TStore;
-
       store.key = key;
       store.keyHash = keyHash;
+      stores.set(keyHash, store);
+
       store.delete = () => {
         if (store.getSubscriberCount() > 0) {
           console.warn(
@@ -105,8 +106,6 @@ export const createStores = <TState extends Record<string, any>, TKey extends St
         store.setState(initialState);
         return stores.delete(keyHash);
       };
-
-      stores.set(keyHash, store);
     }
 
     const useStore = (options?: {

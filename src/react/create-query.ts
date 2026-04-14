@@ -685,6 +685,7 @@ export const createQuery = <TData, TVariable extends StoreKey = never, TError = 
   const getStore = (variable: TVariable = {} as TVariable) => {
     const variableHash = getHash(variable);
     let store: TStore;
+
     if (stores.has(variableHash)) {
       store = stores.get(variableHash)!;
     } else {
@@ -694,6 +695,7 @@ export const createQuery = <TData, TVariable extends StoreKey = never, TError = 
       ) as TStore;
       store.variableHash = variableHash;
       stores.set(variableHash, store);
+
       const apis = getApis(store, variable);
       store.setInitialData = apis.setInitialData;
       store.execute = apis.execute;
