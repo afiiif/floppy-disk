@@ -119,6 +119,16 @@ type Metadata<TData, TError> = {
 
 type AdditionalStoreApi<TData, TError> = {
   /**
+   * A deterministic hash string derived from the query variable.
+   *
+   * Used as the unique identifier for this query instance in the internal cache.
+   *
+   * @remarks
+   * - Structurally identical variables will produce the same hash.
+   */
+  variableHash: string;
+
+  /**
    * Sets initial data for the query if it has not been initialized.
    *
    * @param data - Initial data
@@ -235,6 +245,11 @@ type AdditionalStoreApi<TData, TError> = {
    * - Should be used if an optimistic update fails.
    */
   rollbackOptimisticUpdate: () => TData;
+
+  /**
+   * Internal data, do not mutate!
+   */
+  metadata: Readonly<Metadata<TData, TError>>;
 };
 
 /**
@@ -245,22 +260,7 @@ type AdditionalStoreApi<TData, TError> = {
  */
 export type QueryOptions<TData, TVariable extends StoreKey, TError = Error> = InitStoreOptions<
   QueryState<TData, TError>,
-  AdditionalStoreApi<TData, TError> & {
-    /**
-     * A deterministic hash string derived from the query variable.
-     *
-     * Used as the unique identifier for this query instance in the internal cache.
-     *
-     * @remarks
-     * - Structurally identical variables will produce the same hash.
-     */
-    variableHash: string;
-
-    /**
-     * Internal data, do not mutate!
-     */
-    metadata: Readonly<Metadata<TData, TError>>;
-  }
+  AdditionalStoreApi<TData, TError>
 > & {
   /**
    * Time (in milliseconds) that data is considered fresh.
@@ -396,33 +396,15 @@ export const createQuery = <TData, TVariable extends StoreKey = never, TError = 
   } = options;
 
   type TState = QueryState<TData, TError>;
-
-  type TAdditionalStoreApi = AdditionalStoreApi<TData, TError> & {
-    /**
-     * Internal data, do not mutate!
-     */
-    metadata: Metadata<TData, TError>;
-  };
-
-  type TStore = StoreApi<TState> & {
-    /**
-     * A deterministic hash string derived from the query variable.
-     *
-     * Used as the unique identifier for this query instance in the internal cache.
-     *
-     * @remarks
-     * - Structurally identical variables will produce the same hash.
-     */
-    variableHash: string;
-  } & TAdditionalStoreApi;
-
   const initialState: TState = { ...INITIAL_STATE };
 
+  type TAdditionalStoreApi = AdditionalStoreApi<TData, TError>;
+  type TStore = StoreApi<TState> & TAdditionalStoreApi;
   const stores = new Map<string, TStore>();
 
   const configureStoreEvents = (
     variableHash: string,
-  ): InitStoreOptions<TState, { variableHash: string } & TAdditionalStoreApi> => ({
+  ): InitStoreOptions<TState, TAdditionalStoreApi> => ({
     ...options,
     onFirstSubscribe: (state, store) => {
       options.onFirstSubscribe?.(state, store);
@@ -455,9 +437,10 @@ export const createQuery = <TData, TVariable extends StoreKey = never, TError = 
       if (metadata.retryResolver) {
         store.setState({ willRetryAt: undefined });
         metadata.retryResolver(store.getState());
+        // @ts-expect-error - User-facing readonly, internally writable
         metadata.retryResolver = undefined;
       }
-      // Start garbage collection timeout
+      // @ts-expect-error - User-facing readonly, internally writable
       metadata.garbageCollectionTimeoutId = setTimeout(() => {
         if (metadata.promiseResolver || metadata.retryResolver) {
           store.setState(initialState);
@@ -487,12 +470,16 @@ export const createQuery = <TData, TVariable extends StoreKey = never, TError = 
 
   // -------
 
-  const getApis = (store: TStore, variable: TVariable): TAdditionalStoreApi => ({
+  const getApis = (
+    store: TStore,
+    variable: TVariable,
+  ): Omit<TAdditionalStoreApi, "variableHash"> => ({
     metadata: {},
     setInitialData: (data, revalidate = false) => {
       const state = store.getState();
       if (state.state === "INITIAL" && state.data === undefined) {
         const { metadata } = store;
+        // @ts-expect-error - User-facing readonly, internally writable
         if (revalidate) metadata.isInvalidated = true;
         store.setState({
           state: "SUCCESS",
@@ -512,6 +499,7 @@ export const createQuery = <TData, TVariable extends StoreKey = never, TError = 
     },
     invalidate: (options) => {
       const { metadata } = store;
+      // @ts-expect-error - User-facing readonly, internally writable
       metadata.isInvalidated = true;
       if (store.getSubscriberCount() > 0) {
         store.execute(options);
@@ -528,9 +516,12 @@ export const createQuery = <TData, TVariable extends StoreKey = never, TError = 
         );
         metadata.promiseResolver?.(initialState);
         metadata.retryResolver?.(initialState);
+        // @ts-expect-error - User-facing readonly, internally writable
         metadata.promiseResolver = undefined;
+        // @ts-expect-error - User-facing readonly, internally writable
         metadata.retryResolver = undefined;
       }
+      // @ts-expect-error - User-facing readonly, internally writable
       metadata.promise = undefined;
       store.setState(initialState);
     },
@@ -546,6 +537,7 @@ export const createQuery = <TData, TVariable extends StoreKey = never, TError = 
     },
     optimisticUpdate: (optimisticData) => {
       const { metadata, revalidate, rollbackOptimisticUpdate } = store;
+      // @ts-expect-error - User-facing readonly, internally writable
       metadata.rollbackData = store.getState().data;
       store.setState({ data: optimisticData });
       return { revalidate, rollback: rollbackOptimisticUpdate };
@@ -558,7 +550,8 @@ export const createQuery = <TData, TVariable extends StoreKey = never, TError = 
   });
 
   const execute = async (store: TStore, variable: TVariable, overwriteOngoingExecution = false) => {
-    const { metadata } = store;
+    const { metadata: _metadata } = store;
+    const metadata = _metadata as Metadata<TData, TError>; // User-facing readonly, internally writable
     if (!overwriteOngoingExecution && metadata.promise) return metadata.promise;
     clearTimeout(metadata.retryTimeoutId);
 

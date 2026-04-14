@@ -4,6 +4,38 @@ import { useStoreState } from "./use-store.ts";
 type GoodInputForHash = string | number | boolean | null | Date;
 export type StoreKey = GoodInputForHash | { [key: string | number]: StoreKey | StoreKey[] };
 
+type AdditionalStoreApi<TKey> = {
+  /**
+   * The original key used to identify this store instance.\
+   * This value is not hashed and is preserved as-is.
+   */
+  key: TKey;
+
+  /**
+   * A deterministic hash string derived from {@link key}.
+   *
+   * Used internally as the unique identifier for caching and retrieving store instances.
+   *
+   * @remarks
+   * - Guarantees that structurally identical keys produce the same hash.
+   */
+  keyHash: string;
+
+  /**
+   * Deletes this store instance from the internal cache.
+   *
+   * @returns `true` if the store was successfully deleted, otherwise `false`.
+   *
+   * @remarks
+   * - If there are active subscribers, the deletion is ignored and `false` is returned.
+   * - When deletion succeeds:
+   *   - The store is removed from the cache.
+   *   - Its state is reset to the initial state.
+   * - Intended for manual cleanup of unused or ephemeral stores.
+   */
+  delete: () => boolean;
+};
+
 /**
  * Creates a factory for multiple stores identified by a key.
  *
@@ -39,46 +71,9 @@ export type StoreKey = GoodInputForHash | { [key: string | number]: StoreKey | S
  */
 export const createStores = <TState extends Record<string, any>, TKey extends StoreKey>(
   initialState: TState,
-  options?: InitStoreOptions<
-    TState,
-    {
-      /**
-       * The original key used to identify this store instance.\
-       * This value is not hashed and is preserved as-is.
-       */
-      key: TKey;
-
-      /**
-       * A deterministic hash string derived from {@link key}.
-       *
-       * Used internally as the unique identifier for caching and retrieving store instances.
-       *
-       * @remarks
-       * - Guarantees that structurally identical keys produce the same hash.
-       */
-      keyHash: string;
-
-      /**
-       * Deletes this store instance from the internal cache.
-       *
-       * @returns `true` if the store was successfully deleted, otherwise `false`.
-       *
-       * @remarks
-       * - If there are active subscribers, the deletion is ignored and `false` is returned.
-       * - When deletion succeeds:
-       *   - The store is removed from the cache.
-       *   - Its state is reset to the initial state.
-       * - Intended for manual cleanup of unused or ephemeral stores.
-       */
-      delete: () => boolean;
-    }
-  >,
+  options?: InitStoreOptions<TState, AdditionalStoreApi<TKey>>,
 ) => {
-  type TStore = StoreApi<TState> & {
-    key: TKey;
-    keyHash: string;
-    delete: () => boolean;
-  };
+  type TStore = StoreApi<TState> & AdditionalStoreApi<TKey>;
   const stores = new Map<string, TStore>();
 
   const getStore = (key: TKey = {} as TKey) => {
