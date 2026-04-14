@@ -63,7 +63,7 @@ export const useMutation = <TData, TVariable = undefined, TError = Error>(
   callbackRef.current.onError = onError;
   callbackRef.current.onSettled = onSettled;
 
-  const stateRef = useRef<TState>({ ...INITIAL_STATE } as TState);
+  const stateRef = useRef<TState>({ ...INITIAL_STATE });
   const [, reRender] = useState({});
 
   const refs = useRef({
@@ -160,7 +160,7 @@ export const useMutation = <TData, TVariable = undefined, TError = Error>(
         "Mutation state was reset while a request is still pending. The request will continue, but its result may override the reset state.",
       );
     }
-    stateRef.current = { ...INITIAL_STATE } as TState;
+    stateRef.current = { ...INITIAL_STATE };
     reRender({});
   }, []);
 

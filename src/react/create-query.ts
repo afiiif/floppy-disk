@@ -416,7 +416,7 @@ export const createQuery = <TData, TVariable extends StoreKey = never, TError = 
     variableHash: string;
   } & TAdditionalStoreApi;
 
-  const initialState = { ...INITIAL_STATE } as TState;
+  const initialState: TState = { ...INITIAL_STATE };
 
   const stores = new Map<string, TStore>();
 

@@ -51,7 +51,7 @@ export type MutationState<TData, TVariable, TError> = {
     }
 );
 
-export const INITIAL_STATE = {
+export const INITIAL_STATE: MutationState<any, any, any> = {
   state: "INITIAL",
   isPending: false,
   isSuccess: false,
@@ -144,7 +144,7 @@ export const createMutation = <TData, TVariable = undefined, TError = Error>(
   type PromiseResult = { variable: TVariable; data?: TData; error?: TError };
   type ResolveFn = (result: PromiseResult | PromiseLike<PromiseResult>) => void;
 
-  const initialState = { ...INITIAL_STATE } as TState;
+  const initialState: TState = { ...INITIAL_STATE };
   let ongoingPromise: Promise<PromiseResult> | undefined;
   const resolveFns = new Set<ResolveFn>([]);
 
