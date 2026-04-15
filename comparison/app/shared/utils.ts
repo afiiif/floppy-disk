@@ -103,3 +103,180 @@ export const mutationFn2 = async ({ foo, bar }: { foo: number; bar?: string }) =
     },
   };
 };
+
+// ---
+
+type WSListener = (event: any) => void;
+
+export class FakeWebSocket {
+  static CONNECTING = 0;
+  static OPEN = 1;
+  static CLOSING = 2;
+  static CLOSED = 3;
+
+  url: string;
+  readyState = FakeWebSocket.CONNECTING;
+
+  // native-like handlers
+  onopen: ((ev: Event) => any) | null = null;
+  onmessage: ((ev: MessageEvent) => any) | null = null;
+  onerror: ((ev: Event) => any) | null = null;
+  onclose: ((ev: CloseEvent) => any) | null = null;
+
+  private listeners: Record<string, WSListener[]> = {};
+
+  private connectDelay: number;
+  private messageInterval: number;
+  private timer?: any;
+  private tick = 0;
+
+  constructor(
+    url: string,
+    opts?: {
+      connectDelay?: number;
+      messageInterval?: number;
+    },
+  ) {
+    this.url = url;
+    this.connectDelay = opts?.connectDelay ?? 1000; // default 1s
+    this.messageInterval = opts?.messageInterval ?? 2000; // default 2s
+
+    this.log("connecting...");
+
+    setTimeout(() => {
+      if (this.readyState !== FakeWebSocket.CONNECTING) return;
+
+      this.readyState = FakeWebSocket.OPEN;
+      this.log("open");
+      this.dispatch("open", new Event("open"));
+
+      this.startStream();
+    }, this.connectDelay);
+  }
+
+  send(data: any) {
+    if (this.readyState !== FakeWebSocket.OPEN) {
+      throw new Error("WebSocket is not open");
+    }
+
+    this.log("send →", data);
+
+    // simulate server processing delay
+    setTimeout(() => {
+      if (this.readyState !== FakeWebSocket.OPEN) return;
+
+      // assume client sends JSON string
+      let parsed: any;
+      try {
+        parsed = typeof data === "string" ? JSON.parse(data) : data;
+      } catch {
+        parsed = { raw: data };
+      }
+
+      const response = {
+        ...parsed,
+        echo: true, // 👈 mark as server echo
+        at: Date.now(),
+      };
+
+      const event = new MessageEvent("message", {
+        data: JSON.stringify(response),
+      });
+
+      this.log("message (echo) ←", response);
+      this.dispatch("message", event);
+    }, 400); // slight delay
+  }
+
+  close(code = 1000, reason = "") {
+    if (this.readyState >= FakeWebSocket.CLOSING) return;
+
+    this.readyState = FakeWebSocket.CLOSING;
+    this.log("closing");
+
+    if (this.timer) {
+      clearInterval(this.timer);
+      this.timer = undefined;
+    }
+
+    setTimeout(() => {
+      this.readyState = FakeWebSocket.CLOSED;
+
+      const event = new CloseEvent("close", {
+        code,
+        reason,
+        wasClean: true,
+      });
+
+      this.log("close");
+      this.dispatch("close", event);
+    }, 0);
+  }
+
+  addEventListener(type: string, cb: WSListener) {
+    this.listeners[type] ??= [];
+    this.listeners[type].push(cb);
+  }
+
+  removeEventListener(type: string, cb: WSListener) {
+    this.listeners[type] = (this.listeners[type] || []).filter((f) => f !== cb);
+  }
+
+  // =========================
+  // internal
+  // =========================
+
+  private startStream() {
+    this.timer = setInterval(() => {
+      if (this.readyState !== FakeWebSocket.OPEN) return;
+
+      this.tick++;
+
+      // 🔴 simulate error every 5th message
+      if (this.tick % 5 === 0) {
+        const err = new Event("error");
+        (err as any).error = new Error(`Fake error at tick ${this.tick}`);
+
+        this.log("error ←", (err as any).error.message);
+        this.dispatch("error", err);
+
+        return; // don't emit message on error tick
+      }
+
+      const payload = {
+        text: `hello ${Math.random()}`,
+        at: Date.now(),
+      };
+
+      const data = JSON.stringify(payload);
+
+      this.log("message ←", data);
+
+      const event = new MessageEvent("message", { data });
+      this.dispatch("message", event);
+    }, this.messageInterval);
+  }
+
+  private dispatch(type: string, event: any) {
+    // property handler
+    const handler = (this as any)[`on${type}`];
+    if (typeof handler === "function") {
+      handler.call(this, event);
+    }
+
+    // listeners
+    for (const cb of this.listeners[type] || []) {
+      cb(event);
+    }
+  }
+
+  private log(...args: any[]) {
+    const emoji =
+      {
+        "connecting...": "🔵",
+        open: "🟢",
+        close: "🔴",
+      }[args[0] as string] || "🔔";
+    console.log(`[ws] ${emoji} (${this.url})`, ...args);
+  }
+}

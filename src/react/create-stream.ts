@@ -313,13 +313,11 @@ export const experimental_createStream = <
     }
 
     const { connectionState } = store.getState();
-    console.info("triggerReconnect", connectionState);
     if (connectionState === "INITIAL" || connectionState === "DISCONNECTED") {
       // Force reconnect if has subscriber but is not connected
       return store.connection.reconnect();
     }
     const shouldReconnect = reconnectOn(trigger, store.getState());
-    console.log({ shouldReconnect });
     if (shouldReconnect) store.connection.reconnect();
   };
 

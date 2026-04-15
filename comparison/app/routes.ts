@@ -6,4 +6,5 @@ export default [
   route("store/floppy-disk", "routes/store-floppy-disk.tsx"),
   route("async/tanstack", "routes/async-tanstack.tsx"),
   route("async/floppy-disk", "routes/async-floppy-disk.tsx"),
+  route("stream", "routes/stream.tsx"),
 ] satisfies RouteConfig;
