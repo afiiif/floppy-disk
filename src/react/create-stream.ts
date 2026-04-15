@@ -159,7 +159,7 @@ export const experimental_createStream = <
     Partial<Record<DisconnectTrigger, number>>
   > = new WeakMap();
 
-  const clearDataTimeoutIds = new WeakMap<TStore, number>();
+  const gcTimeoutIds = new WeakMap<TStore, number>();
 
   const configureStoreEvents = (): InitStoreOptions<TState, TAdditionalStoreApi> => ({
     ...options,
@@ -219,10 +219,11 @@ export const experimental_createStream = <
     connections.delete(store);
     disconnectFns.delete(store);
 
-    clearDataTimeoutIds.set(
+    gcTimeoutIds.set(
       store,
       setTimeout(() => {
-        store.data.reset();
+        if (store.getSubscriberCount()) store.data.reset();
+        else store.delete();
       }, gcTime),
     );
   };
@@ -331,7 +332,7 @@ export const experimental_createStream = <
   };
 
   const triggerReconnect = (store: TStore, trigger: ReconnectTrigger) => {
-    clearTimeout(clearDataTimeoutIds.get(store));
+    clearTimeout(gcTimeoutIds.get(store));
     const disconnectTimeoutIds_ = disconnectTimeoutIds.get(store);
     if (disconnectTimeoutIds_) {
       clearTimeout(disconnectTimeoutIds_["last-unsubscribe"]);
