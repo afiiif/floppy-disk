@@ -154,12 +154,30 @@ export const experimental_createStream = <
 
   const connections = new WeakMap<TStore, TConnection>();
   const disconnectFns = new WeakMap<TStore, () => void>();
+
   const disconnectTimeoutIds: WeakMap<
     TStore,
     Partial<Record<DisconnectTrigger, number>>
   > = new WeakMap();
 
+  const clearAllTimeouts = (store: TStore) => {
+    const gcTimeoutId = gcTimeoutIds.get(store);
+    if (gcTimeoutId) {
+      clearTimeout(gcTimeoutId);
+      gcTimeoutIds.delete(store);
+    }
+
+    const disconnectTimeoutIds_ = disconnectTimeoutIds.get(store);
+    if (disconnectTimeoutIds_) {
+      clearTimeout(disconnectTimeoutIds_["last-unsubscribe"]);
+      clearTimeout(disconnectTimeoutIds_["document-hidden"]);
+      clearTimeout(disconnectTimeoutIds_.offline);
+    }
+  };
+
   const gcTimeoutIds = new WeakMap<TStore, number>();
+
+  // -------
 
   const configureStoreEvents = (): InitStoreOptions<TState, TAdditionalStoreApi> => ({
     ...options,
@@ -202,12 +220,7 @@ export const experimental_createStream = <
       console.log("Stream disconnected while there is subscriber");
     }
 
-    const disconnectTimeoutIds_ = disconnectTimeoutIds.get(store);
-    if (disconnectTimeoutIds_) {
-      clearTimeout(disconnectTimeoutIds_["last-unsubscribe"]);
-      clearTimeout(disconnectTimeoutIds_["document-hidden"]);
-      clearTimeout(disconnectTimeoutIds_.offline);
-    }
+    clearAllTimeouts(store);
 
     disconnectFns.get(store)?.();
     if (store.getState().connectionState !== "INITIAL") {
@@ -222,8 +235,7 @@ export const experimental_createStream = <
     gcTimeoutIds.set(
       store,
       setTimeout(() => {
-        if (store.getSubscriberCount()) store.data.reset();
-        else store.delete();
+        if (store.getSubscriberCount() === 0) store.delete();
       }, gcTime),
     );
   };
@@ -246,8 +258,11 @@ export const experimental_createStream = <
       store.connection.get = () => connections.get(store);
 
       store.connection.reconnect = () => {
+        clearAllTimeouts(store);
+
         const { connectionState } = store.getState();
         if (connectionState === "CONNECTING") return;
+
         disconnectFns.get(store)?.();
 
         store.setState({
@@ -312,6 +327,7 @@ export const experimental_createStream = <
           );
           return false;
         }
+        clearAllTimeouts(store);
         store.setState(initialState);
         return stores.delete(variableHash);
       };
@@ -331,14 +347,10 @@ export const experimental_createStream = <
     });
   };
 
+  // -------
+
   const triggerReconnect = (store: TStore, trigger: ReconnectTrigger) => {
-    clearTimeout(gcTimeoutIds.get(store));
-    const disconnectTimeoutIds_ = disconnectTimeoutIds.get(store);
-    if (disconnectTimeoutIds_) {
-      clearTimeout(disconnectTimeoutIds_["last-unsubscribe"]);
-      clearTimeout(disconnectTimeoutIds_["document-hidden"]);
-      clearTimeout(disconnectTimeoutIds_.offline);
-    }
+    clearAllTimeouts(store);
 
     const { connectionState } = store.getState();
     if (connectionState === "INITIAL" || connectionState === "DISCONNECTED") {
