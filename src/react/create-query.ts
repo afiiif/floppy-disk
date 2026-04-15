@@ -78,7 +78,7 @@ export type QueryState<TData, TError> = {
   | {
       state: "SUCCESS_BUT_REVALIDATION_ERROR";
       isSuccess: true;
-      isError: false;
+      isError: true;
       data: TData;
       dataUpdatedAt: number;
       dataStaleAt: undefined | number;
@@ -624,17 +624,11 @@ export const createQuery = <TData, TVariable extends StoreKey = never, TError = 
                 isRevalidating: false,
                 isRetrying: false,
                 retryCount: 0,
+                state:
+                  store.getState().state === "SUCCESS" ? "SUCCESS_BUT_REVALIDATION_ERROR" : "ERROR",
+                isError: true,
                 error,
                 errorUpdatedAt: Date.now(),
-                ...(store.getState().data
-                  ? {
-                      state: "SUCCESS_BUT_REVALIDATION_ERROR",
-                      isError: false,
-                    }
-                  : {
-                      state: "ERROR",
-                      isError: true,
-                    }),
               });
               const state = store.getState();
               resolve(state);

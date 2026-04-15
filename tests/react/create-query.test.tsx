@@ -218,7 +218,7 @@ describe("createQuery", () => {
       state: "SUCCESS_BUT_REVALIDATION_ERROR",
       willRetryAt: undefined,
       isSuccess: true,
-      isError: false,
+      isError: true,
       data: "ok",
       dataUpdatedAt: lastDataUpdatedAt,
       dataStaleAt: lastDataUpdatedAt + DEFAULT_STALE_TIME,
@@ -393,7 +393,7 @@ describe("createQuery", () => {
       retryCount: 0,
       state: "SUCCESS_BUT_REVALIDATION_ERROR",
       isSuccess: true,
-      isError: false,
+      isError: true,
     });
     expect(state.error).toBeDefined();
 
