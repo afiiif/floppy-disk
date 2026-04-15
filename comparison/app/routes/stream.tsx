@@ -98,25 +98,40 @@ function ChatStreamDataLifeCycle({ roomId }: { roomId: string }) {
 function ChatStreamActions({ roomId }: { roomId: string }) {
   const useChatStream = chatStream(roomId);
   return (
-    <CardWithReRenderHighlight className="!mb-0">
-      <form
-        className="flex gap-3"
-        onSubmit={(e) => {
-          e.preventDefault();
-          const data = new FormData(e.currentTarget);
-          const ws = useChatStream.connection.get();
-          ws?.send(JSON.stringify({ data: data.get("msg") }));
-          e.currentTarget.reset();
-        }}
-      >
-        <input
-          type="text"
-          name="msg"
-          className="flex-1 border px-2 py-0.5 rounded"
-          maxLength={32}
-        />
-        <button type="submit">Send</button>
-      </form>
-    </CardWithReRenderHighlight>
+    <>
+      <CardWithReRenderHighlight>
+        <form
+          className="flex gap-3"
+          onSubmit={(e) => {
+            e.preventDefault();
+            const data = new FormData(e.currentTarget);
+            const ws = useChatStream.connection.get();
+            ws?.send(JSON.stringify({ data: data.get("msg") }));
+            e.currentTarget.reset();
+          }}
+        >
+          <input
+            type="text"
+            name="msg"
+            placeholder="Input message..."
+            className="flex-1 border px-2 py-0.5 rounded"
+            maxLength={32}
+          />
+          <button type="submit">Send message</button>
+        </form>
+      </CardWithReRenderHighlight>
+      <CardWithReRenderHighlight className="!mb-0 flex gap-3">
+        <button type="button" className="w-full" onClick={() => useChatStream.data.reset()}>
+          Reset data
+        </button>
+        <button
+          type="button"
+          className="w-full"
+          onClick={() => useChatStream.connection.reconnect()}
+        >
+          Reconnect
+        </button>
+      </CardWithReRenderHighlight>
+    </>
   );
 }

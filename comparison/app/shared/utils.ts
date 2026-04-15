@@ -192,7 +192,7 @@ export class FakeWebSocket {
     if (this.readyState >= FakeWebSocket.CLOSING) return;
 
     this.readyState = FakeWebSocket.CLOSING;
-    this.log("closing");
+    this.log("closing...");
 
     if (this.timer) {
       clearInterval(this.timer);
@@ -273,8 +273,9 @@ export class FakeWebSocket {
   private log(...args: any[]) {
     const emoji =
       {
-        "connecting...": "🔵",
+        "connecting...": "🟩",
         open: "🟢",
+        "closing...": "🟥",
         close: "🔴",
       }[args[0] as string] || "🔔";
     console.log(`[ws] ${emoji} (${this.url})`, ...args);

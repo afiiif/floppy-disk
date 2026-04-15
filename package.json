@@ -2,7 +2,7 @@
   "name": "floppy-disk",
   "description": "Lightweight unified state management for sync and async data.",
   "private": true,
-  "version": "3.5.1",
+  "version": "3.7.0",
   "publishConfig": {
     "tag": "alpha"
   },
