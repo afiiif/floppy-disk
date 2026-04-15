@@ -57,8 +57,8 @@ export type StreamState<TData, TError> =
   | ({
       connectionState: "CONNECTING";
       connectingAt: number;
-      connectedAt: number | undefined;
-      disconnectedAt: number | undefined;
+      connectedAt: undefined;
+      disconnectedAt: undefined;
     } & StreamDataState<TData, TError>)
   | ({
       connectionState: "CONNECTED";
@@ -268,6 +268,8 @@ export const experimental_createStream = <
         store.setState({
           connectionState: "CONNECTING",
           connectingAt: Date.now(),
+          connectedAt: undefined,
+          disconnectedAt: undefined,
         });
 
         const connection = connect(variable, {
