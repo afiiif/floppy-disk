@@ -3,7 +3,14 @@ import type { Config } from "@react-router/dev/config";
 export default {
   ssr: false,
   async prerender() {
-    return ["/", "/store/zustand", "/store/floppy-disk", "/async/tanstack", "/async/floppy-disk"];
+    return [
+      "/",
+      "/store/zustand",
+      "/store/floppy-disk",
+      "/async/tanstack",
+      "/async/floppy-disk",
+      "/stream",
+    ];
   },
   ...(process.env.NODE_ENV === "production"
     ? {
