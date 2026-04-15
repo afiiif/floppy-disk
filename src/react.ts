@@ -9,3 +9,4 @@ export {
   type MutationState,
 } from "./react/create-mutation.ts";
 export * from "./react/use-mutation.ts";
+export * from "./react/create-stream.ts";
