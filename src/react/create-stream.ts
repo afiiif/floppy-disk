@@ -1,4 +1,11 @@
-import { type InitStoreOptions, type StoreApi, getHash, initStore, isClient } from "../vanilla.ts";
+import {
+  type InitStoreOptions,
+  type SetStateInput,
+  type StoreApi,
+  getHash,
+  initStore,
+  isClient,
+} from "../vanilla.ts";
 import type { StoreKey } from "./create-stores.ts";
 import { useStoreState } from "./use-store.ts";
 
@@ -93,6 +100,7 @@ type AdditionalStoreApi<TConnection> = {
   data: {
     reset: () => void;
   };
+  delete: () => boolean;
 };
 
 export type StreamOptions<TConnection, TData, TError = Error> = InitStoreOptions<
@@ -295,6 +303,17 @@ export const experimental_createStream = <
           errorUpdatedAt: undefined,
         });
       };
+
+      store.delete = () => {
+        if (store.getSubscriberCount() > 0) {
+          console.warn(
+            "Cannot delete store while it still has active subscribers. Unsubscribe all listeners before deleting the store.",
+          );
+          return false;
+        }
+        store.setState(initialState);
+        return stores.delete(variableHash);
+      };
     }
 
     const useStore = (options?: { initialData?: TData }) =>
@@ -302,7 +321,13 @@ export const experimental_createStream = <
         initialState: { data: options?.initialData } as any,
       });
 
-    return Object.assign(useStore, store);
+    return Object.assign(useStore, {
+      ...store,
+      setState: (value: SetStateInput<TState>) => {
+        console.debug("Manual setState (not via provided actions) on stream store");
+        store.setState(value);
+      },
+    });
   };
 
   const triggerReconnect = (store: TStore, trigger: ReconnectTrigger) => {
