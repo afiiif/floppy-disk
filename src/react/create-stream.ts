@@ -189,6 +189,36 @@ export const experimental_createStream = <
     },
   });
 
+  const disconnectAndSetState = (store: TStore, showLog = false) => {
+    if (store.getSubscriberCount() && showLog) {
+      console.log("Stream disconnected while there is subscriber");
+    }
+
+    const disconnectTimeoutIds_ = disconnectTimeoutIds.get(store);
+    if (disconnectTimeoutIds_) {
+      clearTimeout(disconnectTimeoutIds_["last-unsubscribe"]);
+      clearTimeout(disconnectTimeoutIds_["document-hidden"]);
+      clearTimeout(disconnectTimeoutIds_.offline);
+    }
+
+    disconnectFns.get(store)?.();
+    if (store.getState().connectionState !== "INITIAL") {
+      store.setState({
+        connectionState: "DISCONNECTED",
+        disconnectedAt: Date.now(),
+      });
+    }
+    connections.delete(store);
+    disconnectFns.delete(store);
+
+    clearDataTimeoutIds.set(
+      store,
+      setTimeout(() => {
+        store.data.reset();
+      }, gcTime),
+    );
+  };
+
   const getStore = (variable: TVariable = {} as TVariable) => {
     const variableHash = getHash(variable);
     let store: TStore;
@@ -251,35 +281,7 @@ export const experimental_createStream = <
         disconnectFns.set(store, () => disconnect(connection));
       };
 
-      store.connection.disconnect = () => {
-        if (store.getSubscriberCount()) {
-          console.warn("Stream disconnected while there is subscriber");
-        }
-
-        const disconnectTimeoutIds_ = disconnectTimeoutIds.get(store);
-        if (disconnectTimeoutIds_) {
-          clearTimeout(disconnectTimeoutIds_["last-unsubscribe"]);
-          clearTimeout(disconnectTimeoutIds_["document-hidden"]);
-          clearTimeout(disconnectTimeoutIds_.offline);
-        }
-
-        disconnectFns.get(store)?.();
-        if (store.getState().connectionState !== "INITIAL") {
-          store.setState({
-            connectionState: "DISCONNECTED",
-            disconnectedAt: Date.now(),
-          });
-        }
-        connections.delete(store);
-        disconnectFns.delete(store);
-
-        clearDataTimeoutIds.set(
-          store,
-          setTimeout(() => {
-            store.data.reset();
-          }, gcTime),
-        );
-      };
+      store.connection.disconnect = () => disconnectAndSetState(store, true);
 
       store.data = {} as any;
       store.data.reset = () => {
@@ -327,7 +329,7 @@ export const experimental_createStream = <
     if (!disconnectTimeoutIds.has(store)) disconnectTimeoutIds.set(store, {});
     const disconnectTimeoutIds_ = disconnectTimeoutIds.get(store)!;
     disconnectTimeoutIds_[trigger] = setTimeout(() => {
-      store.connection.disconnect();
+      disconnectAndSetState(store);
     }, disconnectDelay);
   };
 
