@@ -357,7 +357,11 @@ export const experimental_createStream = <
     const { connectionState } = store.getState();
     if (connectionState === "INITIAL" || connectionState === "DISCONNECTED") {
       // Force reconnect if has subscriber but is not connected
-      return store.connection.reconnect();
+      queueMicrotask(() => {
+        // Defer connecting so that the connectionState update to "CONNECTING" is broadcasted to all subscribers
+        store.connection.reconnect();
+      });
+      return;
     }
     const shouldReconnect = reconnectOn(trigger, store.getState());
     if (shouldReconnect) store.connection.reconnect();
