@@ -139,7 +139,7 @@ export class FakeWebSocket {
   ) {
     this.url = url;
     this.connectDelay = opts?.connectDelay ?? 1000; // default 1s
-    this.messageInterval = opts?.messageInterval ?? 2000; // default 2s
+    this.messageInterval = opts?.messageInterval ?? 3000; // default 3s
 
     this.log("connecting...");
 
@@ -232,8 +232,8 @@ export class FakeWebSocket {
 
       this.tick++;
 
-      // 🔴 simulate error every 5th message
-      if (this.tick % 5 === 0) {
+      // 🔴 simulate error every 4th message
+      if (this.tick % 4 === 0) {
         const err = new Event("error");
         (err as any).error = new Error(`Fake error at tick ${this.tick}`);
 

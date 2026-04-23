@@ -67,6 +67,7 @@ function ChatStreamState({ roomId }: { roomId: string }) {
   const { data = [], error } = useChatStream();
   return (
     <CardWithReRenderHighlight>
+      <h3>Total messages: {data.length}</h3>
       <pre className="text-xs">{JSON.stringify(data, null, 2)}</pre>
       {error && <div className="text-xs mt-3 text-red-400">{error.message}</div>}
     </CardWithReRenderHighlight>
