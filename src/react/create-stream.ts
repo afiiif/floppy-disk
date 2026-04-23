@@ -263,7 +263,11 @@ export const experimental_createStream = <
         const { connectionState } = store.getState();
         if (connectionState === "CONNECTING") return;
 
-        disconnectFns.get(store)?.();
+        const prevDisconnect = disconnectFns.get(store);
+        if (prevDisconnect) {
+          prevDisconnect();
+          disconnectFns.delete(store);
+        }
 
         store.setState({
           connectionState: "CONNECTING",
