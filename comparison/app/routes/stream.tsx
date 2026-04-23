@@ -74,12 +74,12 @@ function ChatStreamState({ roomId }: { roomId: string }) {
 }
 function ChatStreamConnectionLifeCycle({ roomId }: { roomId: string }) {
   const useChatStream = chatStream(roomId);
-  const { connectionState, connectedAt, disconnectedAt } = useChatStream();
+  const { connectionState, connectingAt, connectedAt, disconnectedAt } = useChatStream();
   return (
     <CardWithReRenderHighlight>
       <h3>Connection Lifecycle</h3>
       <pre className="text-xs">
-        {JSON.stringify({ connectionState, connectedAt, disconnectedAt }, null, 2)}
+        {JSON.stringify({ connectionState, connectingAt, connectedAt, disconnectedAt }, null, 2)}
       </pre>
     </CardWithReRenderHighlight>
   );
