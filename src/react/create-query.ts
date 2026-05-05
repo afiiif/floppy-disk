@@ -819,7 +819,12 @@ export const createQuery = <TData, TVariable extends StoreKey = never, TError = 
 
       useIsomorphicLayoutEffect(() => {
         return store.subscribe((nextState, prevState, changedKeys) => {
-          if (prevState.state === "INITIAL" && !prevState.isPending && nextState.isPending) {
+          if (
+            prevState.state === "INITIAL" &&
+            !prevState.isPending &&
+            nextState.isPending &&
+            !nextState.isRetrying
+          ) {
             // Prevent unnecessary re-render since the isPending already true on initial render
             return;
           }
