@@ -18,8 +18,8 @@ importers:
         specifier: ^5.95.2
         version: 5.95.2(react@19.2.4)
       floppy-disk:
-        specifier: ^3.7.2
-        version: 3.7.2(@types/react@19.2.14)(react@19.2.4)
+        specifier: ^3.7.3
+        version: 3.7.3(@types/react@19.2.14)(react@19.2.4)
       isbot:
         specifier: ^5.1.36
         version: 5.1.36
@@ -882,8 +882,8 @@ packages:
     resolution: {integrity: sha512-aA4RyPcd3badbdABGDuTXCMTtOneUCAYH/gxoYRTZlIJdF0YPWuGqiAsIrhNnnqdXGswYk6dGujem4w80UJFhg==}
     engines: {node: '>= 0.8'}
 
-  floppy-disk@3.7.2:
-    resolution: {integrity: sha512-F9gs7WIkiB/29EqIkHz2KXXK2qgzerSyxw+DsXVtwLLtIwzlzqJykA6g34bUZq+siKAdLZULT3btmmzgQgAuXA==}
+  floppy-disk@3.7.3:
+    resolution: {integrity: sha512-xuCyQ81heDA2xim5/v7C0PKIAvEhPyT+rXd8eBd5TcXHLdLUyFqIqzxPXsvOW2bCpnOFxLtRGiQgetCYjjj1ww==}
     peerDependencies:
       '@types/react': '>=17.0'
       react: '>=17.0'
@@ -2195,7 +2195,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  floppy-disk@3.7.2(@types/react@19.2.14)(react@19.2.4):
+  floppy-disk@3.7.3(@types/react@19.2.14)(react@19.2.4):
     optionalDependencies:
       '@types/react': 19.2.14
       react: 19.2.4
