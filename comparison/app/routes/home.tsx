@@ -57,8 +57,8 @@ export default function Home() {
       </p>
 
       <div className="pt-5">You can find the code here:</div>
-      <a className="link" href="https://github.com/afiiif/floppy-disk/tree/beta/comparison">
-        github.com/afiiif/floppy-disk/tree/beta/comparison
+      <a className="link" href="https://github.com/afiiif/floppy-disk/tree/main/comparison">
+        github.com/afiiif/floppy-disk/tree/main/comparison
       </a>
 
       <div className="pt-5">Documentation is available here:</div>
