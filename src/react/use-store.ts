@@ -1,6 +1,5 @@
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { type StoreApi } from "../vanilla.ts";
-import { useIsomorphicLayoutEffect } from "./use-isomorphic-layout-effect.ts";
 
 type Path = Array<string | number | symbol>;
 
@@ -66,7 +65,7 @@ export const useStoreStateWithInitializer = <TState extends Record<string, any>>
   initialState = NO_INITIAL_VALUE as Partial<TState>,
 ) => {
   const initiatedAt = useRef(new WeakMap([[store, 0]]));
-  useIsomorphicLayoutEffect(() => {
+  useEffect(() => {
     if (initialState === NO_INITIAL_VALUE || initiatedAt.current.get(store)) return;
     store.setState(initialState);
     initiatedAt.current.set(store, Date.now());
@@ -114,7 +113,7 @@ export const useStoreState = <TState extends Record<string, any>>(
 
   const [, reRender] = useState({});
 
-  useIsomorphicLayoutEffect(() => {
+  useEffect(() => {
     return store.subscribe((nextState, prevState, changedKeys) => {
       const paths = compressPaths(usedPathsRef.current);
       for (const path of paths) {
@@ -125,6 +124,8 @@ export const useStoreState = <TState extends Record<string, any>>(
         if (!Object.is(prevVal, nextVal)) return reRender({});
       }
     });
+    // False positive (missing dependency: 'usedPathsRef'): usedPathsRef is a ref, no need to add to deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [store]);
 
   return trackedState;

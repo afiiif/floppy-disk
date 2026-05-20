@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   type InitStoreOptions,
   type SetStateInput,
@@ -9,7 +9,6 @@ import {
   noop,
 } from "../vanilla.ts";
 import type { StoreKey } from "./create-stores.ts";
-import { useIsomorphicLayoutEffect } from "./use-isomorphic-layout-effect.ts";
 import {
   NO_INITIAL_VALUE,
   compressPaths,
@@ -817,7 +816,7 @@ export const createQuery = <TData, TVariable extends StoreKey = never, TError = 
 
       const [, reRender] = useState({});
 
-      useIsomorphicLayoutEffect(() => {
+      useEffect(() => {
         return store.subscribe((nextState, prevState, changedKeys) => {
           if (
             prevState.state === "INITIAL" &&
@@ -837,10 +836,12 @@ export const createQuery = <TData, TVariable extends StoreKey = never, TError = 
             if (!Object.is(prevVal, nextVal)) return reRender({});
           }
         });
+        // False positive (missing dependency: 'usedPathsRef'): usedPathsRef is a ref, no need to add to deps
+        // eslint-disable-next-line react-hooks/exhaustive-deps
       }, [store]);
 
       // Execute queryFn on mount & on re-render
-      useIsomorphicLayoutEffect(() => {
+      useEffect(() => {
         if (revalidateOnMount !== false) {
           if (!initialDataIsStale) {
             const dataInitiatedAt = initialDataInitiatedAt.current.get(store);
@@ -851,6 +852,8 @@ export const createQuery = <TData, TVariable extends StoreKey = never, TError = 
           }
           revalidate(store, variable, false);
         }
+        // False positive (missing dependency: 'initialDataInitiatedAt'): initialDataInitiatedAt is a ref, no need to add to deps
+        // eslint-disable-next-line react-hooks/exhaustive-deps
       }, [store, revalidateOnMount, initialDataIsStale]);
 
       if (keepPreviousData) {
