@@ -277,65 +277,23 @@ export type StreamOptions<TConnection, TData, TError = Error> = InitStoreOptions
  * @returns A function to retrieve or create a stream instance by variable
  *
  * @remarks
- * This utility is designed for **long-lived, push-based async sources**, such as:
- * - WebSocket
- * - Server-Sent Events (SSE)
- * - Firebase / realtime databases
- *
- * ---
- *
- * ## Key concepts
- *
- * ### 1. Connection lifecycle (managed automatically)
- *
- * - Connection is established when needed (e.g. first subscriber)
- * - Connection may be disconnected based on triggers:
- *   - no subscribers
- *   - tab hidden
- *   - offline
- * - Reconnection is controlled via `reconnectOn`
- *
- * ---
- *
- * ### 2. Data flow (push-based)
- *
- * The `connect` function receives an `emit` API:
- *
- * - `emit.connected()` → mark connection as established
- * - `emit.data(fn)` → update data using reducer
- * - `emit.error(err)` → report error
- *
- * Data updates are **incremental** and controlled by the stream source.
- *
- * ---
- *
- * ### 3. Store-per-variable
- *
- * - Each unique `variable` creates a separate stream instance
- * - Variables are deterministically hashed for stable identity
- * - Each instance manages its own:
- *   - connection
- *   - state
- *   - subscribers
- *
- * ---
- *
- * ### 4. React integration (Proxy-based)
- *
- * - The returned hook exposes the full state as a Proxy
- * - Components automatically subscribe to accessed properties
- * - No selector or memoization is required
+ * - Designed for **long-lived, push-based async sources**, such as: WebSocket, SSE, realtime databases
+ * - A stream consists of two independent concerns:
+ *   1. **Connection state** — lifecycle of the underlying connection
+ *   2. **Data state** — lifecycle of emitted data
+ * - Connection lifecycle:
+ *   - Connection is established when needed (e.g. first subscriber)
+ *   - Connection may be disconnected based on triggers: no subscribers, tab hidden, offline
+ * - Streams are **keyed by variable** (via deterministic hashing).
+ * - Each unique variable maps to its own stream instance.
  *
  * ---
  *
  * ## Execution model
  *
- * - Streams are **lazy**:
- *   - No connection until there is a subscriber
- * - Streams are **shared**:
- *   - Multiple subscribers reuse the same connection
- * - Streams are **stateful**:
- *   - Data persists across reconnects (unless reset or GC)
+ * - Streams are **lazy**: No connection until there is a subscriber
+ * - Streams are **shared**: Multiple subscribers reuse the same connection
+ * - Streams are **stateful**: Data persists across reconnects (unless reset or GC)
  *
  * ---
  *
