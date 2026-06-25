@@ -321,12 +321,7 @@ export type StreamOptions<TConnection, TData, TError = Error> = InitStoreOptions
  *   return <div>{state.data?.length}</div>;
  * }
  */
-export const experimental_createStream = <
-  TConnection,
-  TData,
-  TVariable extends StoreKey,
-  TError = Error,
->(
+export const createStream = <TConnection, TData, TVariable extends StoreKey, TError = Error>(
   connect: (
     variable: TVariable,
     emit: {

@@ -1,6 +1,6 @@
 import { act, renderHook } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
-import { experimental_createStream } from "floppy-disk/react";
+import { createStream } from "floppy-disk/react";
 
 describe("createStream", () => {
   it("connects on mount and updates connection state", async () => {
@@ -10,7 +10,7 @@ describe("createStream", () => {
       return {};
     });
 
-    const stream = experimental_createStream(connect, () => {});
+    const stream = createStream(connect, () => {});
 
     const { result } = renderHook(() => {
       const useStream = stream();
@@ -37,7 +37,7 @@ describe("createStream", () => {
   it("receives data updates via emit.data reducer", async () => {
     let emitRef: any;
 
-    const stream = experimental_createStream(
+    const stream = createStream(
       (_, emit) => {
         emitRef = emit;
         return {};
@@ -89,7 +89,7 @@ describe("createStream", () => {
   it("handles error before any data", async () => {
     let emitRef: any;
 
-    const stream = experimental_createStream(
+    const stream = createStream(
       (_, emit) => {
         emitRef = emit;
         return {};
@@ -128,7 +128,7 @@ describe("createStream", () => {
   it("transitions to SUCCESS_BUT_THEN_ERROR", async () => {
     let emitRef: any;
 
-    const stream = experimental_createStream(
+    const stream = createStream(
       (_, emit) => {
         emitRef = emit;
         return {};
@@ -185,7 +185,7 @@ describe("createStream", () => {
 
     const disconnect = vi.fn();
 
-    const stream = experimental_createStream(() => ({}), disconnect, {
+    const stream = createStream(() => ({}), disconnect, {
       connection: {
         disconnectOn: () => 100,
       },
@@ -219,7 +219,7 @@ describe("createStream", () => {
 
     const disconnect = vi.fn();
 
-    const stream = experimental_createStream(() => ({}), disconnect, {
+    const stream = createStream(() => ({}), disconnect, {
       connection: {
         disconnectOn: () => 100,
       },
@@ -258,7 +258,7 @@ describe("createStream", () => {
     let emitRef: any;
     const disconnect = vi.fn();
 
-    const stream = experimental_createStream((_, emit) => {
+    const stream = createStream((_, emit) => {
       emitRef = emit;
       return {};
     }, disconnect);
