@@ -1,8 +1,8 @@
-import { experimental_createStream as createStream } from "floppy-disk/react";
 import { useState } from "react";
 
 import { CardWithReRenderHighlight } from "../shared/components";
 import { FakeWebSocket } from "../shared/utils";
+import { createStream } from "floppy-disk/react";
 
 export function meta() {
   return [
