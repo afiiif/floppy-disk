@@ -1,0 +1,42 @@
+import { Callout } from 'nextra-theme-docs';
+
+# Initial Store State (SSR/SSG)
+
+When using SSR or SSG, you often want to initialize the store with data from the server.
+At the same time, you must avoid **shared state between users**, which can lead to data leaking across requests.
+
+FloppyDisk makes this safe and straightforward with `initialState`.
+
+```tsx
+async function MyServerComponent() {
+  const data = await getData(); // e.g. { plants: 99, zombies: 77 }
+  return <MyClientComponent initialData={data} />;
+}
+
+const useLawn = createStore({ plants: 0, zombies: 0 });
+
+function MyClientComponent({ initialData }) {
+  const { plants, zombies } = useLawn({ initialState: initialData });
+
+  return <div> 🌱 {plants} vs 🧟 {zombies} </div>;
+  // Output: <div> 🌱 99 vs 🧟 77 </div> *based on data from server
+}
+```
+
+<Callout type='info'>
+`initialState` is only applied once per store instance
+It will not overwrite existing state on re-render.
+</Callout>
+
+## With Keyed Store
+
+Works the same with [keyed stores](/docs/sync/stores):
+
+```tsx
+function Lawn({ id, initialState }) {
+  const useLawn = lawnStores({ id });
+  const { plants, zombies } = useLawn({ initialState });
+
+  return <div> 🌱 {plants} vs 🧟 {zombies} </div>;
+}
+```

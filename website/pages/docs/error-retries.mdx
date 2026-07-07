@@ -1,0 +1,36 @@
+# Error Retries
+
+Error retries are a built-in feature of **queries** in FloppyDisk.
+Because queries are designed to be **side-effect free**, they can be safely retried without introducing unintended behavior.
+
+Mutations, on the other hand, may produce side effects (e.g. writing data), so they do not include automatic retry by default.
+Retry logic for mutations should be handled explicitly by you.
+
+```tsx
+const plantsQuery = createQuery(getPlants,
+  {
+    shouldRetry: (error, state) => {
+      if (error?.status === 401 || error?.status === 403) {
+        return [false]; // No need useless retry
+      }
+
+      if (state.retryCount > 3) {
+        return [false]; // No more retry, already retries 3x
+      }
+
+      return [
+        true,                         // true means do retry
+        1000 * 2 ** state.retryCount, // delay: exponential backoff
+      ];
+    },
+  },
+);
+```
+
+When a query fails:
+
+1. `shouldRetry(error, state)` is called
+2. If it returns:
+   - `[true, delay]` → schedule retry after delay
+   - `[false]` → stop retrying
+3. Retry only happens if the query is used (has subscribers)

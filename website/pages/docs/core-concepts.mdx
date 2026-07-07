@@ -1,0 +1,97 @@
+# Core Concepts
+
+## State in FloppyDisk
+
+FloppyDisk is built on two core ideas:
+
+- Immutable state updates
+- Automatic dependency tracking (via [Proxy](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Proxy))
+
+Together, they enable **smart re-rendering without selectors**.
+
+### Store State Must Be an Object
+
+In FloppyDisk, the store state is always an **object**.
+
+```tsx
+const useMyAwesomeStore = createStore({
+  foo: 1,
+  bar: 2,
+});
+```
+
+This is required because:
+
+- Proxy tracking works on object properties
+- Enables fine-grained re-rendering
+
+```tsx
+// Not supported:
+createStore(0); // ❌ Primitive values
+createStore([]); // ❌ Arrays as root state
+
+// Supported:
+createStore({ value: 0 }); // ✅
+createStore({ list: [] }); // ✅
+```
+
+## Immutability (Predictable State Updates)
+
+FloppyDisk follows the same pattern as React:
+
+> State is never mutated directly, you always return a new value.
+
+```tsx
+useStore.setState(prev => ({ count: prev.count + 1 }));
+```
+
+Why this matters:
+
+- ✅ Predictable updates
+- ✅ Easy debugging
+- ✅ Works naturally with React mental model
+
+### What You Don't Do
+
+```tsx
+store.getState().count++; // ❌ Avoid mutation
+```
+
+Mutating state directly:
+
+- Breaks predictability
+- Bypasses change detection → leads to inconsistent UI updates
+
+## Proxy Tracking (Automatic Dependency Detection)
+
+This is where FloppyDisk becomes powerful.\
+When you use the store inside React, FloppyDisk internally:
+
+1. Wraps the state in a Proxy
+2. Tracks which properties you access
+3. **Re-renders only when those properties change**
+
+```tsx
+const useStore = createStore({
+  foo: 1,
+  bar: { value: 2 },
+});
+
+// And inside component:
+const { bar } = useStore();
+return <div>{bar.value}</div>;
+```
+
+In this example 👆 the component only re-rendered when `bar.value` changed:
+
+```tsx
+// No re-render
+useStore.setState({ foo: 999 });
+
+// No re-render
+useStore.setState({ bar: { value: 2 } });
+// `bar` reference changed, but `bar.value` is still the same
+
+// Re-render 🔔
+useStore.setState({ bar: { value: 999 } });
+```

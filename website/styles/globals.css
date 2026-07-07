@@ -1,0 +1,17 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+ul ul.nx-mt-6 {
+  margin-top: 0;
+}
+
+.full-width-page ~ div > .nextra-nav-container + .nx-max-w-\[90rem\] {
+  @apply max-w-full;
+}
+.full-width-page ~ div > .nextra-nav-container + .nx-max-w-\[90rem\] > .nx-w-64 {
+  @apply w-0;
+}
+.full-width-page ~ div > .nextra-nav-container + .nx-max-w-\[90rem\] main {
+  @apply max-w-full;
+}

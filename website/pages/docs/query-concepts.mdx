@@ -1,0 +1,122 @@
+import { Callout } from 'nextra-theme-docs';
+
+# Concept of Stale, Revalidate, & Invalidate
+
+Understanding these concepts is key to how FloppyDisk manages async state efficiently and predictably.
+
+## Stale vs Fresh
+
+Every query can be either:
+
+<div>
+- **Fresh** → data is still considered up-to-date
+- **Stale** → data is considered outdated (need revalidation)
+</div>
+
+This is controlled by **staleTime** (default: 2.5 seconds).
+
+The timer starts right after the promise resolves.
+
+### Simulation
+
+Let's say a query with `{ staleTime: 2500 }`.\
+Timeline simulation:
+
+<div>
+- t = 0ms → query executed
+- t = 500ms → promise resolved → data is considered FRESH → ⏱️ start stale timer
+- t = 2500ms → still FRESH (2000ms since time started)
+- t = 3000ms → becomes STALE (2500ms since time started)
+- t = 4000ms → still STALE
+</div>
+
+<Callout type='info'>
+Stale time starts after data is available, not when the request begins.
+This ensures freshness is based on actual data age, not network duration.
+</Callout>
+
+**Mental Model**
+
+<div>
+- Fresh = trust the cache
+- Stale = safe to revalidate (refetch)
+</div>
+
+## Execute
+
+`execute()` means:\
+Always run the promise, no matter what.
+
+- Ignores stale state
+- Ignores invalidation
+- Forces a fetch
+
+<div className='text-sm mt-6 opacity-70'>
+💡 In TanStack Query terms, `execute` is equivalent to `fetch`.
+</div>
+
+## Revalidate
+
+`revalidate()` is conditional:
+
+- If query is **stale** → run the promise
+- If query is **invalidated** → run the promise
+- Otherwise → do nothing (use cached data)
+
+Revalidation respects freshness.
+
+<div className='text-sm mt-6 opacity-70'>
+💡 In TanStack Query terms, `revalidate` is equivalent to `refetch`.
+</div>
+
+## Invalidate
+
+`invalidate()` marks a query as **invalid**, even if it's still fresh.
+
+Then:
+
+<div>
+- If the query is subscribed → automatically execute
+- If the query is unsubscribed → stop here → wait until it becomes subscribed, then execute
+</div>
+
+This ensures:
+
+<div>
+- No unnecessary work for unused queries
+- Active UI always stays up-to-date
+</div>
+
+<div className='text-sm mt-6 opacity-70'>
+💡 In TanStack Query terms, `invalidate` is equivalent to `invalidateQueries`.
+</div>
+
+## Subscribed vs Unsubscribed
+
+Based on total subscribers, a query can be classified into two conditions:
+
+<div>
+- **Subscribed query** → has active subscribers
+- **Unsubscribed query** → has no subscribers
+</div>
+
+This distinction is important because it determines whether a query should actively update or stay idle.
+
+<Callout type='info'>
+If a query is **used** by a currently rendered component, it becomes **subscribed**,
+because the component internally subscribes to the query store.
+</Callout>
+
+## How They Work Together
+
+<div className='whitespace-nowrap pt-6'>
+
+| Command        | Fresh/Stale                             | Subscribed                              | Query function called?                                           |
+| -------------- | --------------------------------------- | --------------------------------------- | ---------------------------------------------------------------- |
+| `execute()`    | <span className='opacity-70'>Any</span> | <span className='opacity-70'>Any</span> | ✅ Called                                                        |
+| `revalidate()` | **Fresh**                               | <span className='opacity-70'>Any</span> | ❌ Not called                                                    |
+| `revalidate()` | **Stale**                               | <span className='opacity-70'>Any</span> | ✅ Called                                                        |
+| `invalidate()` | <span className='opacity-70'>Any</span> | **Yes**                                 | ✅ Called immediately                                            |
+| `invalidate()` | <span className='opacity-70'>Any</span> | **No**                                  | ⏳ Deferred<div>→ Called when the query becomes subscribed</div> |
+
+</div>

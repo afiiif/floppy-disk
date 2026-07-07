@@ -1,0 +1,117 @@
+import JsOrTs from '@/pages/_components/JsOrTs';
+
+import { KeyedQuery } from './_KeyedQuery';
+
+# Query Guides
+
+## Single Query
+
+Create a query using `createQuery`:
+
+```tsx
+import { createQuery } from "floppy-disk/react";
+
+const myQuery = createQuery(
+  myAsyncFn,
+  // { staleTime: 5000, revalidateOnFocus: false } <-- optional options
+);
+```
+
+Use it inside your component:
+
+```tsx
+const useMyQuery = myQuery();
+
+function MyComponent() {
+  const { data, error } = useMyQuery();
+
+  if (!data && !error) return <div>Loading...</div>;
+  if (error) return <div>Error: {error.message}</div>;
+
+  return <div>{data.foo} {data.bar}</div>;
+}
+```
+
+## Keyed Query (Dynamic Params)
+
+You can create parameterized queries:
+
+<JsOrTs>
+
+<>
+
+```tsx
+import { createQuery } from "floppy-disk/react";
+
+import { getZombieById } from "../utils"; // Your own module
+
+const zombieQuery = createQuery(
+  getZombieById,
+  // { staleTime: 5000, revalidateOnFocus: false } <-- optional options
+);
+```
+
+</>
+
+<>
+
+```tsx
+import { createQuery } from "floppy-disk/react";
+
+import { getZombieById, type GetZombieByIdResponse } from "../utils"; // Your own module
+
+type ZombieQueryParam = { id: string };
+
+const zombieQuery = createQuery<GetZombieByIdResponse, ZombieQueryParam>(
+  getZombieById,
+  // { staleTime: 5000, revalidateOnFocus: false } <-- optional options
+);
+```
+
+</>
+
+</JsOrTs>
+
+Use it with parameters:
+
+```tsx
+function ZombieDetail({ id }) {
+  const useZombieQuery = zombieQuery({ id: 1 });
+  const { data, error } = useZombieQuery();
+
+  if (!data && !error) return <div>Loading...</div>;
+  if (error) return <div>Error: {error.message}</div>;
+
+  return <div>Name: {data.name}, hp: {data.hp}</div>;
+}
+```
+
+Each unique parameter creates its own cache entry.
+
+### Keyed Query Demo
+
+<KeyedQuery />
+
+## Store Inheritance
+
+Queries in FloppyDisk are built on top of the core store.
+This means every query inherits the same capabilities, such as `subscribe`, `getState`, and [store events](/docs/sync/store-events).
+It also gets **automatic reactivity** out of the box, so components rerender only when the state they use actually changes.
+
+```tsx
+const { data } = useMyQuery();
+// ^Only data changes will trigger a re-render
+
+const value = useMyQuery().data?.foo.bar.baz;
+// ^Only data.foo.bar.baz changes will trigger a re-render
+```
+
+Get state outside React:
+
+```tsx
+const myPlantQuery = createQuery<MyPlantResponse>(getMyPlant); // Query without paramerer
+const zombieQuery = createQuery<GetZombieByIdResponse, { id: string }>(getZombieById); // Parameterized query
+
+const getMyPlantQueryData = () => myPlantQuery().getState().data;
+const getZombieQueryData = ({ id }) => zombieQuery({ id }).getState().data;
+```

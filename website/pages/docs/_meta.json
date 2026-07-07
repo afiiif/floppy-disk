@@ -1,0 +1,40 @@
+{
+  "getting-started": "Getting Started",
+  "comparison": "Comparison",
+  "core-concepts": "Core Concepts",
+
+  "--sync--": { "type": "separator", "title": "Sync State Manager" },
+  "store": "Store (Global State)",
+  "store-events": "Store Events",
+  "stores": "Stores (Keyed Store)",
+  "ssr-ssg": "Initial Store State (SSR/SSG)",
+
+  "--async--": { "type": "separator", "title": "Async State Manager" },
+  "async-philosophy": "Philosophy",
+  "query-state-machine": "Query State Machine",
+  "query": "Query Guides",
+  "query-concepts": "Concept of Stale, Revalidate, & Invalidate",
+  "paginated-query": "Paginated Query",
+  "infinite-scroll": "Infinite Scroll",
+  "query-ssr-ssg": "Initial Query Data (SSR/SSG)",
+  "optimistic-update": "Optimistic Update",
+  "bi-directional-query": { "title": "Bi-directional Query", "display": "hidden" },
+  "error-retries": "Error Retries",
+  "mutation": "Mutation Guides",
+  "async-cancellation": "Query/Mutation Cancellation",
+
+  "--reference--": { "type": "separator", "title": "Reference" },
+  "api-reference": "API Reference",
+
+  "--separator1--": { "type": "separator", "title": "Other" },
+  "change-log": {
+    "title": "Change Log ↗",
+    "href": "https://github.com/afiiif/floppy-disk/releases",
+    "newWindow": true
+  },
+  "npm": {
+    "title": "NPM ↗",
+    "href": "https://www.npmjs.com/package/floppy-disk",
+    "newWindow": true
+  }
+}

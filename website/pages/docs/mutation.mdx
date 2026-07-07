@@ -1,0 +1,95 @@
+# Mutation Guides
+
+Mutations are used to perform write operations—such as creating, updating, or deleting data.
+
+FloppyDisk provides two ways to use mutations:
+
+- **Global mutation** → shared state across components
+- **Local mutation** → isolated per component
+
+## Global Mutation
+
+Create a global mutation using `createMutation`:
+
+```tsx
+import { createMutation } from "floppy-disk/react";
+
+const useUpdatePlant = createMutation(updatePlant, {
+  onSuccess: (data) => {
+    console.log("Global success:", data);
+  },
+});
+```
+
+Use it inside any component:
+
+```tsx
+function UpdateButton() {
+  const { isPending } = useUpdatePlant();
+
+  return (
+    <button
+      disabled={isPending}
+      onClick={() => {
+        useUpdatePlant.execute({ id: 1, name: "Sunflower", hp: 300 });
+      }}
+    >
+      Update Plant
+    </button>
+  );
+}
+```
+
+Characteristics:
+
+- Shared across all components
+- Single source of truth for mutation state
+- Can be triggered from anywhere using `.execute()`
+- Useful for global actions (e.g. forms, shared actions)
+
+## Local Mutation
+
+Create a local mutation using `useMutation`:
+
+```tsx
+import { useMutation } from "floppy-disk/react";
+
+function UpdateForm() {
+  const [result, { execute }] = useMutation(updateZombie, {
+    onSuccess: (data) => {
+      console.log("Local success:", data);
+    },
+  });
+
+  return (
+    <div>
+      <button
+        disabled={result.isPending}
+        onClick={() => {
+          execute({ id: 27, name: "Gargantuar", hp: 3000 });
+        }}
+      >
+        Submit
+      </button>
+
+      {result.isError && <div>Error occurred</div>}
+    </div>
+  );
+}
+```
+
+Characteristics:
+
+- Isolated per component instance
+- Each usage has its own state
+- No shared side effects
+- Ideal for component-scoped interactions
+
+## Execution
+
+Both global and local mutations:
+
+- Execute via `execute(input)`
+- Return a Promise that **never throw**.\
+  It returns `{ variable: TVariable; data?: TData; error?: TError }` instead.
+- Update state automatically (`isPending`, `isSuccess`, `isError`, etc.)

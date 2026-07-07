@@ -1,0 +1,12 @@
+{
+  "ignorePatterns": ["examples/**/*"],
+  "extends": "next/core-web-vitals",
+  "overrides": [
+    {
+      "files": ["./examples/**/*.[jt]s?(x)"],
+      "rules": {
+        "react/no-unescaped-entities": "off"
+      }
+    }
+  ]
+}

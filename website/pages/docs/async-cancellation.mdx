@@ -1,0 +1,47 @@
+# Query/Mutation Cancellation
+
+FloppyDisk does not control your async function. It focuses on **state**, **not execution**.
+If you need cancellation (e.g. aborting a request), you must handle it yourself using tools like `AbortController`.
+
+FloppyDisk **never** cancels an execution.
+It focuses purely on managing the result, not controlling the async process itself.
+When multiple executions happen, FloppyDisk simply **decides what to do** with the result—whether to use it to update the state or ignore it.
+This keeps the system predictable, flexible, & agnostic to any async implementation.
+
+## Manual Cancellation Pattern
+
+You can manage cancellation yourself:
+
+```tsx
+let controller: AbortController | null = null;
+
+const myQuery = createQuery(async () => {
+  controller?.abort(); // cancel previous request
+  controller = new AbortController();
+
+  const res = await fetch("/api/data", {
+    signal: controller.signal,
+  });
+
+  return res.json();
+});
+```
+
+With keyed queries, each query instance can manage its own controller:
+
+```tsx
+const controllers = new Map<string, AbortController>();
+
+const myQuery = createQuery(async (param, _state, paramHash) => {
+  controllers.get(paramHash)?.abort();
+
+  const controller = new AbortController();
+  controllers.set(paramHash, controller);
+
+  const res = await fetch(`/api/data?id=${param.id}`, {
+    signal: controller.signal,
+  });
+
+  return res.json();
+});
+```

@@ -1,0 +1,115 @@
+# Comparison
+
+Every state management tool makes **trade-offs**.\
+FloppyDisk(.ts) is designed to combine what works well and remove what doesn't.
+
+If you've used Zustand, Valtio, or TanStack Query, this will feel familiar—but more unified.
+
+## Zustand & Valtio
+
+[Zustand](https://zustand.docs.pmnd.rs) is popular for its simplicity.\
+But there's a catch:
+
+> You need selectors to prevent unnecessary re-renders.
+
+```tsx
+const count = useStore(s => s.count);
+```
+
+Without selectors, components may re-render more than needed.
+Optimization becomes the developer's responsibility.
+
+[Valtio](https://valtio.dev) solves this with Proxy-based tracking:\
+No selectors needed, fine-grained reactivity out of the box.
+
+But it introduces a different trade-off:
+
+```tsx
+state.count++;
+```
+
+<div className='mt-6 [&_ul]:mt-0'>
+
+> You mix two mental models:
+>
+> - React → immutable updates
+> - Valtio → mutable updates
+
+</div>
+
+## FloppyDisk: No selectors, no mixed model
+
+FloppyDisk combines the strengths of both:
+
+- ✅ No selectors (like Valtio)
+- ✅ Immutable updates (like React & Zustand)
+- ✅ Automatic fine-grained reactivity
+
+```tsx
+const { count } = useStore();
+```
+
+```tsx
+useStore.setState(prev => ({ count: prev.count + 1 }));
+```
+
+> You get automatic optimization—without changing how you think about state.
+
+## TanStack Query
+
+[TanStack Query](https://tanstack.com/query) is the go-to solution for async state:\
+Caching, retry logic, revalidation, huge ecosystem.
+
+<div className='mt-6 [&_.nextra-code-block]:mt-2.5'>
+
+But it comes with trade-offs:
+
+1. **Bundle size**\
+   It's a relatively large library, especially if you only need core features.
+2. **Query keys**\
+   Every query must be identified manually. You are responsible for structuring and maintaining query keys.
+   ```tsx
+   useQuery(["user", id], getUserById);
+   ```
+
+</div>
+
+## FloppyDisk: Simpler model, smaller footprint
+
+FloppyDisk approaches async state differently:
+
+- ✅ **Smaller bundle**\
+  No external dependencies, designed to stay lightweight.
+- ✅ **No query keys**\
+  Each variable creates its own store, the variable itself is the identity.
+- ✅ **Unified mental model**\
+  With FloppyDisk:
+  - Sync state → `createStore` / `createStores`
+  - Async state → `createQuery` / `createMutation`
+
+```tsx
+import { createQuery } from "floppy-disk/react";
+
+const userDetailQuery = createQuery<GetUserByIdResponse, { id: string }>(
+  getUserById,
+);
+```
+
+```tsx
+function UserDetail({ id }: { id: string }) {
+  const useUserDetailQuery = userDetailQuery({ id });
+  const { data, error } = useUserDetailQuery();
+
+  if (!data && !error) return <div>Loading...</div>;
+  if (error) return <div>Error: {error.message}</div>;
+
+  return <div>Name: {data.name}, email: {data.email}</div>;
+}
+```
+
+## When FloppyDisk Fits Best
+
+- You want **automatic reactivity** without selectors
+- You prefer **immutable state** (same pattern as React)
+- You want **one solution** for sync + async
+- You care about **bundle size**

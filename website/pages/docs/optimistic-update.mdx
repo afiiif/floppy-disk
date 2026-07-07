@@ -1,0 +1,40 @@
+# Optimistic Update
+
+Optimistic update lets you **update the UI immediately** before the async operation completes.
+This makes your app feel fast and responsive—no waiting for the server.
+
+Every query provides an `optimisticUpdate` method:
+
+```tsx
+const plantsQuery = createQuery(getPlants);
+
+function addPlant(newPlant) {
+  const query = plantsQuery();
+
+  // Update state on client
+  const { rollback, revalidate } = query.optimisticUpdate([
+    ...query.getState().data,
+    newPlant,
+  ]);
+
+  // Submit data to server
+  submitNewPlant(newPlant)
+    .then(() => {
+      revalidate(); // Sync with server
+    })
+    .catch(() => {
+      rollback(); // Revert on failure
+    });
+}
+```
+
+When you call `optimisticUpdate(data)`:
+
+<div>
+1. The query data is updated immediately
+2. Previous data is stored internally
+3. UI updates instantly
+4. You get control to:
+   - `rollback()` → restore previous data
+   - `revalidate()` → fetch actual data from server
+</div>

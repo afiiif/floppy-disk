@@ -1,0 +1,70 @@
+# Initial Query Data (SSR/SSG)
+
+When using SSR or SSG, you often want to **serve HTML that is already populated with data**.
+
+Instead of sending an empty page and fetching on the client, the server renders the UI with real data upfront.
+This improves perceived performance, avoids loading states, and ensures the content is immediately visible.
+
+FloppyDisk lets you pass that server-fetched data directly into your query as initial state—so the client can pick up exactly where the server left off.
+
+## Initialize Query Data from Server
+
+```tsx
+async function MyServerComponent() {
+  const data = await getData(); // e.g. { count: 3 }
+  return <MyClientComponent initialData={data} />;
+}
+```
+
+Use it in your query:
+
+```tsx
+import { createQuery } from "floppy-disk/react";
+
+const myQuery = createQuery(getData);
+const useMyQuery = myQuery();
+
+function MyClientComponent({ initialData }) {
+  const { data } = useMyQuery({
+    initialData,
+    // initialDataIsStale: true <-- Optional, default to false (no immediate revalidation)
+  });
+
+  return <>count is {data.count}</>; // Output: count is 3
+}
+```
+
+## How It Works
+
+- `initialData` seeds the query state on first render
+- The query starts in a **success state** immediately
+- No loading state is shown on the client
+
+This makes SSR/SSG seamless and avoids UI flicker.
+
+## Revalidation Behavior
+
+By default:
+
+<div>
+- `initialDataIsStale` = false
+- The query is considered fresh
+- No automatic re-fetch happens on mount
+</div>
+
+If you want to revalidate immediately:
+
+```tsx
+useMyQuery({
+  initialData,
+  initialDataIsStale: true,
+});
+```
+
+This will:
+
+<div>
+- show initial data instantly
+- trigger a background re-fetch
+- update the UI when fresh data arrives
+</div>

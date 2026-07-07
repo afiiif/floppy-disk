@@ -1,0 +1,108 @@
+import { Callout } from 'nextra-theme-docs';
+
+# Infinite Scroll
+
+FloppyDisk does **not provide** a dedicated "_infinite query_" API for infinite scroll UI.\
+Instead, it embraces a simpler and more flexible approach:
+
+> Infinite queries can be easily built with **composition** + **recursive rendering**.
+
+Why? Because async state is already powerful enough:
+
+<div>
+- keyed queries handle parameters
+- components handle composition
+- recursive rendering handles pagination
+</div>
+
+No special abstraction needed.
+
+Instead of relying on a specific API, infinite scroll is achieved by composing components that render the next page when needed.
+Each page is simply another component instance with a different cursor.
+
+## How It Works
+
+At a high level, the pattern looks like this:
+
+```
+Page → LoadMore → Page → LoadMore → ...
+```
+
+- `Page` is responsible for fetching and rendering a single page of data
+- `LoadMore` decides when to render the next page
+- When triggered, `LoadMore` renders another `Page` with the next cursor
+
+This creates a recursive rendering pattern where each page naturally leads to the next.
+
+Here is the example on how to implement infinite query properly:
+
+```tsx
+type GetPlantParams = {
+  cursor?: string; // For pagination
+};
+type GetPlantsResponse = {
+  plants: Plant[];
+  meta: { nextCursor: string };
+};
+
+const plantsQuery = createQuery<GetPlantsResponse, GetPlantParams>(getPlants, {
+  staleTime: Infinity,
+  revalidateOnFocus: false,
+  revalidateOnReconnect: false,
+});
+
+function Main() {
+  return <Page cursor={undefined} />;
+}
+
+function Page({ cursor }: { cursor?: string }) {
+  const usePlantsQuery = plantsQuery({ cursor });
+  const { data, error } = usePlantsQuery();
+
+  if (!data && !error) return <div>Loading...</div>;
+  if (error) return <div>Error</div>;
+
+  return (
+    <>
+      {data.plants.map((plant) => (
+        <PlantCard key={plant.id} plant={plant} />
+      ))}
+      {data.meta.nextCursor && <LoadMore nextCursor={data.meta.nextCursor} />}
+    </>
+  );
+}
+
+function LoadMore({ nextCursor }: { nextCursor?: string }) {
+  const [isNextPageRequested, setIsNextPageRequested] = useState(() => {
+    const stateOfNextPageQuery = plantsQuery({ cursor: nextCursor }).getState();
+    return stateOfNextPageQuery.isPending || stateOfNextPageQuery.isSuccess;
+  });
+
+  if (isNextPageRequested) {
+    return <Page cursor={nextCursor} />;
+  }
+
+  return <DomObserver onReachBottom={() => setIsNextPageRequested(true)} />;
+}
+```
+
+## Revalidation Considerations
+
+When implementing infinite queries, it is **highly recommended to disable automatic revalidation**.
+
+Why?\
+In an infinite list, users may scroll through many pages ("_doom-scrolling_").\
+If revalidation is triggered:
+
+<div>
+- All previously loaded pages may re-execute
+- Content at the top may change without the user noticing
+- Layout shifts can occur unexpectedly
+</div>
+
+This leads to a **confusing and unstable user experience**.\
+Revalidating dozens of previously viewed pages rarely provides value to the user.
+
+<Callout type='info'>
+Demo: https://afiiif.github.io/floppy-disk/async/floppy-disk/?activeTab=Infinite+Query
+</Callout>

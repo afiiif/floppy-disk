@@ -1,0 +1,41 @@
+---
+title: FloppyDisk.ts - A New Generation State Management Library for React
+description: The Zustand-ReactQuery alternative for local, global, sync, or async state management.
+keywords: Floppy Disk, React, State Management, JS, JavaScript, NPM, Store, TanStack-Query, Zustand, Alternative
+---
+
+import Banner from './_HomeBanner';
+import Comparison from './_HomeComparison';
+
+<Banner>
+
+```bash
+npm i floppy-disk
+```
+
+</Banner>
+
+<Comparison />
+
+<section className="mx-auto max-w-lg pt-32 text-base sm:px-4 sm:pt-36 sm:text-lg md:px-0">
+<div className="mx-auto text-center max-w-xs [&~ul]:mt-0">
+## In Short
+</div>
+
+**Like Zustand, but has additional capabilities:**
+
+- No selectors: automatically optimizes re-renders
+- Store events: `onFirstSubscribe`, `onSubscribe`, `onUnsubscribe`, `onLastUnsubscribe`
+- Easier to set the initial state on SSR/SSG
+- Smaller bundle
+
+**Async support like TanStack Query, but:**
+
+- DX is very similar to Zustand: Store is available globally, access/modify state from anywhere
+- Better docs: [concept](/docs/query-concepts) & [state transition](/docs/query-state-machine) are clearly explained
+  <div className='opacity-70 text-sm'>(honestly, many developers have used TanStack Query for years but still don't fully understand the difference between `refetch` and `invalidate`)</div>
+- Much smaller bundle than TanStack Query
+
+</section>
+
+<div className='h-28' />

@@ -1,0 +1,79 @@
+import JsOrTs from '@/pages/_components/JsOrTs';
+
+# Stores (Keyed Store)
+
+Sometimes you don't want just one global state.\
+You want multiple instances of the same store, each with its own state.
+
+That's what Keyed Stores are for.
+
+## Creating a Keyed Store
+
+Use `createStores` instead of `createStore`:
+
+<JsOrTs>
+
+<>
+
+```tsx
+import { createStores } from "floppy-disk/react";
+
+const lawnStores = createStores({
+  plants: 3,
+  zombies: 1,
+});
+```
+
+</>
+
+<>
+
+```tsx
+import { createStores } from "floppy-disk/react";
+
+const lawnStores = createStores<
+  { plants: number, zombies: number }, // State type
+  { id: string } // Store key type
+>({
+  plants: 3,
+  zombies: 1,
+});
+```
+
+</>
+
+</JsOrTs>
+
+## Using a Keyed Store
+
+Each key creates a **separate store instance**:
+
+```tsx
+function Lawn({ id }: { id: string }) {
+  const useLawn = lawnStores({ id });
+  const { plants, zombies } = useLawn();
+
+  return <div> 🌱 {plants} vs 🧟 {zombies} </div>;
+}
+
+function LawnControl({ id }: { id: string }) {
+  const useLawn = lawnStores({ id });
+
+  return (
+    <button
+      onClick={() => {
+        useLawn.setState(prev => ({ plants: prev.plants + 1 }));
+      }}
+    >
+      Add plant
+    </button>
+  );
+}
+```
+
+Updating keyed-store state outside React:
+
+```tsx
+lawnStores({ id: "lawn-id-you-want-to-update" })
+  .setState({ plants: 99, zombies: 88 });
+```

@@ -1,0 +1,348 @@
+import Code from '@/pages/_components/Code';
+
+# API Reference
+
+Legend:
+
+<div className='pb-4'>
+- `?` means optional
+</div>
+
+## initStore
+
+Create a standalone store instance **without React**.
+
+```ts
+import { initStore } from "floppy-disk";
+
+const store = initStore(initialState, options);
+```
+
+### Parameters
+
+<div className="[&_ul]:text-sm">
+
+- `initialState` : The initial state of the store, must be an **object**
+- `options?`
+  - `onFirstSubscribe?` : Called when the first subscriber is added
+  - `onSubscribe?` : Called every time a subscriber is added
+  - `onUnsubscribe?` : Called every time a subscriber is removed
+  - `onLastUnsubscribe?` : Called when the last subscriber is removed
+  - `onStateChange?` : Called whenever state changes (does not register as a subscriber)
+  - `allowSetStateServerSide?` : Allow `setState` on server (**disabled by default**)
+
+</div>
+
+### Return Value
+
+<div className="[&_ul_ul]:text-sm">
+
+- `store` : **Store Instance**
+  - `store.getState()` : Get the current state
+  - `store.setState(value)` : Update the state (accepts partial object or updater function)
+  - `store.subscribe(fn)` : Subscribe to state changes (returns unsubscribe function)
+  - `store.getSubscriberCount()` : Get the number of subscribers
+
+</div>
+
+<div className='[&~h2]:mt-16' />
+
+## createStore
+
+Creates a store with built-in React bindings.
+
+```ts
+import { createStore } from "floppy-disk/react";
+
+const useStore = createStore(initialState, options);
+```
+
+### Parameters
+
+<div className="[&_ul]:text-sm">
+
+- `initialState` : The initial state of the store, must be an **object**
+- `options?`
+  - `onFirstSubscribe?` : Called when the first subscriber is added
+  - `onSubscribe?` : Called every time a subscriber is added
+  - `onUnsubscribe?` : Called every time a subscriber is removed
+  - `onLastUnsubscribe?` : Called when the last subscriber is removed
+  - `onStateChange?` : Called whenever state changes (does not register as a subscriber)
+  - `allowSetStateServerSide?` : Allow `setState` on server (**disabled by default**)
+
+</div>
+
+### Return Value
+
+<div className="[&_ul_ul]:text-sm">
+
+- `useStore()`
+  - **Parameters** (optional)
+    - `initialState?` : Initial state applied once on first render (also updates the store)
+  - **Return Value**
+    - `state` : Proxied state with automatic tracking (component re-renders only when accessed values change)
+
+- `useStore` **methods**
+  - `useStore.getState()` : Get the current state
+  - `useStore.setState(value)` : Update the state (accepts partial object or updater function)
+  - `useStore.subscribe(fn)` : Subscribe to state changes (returns unsubscribe function)
+  - `useStore.getSubscriberCount()` : Get the number of subscribers
+
+</div>
+
+## createStores
+
+Creates a factory for multiple stores identified by a key.
+
+```ts
+import { createStores } from "floppy-disk/react";
+
+const getStore = createStores(initialState, options);
+const useStore = getStore(key);
+```
+
+### Parameters
+
+<div className="[&_ul]:text-sm">
+
+- `initialState` : The initial state for each store instance, must be an **object**
+- `options?`
+  - `onFirstSubscribe?` : Called when the first subscriber is added
+  - `onSubscribe?` : Called every time a subscriber is added
+  - `onUnsubscribe?` : Called every time a subscriber is removed
+  - `onLastUnsubscribe?` : Called when the last subscriber is removed
+  - `onStateChange?` : Called whenever state changes (does not register as a subscriber)
+  - `allowSetStateServerSide?` : Allow `setState` on server (**disabled by default**)
+
+</div>
+
+### Return Value
+
+<div className="[&_ul_ul]:text-sm">
+
+- `getStore(key?)`
+  - **Parameters**
+    - `key?` : Unique identifier for the store instance (object, will be hashed)
+  - **Return Value**
+    - `useStore` : A store bound to the given key (lazily created and cached)
+
+- `useStore()`
+  - **Parameters** (optional)
+    - `initialState?` : Initial state applied once per store instance (also updates the store once)
+  - **Return Value**
+    - `state` : Proxied state with automatic tracking (component re-renders only when accessed values change)
+
+- `useStore` **methods**
+  - `useStore.getState()` : Get the current state
+  - `useStore.setState(value)` : Update the state (accepts partial object or updater function)
+  - `useStore.subscribe(fn)` : Subscribe to state changes (returns unsubscribe function)
+  - `useStore.getSubscriberCount()` : Get the number of subscribers
+  - `useStore.delete()` : Delete the store instance (only works when no active subscribers)
+
+- `useStore` **properties**
+  - `useStore.key` : The original key object
+  - `useStore.keyHash` : Deterministic hash of the key
+
+</div>
+
+### Notes
+
+<div className='text-sm'>
+- Each unique key creates an isolated store
+- Stores are lazily created and cached
+- `.delete()` will reset state and remove the store from cache
+- Cannot delete a store while it still has active subscribers
+</div>
+
+## createQuery
+
+Creates a query factory for managing async state with caching and lifecycle.
+
+```ts
+import { createQuery } from "floppy-disk/react";
+
+const getQuery = createQuery(queryFn, options);
+const useQuery = getQuery(variable);
+```
+
+### Parameters
+
+<div className="[&_ul]:text-sm">
+
+- `queryFn` : Async function that returns data
+  - Receives `(variable, currentState, variableHash)`
+- `options?`
+  - `staleTime?` : Time (ms) data is considered fresh (default: 2500)
+  - `gcTime?` : Time (ms) before unused queries are garbage collected (default: 5 minutes)
+  - `revalidateOnFocus?` : Revalidate on window focus (default: true)
+  - `revalidateOnReconnect?` : Revalidate on network reconnect (default: true)
+  - `onSuccess?` : Called when query succeeds
+  - `onError?` : Called when query fails and no more retries
+  - `onSettled?` : Called after success or final failure
+  - `shouldRetry?` : Control retry behavior (default: retry once with 1500ms delay)
+  - `onFirstSubscribe?` : Called when the first subscriber is added
+  - `onSubscribe?` : Called every time a subscriber is added
+  - `onUnsubscribe?` : Called every time a subscriber is removed
+  - `onLastUnsubscribe?` : Called when the last subscriber is removed
+  - `onStateChange?` : Called whenever state changes (does not register as a subscriber)
+  - `allowSetStateServerSide?` : Allow `setState` on server (**disabled by default**)
+
+</div>
+
+### Return Value
+
+<div className="[&_ul_ul]:text-sm">
+
+- `getQuery(variable?)`
+  - **Parameters**
+    - `variable?` : Query parameter (object, used as key)
+  - **Return Value**
+    - `useQuery` : Query instance (lazily created and cached per variable)
+
+- `useQuery()`
+  - **Parameters** (optional)
+    - `initialData?` : Initial data (applied once per query instance)
+    - `initialDataIsStale?` : Treat initial data as stale (default: false)
+    - `revalidateOnMount?` : Auto revalidate on mount (default: true)
+    - `keepPreviousData?` : Keep previous data during variable change
+  - **Return Value**
+    - `state` : Proxied query state with automatic tracking
+
+- `useQuery` **methods**
+  - `useQuery.execute(options?)` : Execute query
+    - execute always runs if there is no ongoing execution
+    - If there is an ongoing execution:
+      - `overwriteOngoingExecution: true` (default) → starts a new execution & ignores the previous one
+      - `overwriteOngoingExecution: false` → reuses the existing promise (deduped)
+  - `useQuery.revalidate(options?)` : Execute only if stale or invalidated
+  - `useQuery.invalidate(options?)` : Mark as invalid (and execute if active)
+  - `useQuery.reset()` : Reset to initial state
+  - `useQuery.delete()` : Delete query (only if no subscribers)
+  - `useQuery.optimisticUpdate(data)` : Apply optimistic data
+  - `useQuery.rollbackOptimisticUpdate()` : Restore previous data
+  - `useQuery.getState()` : Get current state
+  - <div className='opacity-60'>`useQuery.setState(value)` : Manually update state (not recommended)</div>
+  - `useQuery.subscribe(fn)` : Subscribe to state changes
+  - `useQuery.getSubscriberCount()` : Get the number of subscribers
+
+- `getQuery` **methods**
+  - `getQuery.executeAll()` : Execute all queries
+  - `getQuery.revalidateAll()` : Revalidate all stale or invalidated
+  - `getQuery.invalidateAll()` : Invalidate all
+  - `getQuery.resetAll()` : Reset all queries
+
+</div>
+
+### Notes
+
+<div className="text-sm">
+- Queries are keyed by query variable (deterministic hash)
+- Each variable has its own isolated state
+- Invalidated queries bypass `staleTime`
+- Unused queries are garbage collected after gcTime
+</div>
+
+## createMutation
+
+Creates a mutation store for handling async operations that modify data.
+
+```ts
+import { createMutation } from "floppy-disk/react";
+
+const useMutation = createMutation(mutationFn, options);
+```
+
+### Parameters
+
+<div className="[&_ul]:text-sm">
+
+- `mutationFn` : Async function that performs the mutation
+  - Receives `(variable, stateBeforeExecute)`
+- `options?`
+  - `onSuccess?` : Called when mutation succeeds
+  - `onError?` : Called when mutation fails
+  - `onSettled?` : Called after success or error
+  - `onFirstSubscribe?` : Called when the first subscriber is added
+  - `onSubscribe?` : Called every time a subscriber is added
+  - `onUnsubscribe?` : Called every time a subscriber is removed
+  - `onLastUnsubscribe?` : Called when the last subscriber is removed
+  - `onStateChange?` : Called whenever state changes (does not register as a subscriber)
+  - `allowSetStateServerSide?` : Allow `setState` on server (**disabled by default**)
+
+</div>
+
+### Return Value
+
+<div className="[&_ul_ul]:text-sm">
+
+- `useMutation()`
+  - **Return Value**
+    - `state` : Proxied mutation state with automatic tracking
+
+- `useMutation` **methods**
+  - `useMutation.execute(variable?)` : Execute mutation
+  - `useMutation.reset()` : Reset state to initial
+  - `useMutation.getState()` : Get current state
+  - <div className='opacity-60'>`useMutation.setState(value)` : Manually update state (not recommended)</div>
+  - `useMutation.subscribe(fn)` : Subscribe to state changes
+  - `useMutation.getSubscriberCount()` : Get the number of subscribers
+
+</div>
+
+### Notes
+
+<div className="text-sm">
+- No retry mechanism
+- Promise **never rejects** (always resolves with `{ variable: TVariable; data?: TData; error?: TError }`)
+- If execution triggered while there is inprogress execution:
+  - Only the latest execution updates state
+  - Previous executions are ignored
+</div>
+
+## useMutation
+
+A hook for managing mutation state without a global store.
+
+```ts
+import { useMutation } from "floppy-disk/react";
+
+const [state, actions] = useMutation(mutationFn, options);
+```
+
+### Parameters
+
+<div className="[&_ul]:text-sm">
+
+- `mutationFn` : Async function that performs the mutation
+  - Receives (variable, stateBeforeExecute)
+  - Does **not** need to be memoized
+- `options?`
+  - `onSuccess?` : Called when mutation succeeds
+  - `onError?` : Called when mutation fails
+  - `onSettled?` : Called after success or error
+
+</div>
+
+### Return Value
+
+<div className="[&_ul_ul]:text-sm">
+
+- `[state, actions]`
+  - `state` : Current mutation state (render snapshot)
+  - `actions.execute(variable?)` : Execute mutation
+  - `actions.reset()` : Reset state to initial
+  - `actions.getLatestState()` : Get latest state (not tied to render)
+
+</div>
+
+### Notes
+
+<div className="text-sm">
+- Local-only (not shared across components)
+- No retry mechanism
+- Promise **never rejects** (always resolves with `{ variable: TVariable; data?: TData; error?: TError }`)
+- If execution triggered while there is inprogress execution:
+  - Only the latest execution updates state
+  - Previous executions are ignoredOnly latest execution updates state
+- Safe against stale closures (always uses latest function & callbacks)
+</div>

@@ -1,0 +1,93 @@
+# Store Events
+
+FloppyDisk provides lifecycle events to help you understand when **subscribers are added or removed**, and react accordingly.
+
+Each store exposes the following events:
+
+- `onFirstSubscribe` → triggered right after the first subscriber is added
+- `onSubscribe` → triggered after any subscriber is added (including the first)
+- `onUnsubscribe` → triggered right after a subscriber is removed
+- `onLastUnsubscribe` → triggered after the last subscriber is removed
+
+```tsx
+const useLawn = createStore(
+  {
+    plants: 3,
+    zombies: 1,
+  },
+  {
+    onFirstSubscribe: () => {
+      console.log("First subscriber! We’re officially popular 🎉");
+    },
+    onSubscribe: () => {
+      console.log("New subscriber joined. Welcome aboard 🫡");
+    },
+    onUnsubscribe: () => {
+      console.log("Subscriber left... was it something I said? 😭");
+    },
+    onLastUnsubscribe: () => {
+      console.log("Everyone left. Guess I’ll just exist quietly now...");
+    },
+  },
+);
+```
+
+## Event Timing
+
+Here's the exact order:
+
+- **When subscribing:**
+  - Trigger `onFirstSubscribe` (only if first)
+  - Then triggers `onSubscribe`
+- **When unsubscribing:**
+  - Triggers `onUnsubscribe`
+  - Then triggers `onLastUnsubscribe` (only if last)
+
+## Use Cases
+
+These events let you control resource lifecycle based on usage.\
+You know exactly:
+
+<div>
+
+- when something starts being used
+- when it's no longer needed
+
+</div>
+
+**Perfect for:**
+
+<div>
+
+- opening / closing connections
+- starting / stopping polling
+- initializing expensive resources
+- adding / removing window event listeners
+
+</div>
+
+## State Changes Event
+
+Sometimes you want to observe state changes **without becoming a subscriber**.
+
+In addition to lifecycle events, FloppyDisk provides `onStateChange` event.
+It listens to changes, but does NOT count as a subscriber.
+It Acts like a "**spy**" on state updates.
+
+Useful for devtools, logging, or debugging state changes.
+
+```tsx
+const useLawn = createStore(
+  {
+    plants: 3,
+    zombies: 1,
+  },
+  {
+    onStateChange: (currentState, prevState) => {
+      if (currentState.zombies === 0 && prevState.zombies > 30) {
+        toast("🏆 Achievement unlocked! Clear more than 30 zombies at once!");
+      }
+    }
+  },
+);
+```

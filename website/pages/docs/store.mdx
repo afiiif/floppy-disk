@@ -1,0 +1,209 @@
+import { Callout } from 'nextra-theme-docs';
+
+# Store (Global State)
+
+A store is a global state container that can be used both inside and outside React.
+
+With FloppyDisk, creating a store is simple:
+
+```tsx
+import { createStore } from "floppy-disk/react";
+
+const useLawn = createStore({
+  plants: 3,
+  zombies: 1,
+});
+```
+
+Use the store like a hook:
+
+```tsx
+function ThePlants() {
+  const { plants } = useLawn();
+  return <div> 🌱 {plants} </div>;
+}
+
+function TheZombies() {
+  const { zombies } = useLawn();
+  return <div> 🧟 {zombies} </div>;
+}
+```
+
+Each component automatically re-renders only **when the values it uses change**.
+
+## Reading State Outside Render
+
+Sometimes you don't need a value for rendering, but only for an event (e.g. inside a click handler).\
+In that case, avoid subscribing to unnecessary state.
+
+<Callout>
+This optimization is **not new**, it follows the same principle commonly used in Zustand:\
+only subscribe to what you render, and read the rest on demand.
+</Callout>
+
+### Not Recommended
+
+```tsx
+function Nay() {
+  const { plants, zombies } = useLawn();
+                // ^⚠️
+  return (
+    <>
+      <div> 🌱 {plants} </div>  {/* only need plant to render */}
+
+      <button
+        onClick={() => {
+          doSomething(zombies);  // zombies only used in event ⚠️
+        }}
+      >
+        Do something with zombies
+      </button>
+    </>
+  );
+}
+```
+
+Here 👆 the component subscribes to `zombies` even though it's not used for rendering.
+This can cause unnecessary re-renders.
+
+### Recommended
+
+```tsx
+function Yay() {
+  const { plants } = useLawn();  // ✅
+
+  return (
+    <>
+      <div> 🌱 {plants} </div>  {/* you only need plant to render */}
+
+      <button
+        onClick={() => {
+          const { zombies } = useLawn.getState();  // ✅
+          doSomething(zombies);
+        }}
+      >
+        Do something with zombies
+      </button>
+    </>
+  );
+}
+```
+
+Only `plants` is subscribed for rendering, while `zombies` is read on demand.
+
+## Updating State
+
+You can update state using `setState`:
+
+```tsx
+const useLawn = createStore({ plants: 3, zombies: 1 });
+// Current state: { plants: 3, zombies: 1 }
+
+useLawn.setState({ plants: 5, zombies: 5 });
+// Current state: { plants: 5, zombies: 5 }
+
+useLawn.setState({ plants: 7 }); // 👈 Partial update
+// Current state: { plants: 7, zombies: 5 }
+
+useLawn.setState(prev => ({ plants: prev.plant + 2 })); // 👈 Using function
+// Current state: { plants: 9, zombies: 5 }
+```
+
+### Recommended Pattern
+
+FloppyDisk encourages keeping your store **minimal** and defining actions **outside the store**.
+
+```tsx
+const useLawn = createStore({ plants: 3, zombies: 1 });
+
+// actions are separated
+
+const addPlant = () =>
+  useLawn.setState(prev => ({
+    plants: prev.plants + 1,
+  }));
+
+const removeZombie = () =>
+  useLawn.setState(prev => ({
+    zombies: Math.max(0, prev.zombies + 1),
+  }));
+
+// or
+
+const lawnActions = {
+  addPlant: () =>
+    useLawn.setState(prev => ({
+      plants: prev.plants + 1,
+    })),
+
+  removeZombie: () =>
+    useLawn.setState(prev => ({
+      zombies: Math.max(0, prev.zombies + 1),
+    })),
+}
+```
+
+This improves **tree-shakeability** and keeps your store minimal.\
+No mixing concerns. No extra mental overhead. 🤗
+
+### Mixing Actions Inside Store (Possible, but Discouraged)
+
+You _can_ define actions inside the store:
+
+```tsx
+const useLawn = createStore({
+  plants: 3,
+  zombies: 1,
+  addPlant: () =>
+    useLawn.setState(prev => ({
+      plants: prev.plants + 1,
+    })),
+  removeZombie: () =>
+    useLawn.setState(prev => ({
+      zombies: Math.max(0, prev.zombies + 1),
+    })),
+});
+```
+
+This comes with trade-offs: not tree-shakeable, mixes state and logic. 🥶
+
+## Reading State Outside React
+
+Stores are not limited to React. You can access state **anywhere**:
+
+```tsx
+const state = useLawn.getState();
+console.log(state.plants);
+```
+
+## Subscribing to Changes
+
+You can subscribe to state changes:
+
+```tsx
+const unsubscribeLawn = useLawn.subscribe((currentState, prevState) => {
+  console.log("State changed:", currentState);
+});
+
+// Later
+unsubscribeLawn(); // when you no longer need it
+```
+
+## Transient Updates (No Re-render)
+
+Sometimes you want to listen to changes **without triggering re-renders**.
+You can do this by simply subscribing to the store:
+
+```tsx
+function MyComponent() {
+
+  useEffect(() => useLawn.subscribe((currentState, prevState) => {
+    if (currentState.zombies !== prevState.zombies) {
+      console.log("Zombie updated");
+      // Do something ...
+    }
+  }), []);
+
+  ...
+}
+```

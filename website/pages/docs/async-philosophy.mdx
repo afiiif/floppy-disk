@@ -1,0 +1,53 @@
+# Philosophy
+
+FloppyDisk provides a powerful async state layer, inspired by [TanStack Query](https://tanstack.com/query) but with a simpler API.
+
+It is agnostic to the type of async operation,
+it works with **any Promise-based operation**, whether it's a network request, local computation, storage access, or something else.
+
+Async operations introduce **time** into your state. That's where complexity comes from.
+Instead of managing the process, model the result as state and let everything follow.
+
+FloppyDisk handles this state modeling so your UI stays predictable.
+
+## Query: Read Operations
+
+Queries are designed for **reading data**.\
+They assume:
+
+- no side effects
+- no data mutation
+- safe to run multiple times
+
+Because of this, queries come with helpful defaults:
+
+- ✅ Retry mechanism (for transient failures)
+- ✅ Revalidation (keep data fresh automatically)
+- ✅ Caching & staleness control
+
+Use queries when:
+
+- fetching data
+- reading from storage
+- running idempotent async logic
+
+## Mutation: Write Operations
+
+Mutations are designed for **changing data**.\
+Examples:
+
+- insert
+- update
+- delete
+- triggering side effects
+
+Because mutations are **not safe to repeat blindly**, FloppyDisk does **not** include:
+
+- ❌ automatic retry
+- ❌ automatic revalidation
+- ❌ implicit re-execution
+
+This is intentional.\
+Mutations should be explicit and controlled, not automatic.
+
+If you need retry mechanism, then you can always **add it manually**.

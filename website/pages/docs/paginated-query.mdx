@@ -1,0 +1,85 @@
+# Paginated Query
+
+Pagination in FloppyDisk is just a **[parameterized query](/docs/async/query#keyed-query-dynamic-params)**.\
+There's no special API for pagination, the page itself is simply part of the query parameter.
+
+You can include `page`, `limit`, any cursor, or any additional filters in your query params:
+
+```tsx
+import { createQuery } from "floppy-disk/react";
+
+const plantsQuery = createQuery<GetPlantsResponse, { page: number, pageSize?: number }>(
+  (params) => {
+  // ^? { page: number, pageSize?: number }
+    return getPlantsPaginated({
+      page: params.page,
+      limit: params.pageSize ?? 10,
+      status: "active",
+    });
+  }
+);
+```
+
+Use it in your component like this:
+
+```tsx
+import { useState } from "react";
+import { Table } from "antd";
+
+function PlantListPage() {
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+
+  const usePlantsQuery = plantsQuery({ page, pageSize });
+
+  const { state, data, error } = usePlantsQuery({
+    keepPreviousData: true, // <-- Optional, for lagged query (like what's on TanStack Query)
+  });
+
+  return (
+    <>
+      {!!error && (
+        <div>Something went wrong: {error.message}</div>
+      )}
+
+      <Table
+        dataSource={data?.plants || []}
+        loading={state === "INITIAL"}
+        pagination={{
+          current: page,
+          pageSize,
+          total: data?.total || 0,
+          onChange: (nextPage, nextPageSize) => {
+            setPage(nextPage);
+            setPageSize(nextPageSize);
+          },
+        }}
+      />
+
+      <button
+        onClick={() => usePlantsQuery.revalidate()}
+      >
+        Refresh
+      </button>
+    </>
+  )
+}
+```
+
+Each parameter combination creates its own isolated state.\
+That means:
+
+- Page 1, Page 2, Page 3 → each has its own cache
+- Switching pages doesn't overwrite previous data
+- Going back to a page can reuse existing state
+
+## Lagged Query Behavior
+
+1. Page 1 is loading (state = `"INITIAL"`, data: `undefined`)
+2. Page 1 loaded (state = `"SUCCESS"`, data: `<DataPage1>`)
+3. User changes page
+4. Page 2 is loading (state = `"INITIAL"`, data: `<DataPage1>`)\
+   → It uses data from page 1 while waiting data for page 2\
+   → UI does not flicker
+5. Page 2 loaded (state = `"SUCCESS"`, data: `<DataPage2>`)\
+   → After resolved, it uses page 2 data

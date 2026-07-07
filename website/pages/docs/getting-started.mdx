@@ -1,0 +1,142 @@
+import Link from 'next/link';
+import { Tab, Tabs } from 'nextra-theme-docs';
+
+import JsOrTs from '@/pages/_components/JsOrTs';
+
+# Introduction
+
+Welcome to the FloppyDisk.ts documentation!
+
+FloppyDisk is a lightweight state management library for both **sync** & **async** state.\
+It brings together familiar patterns into a simpler, more predictable model.
+
+## Installation
+
+<Tabs items={[ 'npm','pnpm', 'yarn', 'bun']}>
+  <Tab>
+    ```bash
+    npm i floppy-disk
+    ```
+  </Tab>
+  <Tab>
+    ```bash
+    pnpm i floppy-disk
+    ```
+  </Tab>
+  <Tab>
+    ```bash
+    yarn add floppy-disk
+    ```
+  </Tab>
+  <Tab>
+    ```bash
+    bun add floppy-disk
+    ```
+  </Tab>
+</Tabs>
+
+Compatible with React 17+ and works any renderers such as `react-dom`, `react-native`, `react-three-fiber`, and so on.
+
+## Feature Preview
+
+### Store (Global State)
+
+Create a store:
+
+```tsx
+import { createStore } from "floppy-disk/react";
+
+const useLawn = createStore({
+  plants: 3,
+  zombies: 1,
+});
+```
+
+Use it inside a component:
+
+```tsx
+function MyPlants() {
+  const { plants } = useLawn(); // No selectors needed.
+
+  return <div>Plants: {plants}</div>; // Only re-render when plants state changes
+}
+```
+
+Update the state **anywhere**:
+
+```tsx
+const addPlant = () => {
+  useLawn.setState(prev => ({ plants: prev.plants + 1 }));
+};
+```
+
+### Query Store for Async State
+
+Create a query store for async data with `createQuery`:
+
+<JsOrTs>
+
+<>
+
+```tsx
+import { createQuery } from "floppy-disk/react";
+
+const plantDetailQuery = createQuery(
+  async ({ id }) => {
+    const res = await fetch(`/api/plants/${id}`);
+    return res.json();
+  },
+);
+```
+
+Use it in your component:
+
+```tsx
+function PlantDetail({ id }) {
+  const usePlantDetailQuery = plantDetailQuery({ id });
+  const { data, error } = usePlantDetailQuery();
+
+  if (!data && !error) return <div>Loading...</div>;
+  if (error) return <div>Error: {error.message}</div>;
+
+  return <div>Name: {data.name}, damage: {data.damage}</div>;
+}
+```
+
+</>
+
+<>
+
+```tsx
+import { createQuery } from "floppy-disk/react";
+
+import { type GetPlantByIdResponse } from "../api"; // Your own module
+
+const plantDetailQuery = createQuery<GetPlantByIdResponse, { id: string }>(
+  async ({ id }) => {
+    const res = await fetch(`/api/plants/${id}`);
+    const data: GetPlantByIdResponse = await res.json();
+    return data;
+  },
+);
+```
+
+Use it in your component:
+
+```tsx
+function PlantDetail({ id }: { id: string }) {
+  const usePlantDetailQuery = plantDetailQuery({ id });
+  const { data, error } = usePlantDetailQuery();
+
+  if (!data && !error) return <div>Loading...</div>;
+  if (error) return <div>Error: {error.message}</div>;
+
+  return <div>Name: {data.name}, damage: {data.damage}</div>;
+}
+```
+
+</>
+
+</JsOrTs>
+
+No such `QueryClientProvider` needed.
