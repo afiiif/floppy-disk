@@ -1,0 +1,53 @@
+@import "tailwindcss";
+
+:root {
+  --primary-bg: #21252b;
+  --secondary-bg: #282c34;
+}
+
+@theme inline {
+  --color-primary-bg: var(--primary-bg);
+  --color-secondary-bg: var(--secondary-bg);
+}
+
+html,
+body {
+  background: var(--primary-bg);
+  @apply text-mist-400 font-mono;
+}
+
+.animate-render {
+  animation: animateRender 0.6s ease;
+}
+@keyframes animateRender {
+  0% {
+    border-color: currentcolor;
+    background-color: transparent;
+    box-shadow: 0 0 0 4px color-mix(in oklab, var(--color-sky-500) 0%, transparent);
+  }
+  50% {
+    border-color: var(--color-sky-500);
+    background-color: #282c34;
+    box-shadow: 0 0 0 4px color-mix(in oklab, var(--color-sky-500) 35%, transparent);
+  }
+  100% {
+    border-color: currentcolor;
+    background-color: transparent;
+    box-shadow: 0 0 0 4px color-mix(in oklab, var(--color-sky-500) 0%, transparent);
+  }
+}
+
+button.btn {
+  @apply text-primary-bg bg-green-400 px-2.5 py-0.5 disabled:cursor-not-allowed disabled:opacity-50;
+  &:not(:disabled) {
+    @apply cursor-pointer hover:bg-green-300;
+  }
+}
+.button-container {
+  button {
+    @apply text-primary-bg bg-green-400 px-2.5 py-0.5 disabled:cursor-not-allowed disabled:opacity-50;
+    &:not(:disabled) {
+      @apply cursor-pointer hover:bg-green-300;
+    }
+  }
+}
