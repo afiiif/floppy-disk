@@ -17,9 +17,6 @@ importers:
       '@tanstack/react-query':
         specifier: ^5.95.2
         version: 5.95.2(react@19.2.4)
-      floppy-disk:
-        specifier: ^3.9.0
-        version: 3.9.0(@types/react@19.2.14)(react@19.2.4)
       isbot:
         specifier: ^5.1.36
         version: 5.1.36
@@ -32,6 +29,9 @@ importers:
       react-router:
         specifier: 7.13.2
         version: 7.13.2(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+      yuustate:
+        specifier: ^3.9.0
+        version: 3.9.0(@types/react@19.2.14)(react@19.2.4)
       zustand:
         specifier: ^5.0.12
         version: 5.0.12(@types/react@19.2.14)(react@19.2.4)
@@ -882,17 +882,6 @@ packages:
     resolution: {integrity: sha512-aA4RyPcd3badbdABGDuTXCMTtOneUCAYH/gxoYRTZlIJdF0YPWuGqiAsIrhNnnqdXGswYk6dGujem4w80UJFhg==}
     engines: {node: '>= 0.8'}
 
-  floppy-disk@3.9.0:
-    resolution: {integrity: sha512-gOObBemkwzPSNWzU3sV4EFORhhVVvq9LRCD+JVGUh0HK3nh+sexI4Vp8cJgmtms3w/JtMlF8VdPkYNnwIfaTRw==}
-    peerDependencies:
-      '@types/react': '>=17.0'
-      react: '>=17.0'
-    peerDependenciesMeta:
-      '@types/react':
-        optional: true
-      react:
-        optional: true
-
   forwarded@0.2.0:
     resolution: {integrity: sha512-buRG0fpBtRHSTCOASe6hD258tEubFoRLb4ZNA6NxMVHNw2gOcwHo9wyablzMzOA5z9xA9L1KNjk/Nt6MT9aYow==}
     engines: {node: '>= 0.6'}
@@ -1404,6 +1393,17 @@ packages:
 
   yallist@3.1.1:
     resolution: {integrity: sha512-a4UGQaWPH59mOXUYnAG2ewncQS4i4F43Tv3JoAM+s2VDAmS9NsK8GpDMLrCHPksFT7h3K6TOoUNn2pb7RoXx4g==}
+
+  yuustate@3.9.0:
+    resolution: {integrity: sha512-HCTpoUjvnv2tvB5AgFNU98ujCv8AQVpkgGxvQQJBHgXtxpdeTWDH2fANQ/oDMQLqcfKIUiNm2pAifLV5jtDGdA==}
+    peerDependencies:
+      '@types/react': '>=17.0'
+      react: '>=17.0'
+    peerDependenciesMeta:
+      '@types/react':
+        optional: true
+      react:
+        optional: true
 
   zustand@5.0.12:
     resolution: {integrity: sha512-i77ae3aZq4dhMlRhJVCYgMLKuSiZAaUPAct2AksxQ+gOtimhGMdXljRT21P5BNpeT4kXlLIckvkPM029OljD7g==}
@@ -2195,11 +2195,6 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  floppy-disk@3.9.0(@types/react@19.2.14)(react@19.2.4):
-    optionalDependencies:
-      '@types/react': 19.2.14
-      react: 19.2.4
-
   forwarded@0.2.0: {}
 
   fresh@0.5.2: {}
@@ -2645,6 +2640,11 @@ snapshots:
       lightningcss: 1.32.0
 
   yallist@3.1.1: {}
+
+  yuustate@3.9.0(@types/react@19.2.14)(react@19.2.4):
+    optionalDependencies:
+      '@types/react': 19.2.14
+      react: 19.2.4
 
   zustand@5.0.12(@types/react@19.2.14)(react@19.2.4):
     optionalDependencies:

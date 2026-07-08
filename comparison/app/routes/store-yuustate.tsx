@@ -1,12 +1,9 @@
-import { createStore } from "floppy-disk/react";
+import { createStore } from "yuustate/react";
 
 import { CardWithReRenderHighlight } from "~/shared/components";
 
 export function meta() {
-  return [
-    { title: "FloppyDisk.ts Store" },
-    { name: "description", content: "FloppyDisk.ts store" },
-  ];
+  return [{ title: "YuuState Store" }, { name: "description", content: "YuuState store" }];
 }
 
 const useMyStore = createStore({
@@ -16,10 +13,10 @@ const useMyStore = createStore({
 
 useMyStore.subscribe((state) => console.info("State updated", state));
 
-export default function StoreFloppyDisk() {
+export default function StoreYuuState() {
   return (
     <>
-      <h1 className="font-bold pb-5">FloppyDisk's Store</h1>
+      <h1 className="font-bold pb-5">YuuState's Store</h1>
       <StoreStateConsumer1 />
       <StoreStateConsumer2 />
       <StoreStateConsumer3 />

@@ -6,15 +6,15 @@ export default {
     return [
       "/",
       "/store/zustand",
-      "/store/floppy-disk",
+      "/store/yuustate",
       "/async/tanstack",
-      "/async/floppy-disk",
+      "/async/yuustate",
       "/stream",
     ];
   },
   ...(process.env.NODE_ENV === "production"
     ? {
-        basename: "/floppy-disk",
+        basename: "/yuustate",
       }
     : {}),
 } satisfies Config;

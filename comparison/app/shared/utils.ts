@@ -7,7 +7,7 @@ export const basicQueryFn1 = async () => {
   };
 };
 export const basicQueryFn2 = async () => {
-  console.info("[floppy-disk]", "basicQueryFn called");
+  console.info("[yuustate]", "basicQueryFn called");
   await new Promise((r) => setTimeout(r, 2000));
   return {
     a: Math.random(),
@@ -27,7 +27,7 @@ export const keyedQueryFn1 = async ({ id }: { id: number }) => {
   };
 };
 export const keyedQueryFn2 = async ({ id }: { id: number }) => {
-  console.info("[floppy-disk]", "keyedQueryFn called", `id: ${id}`);
+  console.info("[yuustate]", "keyedQueryFn called", `id: ${id}`);
   await new Promise((r) => setTimeout(r, 2000));
   if (id === 3) {
     throw new Error("Boom!");
@@ -61,7 +61,7 @@ export const infQueryFn1 = async ({ cursor }: { cursor?: string }) => {
   };
 };
 export const infQueryFn2 = async ({ cursor }: { cursor?: string }) => {
-  console.info("[floppy-disk]", "infQueryFn called", `cursor: ${cursor}`);
+  console.info("[yuustate]", "infQueryFn called", `cursor: ${cursor}`);
   await new Promise((r) => setTimeout(r, 2000));
   return {
     data: [...Array(10).keys()].map((i) => ({

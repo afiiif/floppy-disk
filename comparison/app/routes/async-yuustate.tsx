@@ -1,4 +1,4 @@
-import { createMutation, createQuery, useMutation } from "floppy-disk/react";
+import { createMutation, createQuery, useMutation } from "yuustate/react";
 import { useState } from "react";
 
 import { CardWithReRenderHighlight, Tabs } from "~/shared/components";
@@ -6,15 +6,15 @@ import { basicQueryFn2, infQueryFn2, keyedQueryFn2, mutationFn2 } from "~/shared
 
 export function meta() {
   return [
-    { title: "FloppyDisk.ts for Async State Management" },
-    { name: "description", content: "FloppyDisk.ts for async state management" },
+    { title: "YuuState for Async State Management" },
+    { name: "description", content: "YuuState for async state management" },
   ];
 }
 
-export default function AsyncStateFloppyDisk() {
+export default function AsyncStateYuuState() {
   return (
     <>
-      <h1 className="font-bold pb-4">FloppyDisk.ts for Async State Management</h1>
+      <h1 className="font-bold pb-4">YuuState for Async State Management</h1>
       <Tabs
         menu={[
           {
