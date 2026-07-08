@@ -15,3 +15,16 @@ ul ul.nx-mt-6 {
 .full-width-page ~ div > .nextra-nav-container + .nx-max-w-\[90rem\] main {
   @apply max-w-full;
 }
+
+.nextra-banner-container {
+  @apply !relative !h-auto !px-2;
+  @apply !bg-gradient-to-t from-rose-900 to-rose-800;
+}
+.nextra-banner-container > .nx-truncate {
+  @apply whitespace-normal py-3.5 md:py-4 xl:py-5;
+}
+@media (max-width: 767px) {
+  .nextra-banner-container ~ div.nextra-nav-container {
+    top: 0 !important;
+  }
+}
