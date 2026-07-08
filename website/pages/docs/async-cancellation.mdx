@@ -1,11 +1,11 @@
 # Query/Mutation Cancellation
 
-FloppyDisk does not control your async function. It focuses on **state**, **not execution**.
+YuuState does not control your async function. It focuses on **state**, **not execution**.
 If you need cancellation (e.g. aborting a request), you must handle it yourself using tools like `AbortController`.
 
-FloppyDisk **never** cancels an execution.
+YuuState **never** cancels an execution.
 It focuses purely on managing the result, not controlling the async process itself.
-When multiple executions happen, FloppyDisk simply **decides what to do** with the result—whether to use it to update the state or ignore it.
+When multiple executions happen, YuuState simply **decides what to do** with the result—whether to use it to update the state or ignore it.
 This keeps the system predictable, flexible, & agnostic to any async implementation.
 
 ## Manual Cancellation Pattern

@@ -1,8 +1,8 @@
 # Core Concepts
 
-## State in FloppyDisk
+## State in YuuState
 
-FloppyDisk is built on two core ideas:
+YuuState is built on two core ideas:
 
 - Immutable state updates
 - Automatic dependency tracking (via [Proxy](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Proxy))
@@ -11,7 +11,7 @@ Together, they enable **smart re-rendering without selectors**.
 
 ### Store State Must Be an Object
 
-In FloppyDisk, the store state is always an **object**.
+In YuuState, the store state is always an **object**.
 
 ```tsx
 const useMyAwesomeStore = createStore({
@@ -37,7 +37,7 @@ createStore({ list: [] }); // ✅
 
 ## Immutability (Predictable State Updates)
 
-FloppyDisk follows the same pattern as React:
+YuuState follows the same pattern as React:
 
 > State is never mutated directly, you always return a new value.
 
@@ -64,8 +64,8 @@ Mutating state directly:
 
 ## Proxy Tracking (Automatic Dependency Detection)
 
-This is where FloppyDisk becomes powerful.\
-When you use the store inside React, FloppyDisk internally:
+This is where YuuState becomes powerful.\
+When you use the store inside React, YuuState internally:
 
 1. Wraps the state in a Proxy
 2. Tracks which properties you access

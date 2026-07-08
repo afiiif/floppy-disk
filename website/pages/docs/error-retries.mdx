@@ -1,6 +1,6 @@
 # Error Retries
 
-Error retries are a built-in feature of **queries** in FloppyDisk.
+Error retries are a built-in feature of **queries** in YuuState.
 Because queries are designed to be **side-effect free**, they can be safely retried without introducing unintended behavior.
 
 Mutations, on the other hand, may produce side effects (e.g. writing data), so they do not include automatic retry by default.

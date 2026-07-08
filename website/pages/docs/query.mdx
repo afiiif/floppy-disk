@@ -9,7 +9,7 @@ import { KeyedQuery } from './_KeyedQuery';
 Create a query using `createQuery`:
 
 ```tsx
-import { createQuery } from "floppy-disk/react";
+import { createQuery } from "yuustate/react";
 
 const myQuery = createQuery(
   myAsyncFn,
@@ -41,7 +41,7 @@ You can create parameterized queries:
 <>
 
 ```tsx
-import { createQuery } from "floppy-disk/react";
+import { createQuery } from "yuustate/react";
 
 import { getZombieById } from "../utils"; // Your own module
 
@@ -56,7 +56,7 @@ const zombieQuery = createQuery(
 <>
 
 ```tsx
-import { createQuery } from "floppy-disk/react";
+import { createQuery } from "yuustate/react";
 
 import { getZombieById, type GetZombieByIdResponse } from "../utils"; // Your own module
 
@@ -94,7 +94,7 @@ Each unique parameter creates its own cache entry.
 
 ## Store Inheritance
 
-Queries in FloppyDisk are built on top of the core store.
+Queries in YuuState are built on top of the core store.
 This means every query inherits the same capabilities, such as `subscribe`, `getState`, and [store events](/docs/sync/store-events).
 It also gets **automatic reactivity** out of the box, so components rerender only when the state they use actually changes.
 

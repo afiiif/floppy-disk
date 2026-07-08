@@ -1,6 +1,6 @@
 # Philosophy
 
-FloppyDisk provides a powerful async state layer, inspired by [TanStack Query](https://tanstack.com/query) but with a simpler API.
+YuuState provides a powerful async state layer, inspired by [TanStack Query](https://tanstack.com/query) but with a simpler API.
 
 It is agnostic to the type of async operation,
 it works with **any Promise-based operation**, whether it's a network request, local computation, storage access, or something else.
@@ -8,7 +8,7 @@ it works with **any Promise-based operation**, whether it's a network request, l
 Async operations introduce **time** into your state. That's where complexity comes from.
 Instead of managing the process, model the result as state and let everything follow.
 
-FloppyDisk handles this state modeling so your UI stays predictable.
+YuuState handles this state modeling so your UI stays predictable.
 
 ## Query: Read Operations
 
@@ -41,7 +41,7 @@ Examples:
 - delete
 - triggering side effects
 
-Because mutations are **not safe to repeat blindly**, FloppyDisk does **not** include:
+Because mutations are **not safe to repeat blindly**, YuuState does **not** include:
 
 - ❌ automatic retry
 - ❌ automatic revalidation

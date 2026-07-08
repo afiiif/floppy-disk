@@ -13,7 +13,7 @@ Legend:
 Create a standalone store instance **without React**.
 
 ```ts
-import { initStore } from "floppy-disk";
+import { initStore } from "yuustate";
 
 const store = initStore(initialState, options);
 ```
@@ -52,7 +52,7 @@ const store = initStore(initialState, options);
 Creates a store with built-in React bindings.
 
 ```ts
-import { createStore } from "floppy-disk/react";
+import { createStore } from "yuustate/react";
 
 const useStore = createStore(initialState, options);
 ```
@@ -95,7 +95,7 @@ const useStore = createStore(initialState, options);
 Creates a factory for multiple stores identified by a key.
 
 ```ts
-import { createStores } from "floppy-disk/react";
+import { createStores } from "yuustate/react";
 
 const getStore = createStores(initialState, options);
 const useStore = getStore(key);
@@ -159,7 +159,7 @@ const useStore = getStore(key);
 Creates a query factory for managing async state with caching and lifecycle.
 
 ```ts
-import { createQuery } from "floppy-disk/react";
+import { createQuery } from "yuustate/react";
 
 const getQuery = createQuery(queryFn, options);
 const useQuery = getQuery(variable);
@@ -247,7 +247,7 @@ const useQuery = getQuery(variable);
 Creates a mutation store for handling async operations that modify data.
 
 ```ts
-import { createMutation } from "floppy-disk/react";
+import { createMutation } from "yuustate/react";
 
 const useMutation = createMutation(mutationFn, options);
 ```
@@ -304,7 +304,7 @@ const useMutation = createMutation(mutationFn, options);
 A hook for managing mutation state without a global store.
 
 ```ts
-import { useMutation } from "floppy-disk/react";
+import { useMutation } from "yuustate/react";
 
 const [state, actions] = useMutation(mutationFn, options);
 ```

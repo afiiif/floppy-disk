@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { createQuery } from "floppy-disk/react";
+import { createQuery } from "yuustate/react";
 
 import { getZombieById } from "./_utils";
 
