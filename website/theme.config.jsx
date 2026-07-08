@@ -4,7 +4,7 @@ import { useConfig } from "nextra-theme-docs";
 
 /** @type {import('nextra-theme-docs').DocsThemeConfig} */
 const themeConfig = {
-  docsRepositoryBase: "https://github.com/afiiif/floppy-disk-site/blob/main",
+  docsRepositoryBase: "https://github.com/afiiif/floppy-disk/blob/main/website",
   project: { link: "https://github.com/afiiif/floppy-disk" },
   logo: (
     <div className="group flex items-center gap-3 py-2.5 pr-2.5 text-xl font-bold">
