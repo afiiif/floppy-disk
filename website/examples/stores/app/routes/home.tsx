@@ -1,4 +1,4 @@
-import { createStores } from "floppy-disk/react";
+import { createStores } from "yuustate/react";
 import { useState } from "react";
 
 import type { Route } from "./+types/home";
@@ -6,7 +6,7 @@ import type { Route } from "./+types/home";
 import { CardWithRenderCounter } from "~/card";
 
 export function meta({}: Route.MetaArgs) {
-  return [{ title: "FloppyDisk.ts Stores" }];
+  return [{ title: "YuuState Stores" }];
 }
 
 // ---

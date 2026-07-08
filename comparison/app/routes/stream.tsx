@@ -2,19 +2,16 @@ import { useState } from "react";
 
 import { CardWithReRenderHighlight } from "../shared/components";
 import { FakeWebSocket } from "../shared/utils";
-import { createStream } from "floppy-disk/react";
+import { createStream } from "yuustate/react";
 
 export function meta() {
-  return [
-    { title: "FloppyDisk.ts Stream" },
-    { name: "description", content: "FloppyDisk.ts stream" },
-  ];
+  return [{ title: "YuuState Stream" }, { name: "description", content: "YuuState stream" }];
 }
 
 export default function Stream() {
   return (
     <>
-      <h1 className="font-bold pb-4">FloppyDisk.ts for Stream</h1>
+      <h1 className="font-bold pb-4">YuuState for Stream</h1>
       <ExampleStream />
     </>
   );

@@ -14,9 +14,6 @@ importers:
       '@react-router/serve':
         specifier: 7.14.0
         version: 7.14.0(react-router@7.14.0(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(typescript@5.9.3)
-      floppy-disk:
-        specifier: ^3.8.0
-        version: 3.8.0(@types/react@19.2.14)(react@19.2.4)
       isbot:
         specifier: ^5.1.36
         version: 5.1.37
@@ -29,6 +26,9 @@ importers:
       react-router:
         specifier: 7.14.0
         version: 7.14.0(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+      yuustate:
+        specifier: ^3.9.0
+        version: 3.9.0(@types/react@19.2.14)(react@19.2.4)
     devDependencies:
       '@react-router/dev':
         specifier: 7.14.0
@@ -984,17 +984,6 @@ packages:
     resolution: {integrity: sha512-aA4RyPcd3badbdABGDuTXCMTtOneUCAYH/gxoYRTZlIJdF0YPWuGqiAsIrhNnnqdXGswYk6dGujem4w80UJFhg==}
     engines: {node: '>= 0.8'}
 
-  floppy-disk@3.8.0:
-    resolution: {integrity: sha512-xME6eE3SO4HAomFytnBJ1R8+XrwMCHZGgcN0ablEM0ZlX1s+n9U8GsD0BpzqtUkTs8/yo61eNdMFPZSopricZQ==}
-    peerDependencies:
-      '@types/react': '>=17.0'
-      react: '>=17.0'
-    peerDependenciesMeta:
-      '@types/react':
-        optional: true
-      react:
-        optional: true
-
   forwarded@0.2.0:
     resolution: {integrity: sha512-buRG0fpBtRHSTCOASe6hD258tEubFoRLb4ZNA6NxMVHNw2gOcwHo9wyablzMzOA5z9xA9L1KNjk/Nt6MT9aYow==}
     engines: {node: '>= 0.6'}
@@ -1536,6 +1525,17 @@ packages:
 
   yallist@3.1.1:
     resolution: {integrity: sha512-a4UGQaWPH59mOXUYnAG2ewncQS4i4F43Tv3JoAM+s2VDAmS9NsK8GpDMLrCHPksFT7h3K6TOoUNn2pb7RoXx4g==}
+
+  yuustate@3.9.0:
+    resolution: {integrity: sha512-HCTpoUjvnv2tvB5AgFNU98ujCv8AQVpkgGxvQQJBHgXtxpdeTWDH2fANQ/oDMQLqcfKIUiNm2pAifLV5jtDGdA==}
+    peerDependencies:
+      '@types/react': '>=17.0'
+      react: '>=17.0'
+    peerDependenciesMeta:
+      '@types/react':
+        optional: true
+      react:
+        optional: true
 
 snapshots:
 
@@ -2384,11 +2384,6 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  floppy-disk@3.8.0(@types/react@19.2.14)(react@19.2.4):
-    optionalDependencies:
-      '@types/react': 19.2.14
-      react: 19.2.4
-
   forwarded@0.2.0: {}
 
   fresh@0.5.2: {}
@@ -2860,3 +2855,8 @@ snapshots:
       - '@emnapi/runtime'
 
   yallist@3.1.1: {}
+
+  yuustate@3.9.0(@types/react@19.2.14)(react@19.2.4):
+    optionalDependencies:
+      '@types/react': 19.2.14
+      react: 19.2.4

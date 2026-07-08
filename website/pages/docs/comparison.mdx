@@ -1,7 +1,7 @@
 # Comparison
 
 Every state management tool makes **trade-offs**.\
-FloppyDisk(.ts) is designed to combine what works well and remove what doesn't.
+YuuState is designed to combine what works well and remove what doesn't.
 
 If you've used Zustand, Valtio, or TanStack Query, this will feel familiar—but more unified.
 
@@ -37,9 +37,9 @@ state.count++;
 
 </div>
 
-## FloppyDisk: No selectors, no mixed model
+## YuuState: No selectors, no mixed model
 
-FloppyDisk combines the strengths of both:
+YuuState combines the strengths of both:
 
 - ✅ No selectors (like Valtio)
 - ✅ Immutable updates (like React & Zustand)
@@ -74,21 +74,21 @@ But it comes with trade-offs:
 
 </div>
 
-## FloppyDisk: Simpler model, smaller footprint
+## YuuState: Simpler model, smaller footprint
 
-FloppyDisk approaches async state differently:
+YuuState approaches async state differently:
 
 - ✅ **Smaller bundle**\
   No external dependencies, designed to stay lightweight.
 - ✅ **No query keys**\
   Each variable creates its own store, the variable itself is the identity.
 - ✅ **Unified mental model**\
-  With FloppyDisk:
+  With YuuState:
   - Sync state → `createStore` / `createStores`
   - Async state → `createQuery` / `createMutation`
 
 ```tsx
-import { createQuery } from "floppy-disk/react";
+import { createQuery } from "yuustate/react";
 
 const userDetailQuery = createQuery<GetUserByIdResponse, { id: string }>(
   getUserById,
@@ -107,7 +107,7 @@ function UserDetail({ id }: { id: string }) {
 }
 ```
 
-## When FloppyDisk Fits Best
+## When YuuState Fits Best
 
 - You want **automatic reactivity** without selectors
 - You prefer **immutable state** (same pattern as React)

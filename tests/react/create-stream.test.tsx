@@ -1,6 +1,6 @@
 import { act, renderHook } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
-import { createStream } from "floppy-disk/react";
+import { createStream } from "yuustate/react";
 
 describe("createStream", () => {
   it("connects on mount and updates connection state", async () => {

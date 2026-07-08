@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { isPrefixPath } from "floppy-disk/react/use-store";
+import { isPrefixPath } from "yuustate/react/use-store";
 
 describe("isPrefixPath", () => {
   it("returns false when a segment does not match (early exit)", () => {

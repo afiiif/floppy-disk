@@ -1,4 +1,4 @@
-# FloppyDisk.ts 💾
+# YuuState
 
 A unified state model for **sync & async** data.
 
@@ -7,15 +7,15 @@ Inspired by [Zustand](https://zustand.docs.pmnd.rs) & [TanStack-Query](https://t
 
 _Fine-grained reactivity, minimal boilerplate, zero dependencies._
 
-Demo: https://afiiif.github.io/floppy-disk/
+Demo: https://afiiif.github.io/yuustate/
 
 **Installation:**
 
 ```
-npm install floppy-disk
+npm install yuustate
 ```
 
-**Read the docs → https://floppy-disk.vercel.app**
+**Read the docs → https://yuustate.vercel.app**
 
 <br>
 
@@ -38,10 +38,10 @@ npm install floppy-disk
 ## Store (Global State)
 
 A store is a global state container that can be used both **inside and outside** React.\
-With FloppyDisk, creating a store is simple:
+With YuuState, creating a store is simple:
 
 ```tsx
-import { createStore } from "floppy-disk/react";
+import { createStore } from "yuustate/react";
 
 const useLawn = createStore({
   plants: 3,
@@ -72,7 +72,7 @@ const addPlant = () => {
 Create a query store for async data with `createQuery`:
 
 ```tsx
-import { createQuery } from "floppy-disk/react";
+import { createQuery } from "yuustate/react";
 
 const plantDetailQuery = createQuery(
   async ({ id }) => {
@@ -100,4 +100,4 @@ function PlantDetail({ id }) {
 
 ---
 
-Read the docs → https://floppy-disk.vercel.app
+Read the docs → https://yuustate.vercel.app

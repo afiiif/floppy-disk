@@ -9,8 +9,8 @@ import esbuild from "rollup-plugin-esbuild";
 const extensions = [".js", ".ts", ".tsx"];
 const { root } = path.parse(process.cwd());
 export const entries = [
-  { find: /.*\/vanilla\.ts$/, replacement: "floppy-disk/vanilla" },
-  { find: /.*\/react\.ts$/, replacement: "floppy-disk/react" },
+  { find: /.*\/vanilla\.ts$/, replacement: "yuustate/vanilla" },
+  { find: /.*\/react\.ts$/, replacement: "yuustate/react" },
 ];
 
 function external(id) {

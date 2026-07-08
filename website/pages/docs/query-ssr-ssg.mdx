@@ -5,7 +5,7 @@ When using SSR or SSG, you often want to **serve HTML that is already populated 
 Instead of sending an empty page and fetching on the client, the server renders the UI with real data upfront.
 This improves perceived performance, avoids loading states, and ensures the content is immediately visible.
 
-FloppyDisk lets you pass that server-fetched data directly into your query as initial state—so the client can pick up exactly where the server left off.
+YuuState lets you pass that server-fetched data directly into your query as initial state—so the client can pick up exactly where the server left off.
 
 ## Initialize Query Data from Server
 
@@ -19,7 +19,7 @@ async function MyServerComponent() {
 Use it in your query:
 
 ```tsx
-import { createQuery } from "floppy-disk/react";
+import { createQuery } from "yuustate/react";
 
 const myQuery = createQuery(getData);
 const useMyQuery = myQuery();

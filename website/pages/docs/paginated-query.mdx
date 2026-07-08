@@ -1,12 +1,12 @@
 # Paginated Query
 
-Pagination in FloppyDisk is just a **[parameterized query](/docs/async/query#keyed-query-dynamic-params)**.\
+Pagination in YuuState is just a **[parameterized query](/docs/async/query#keyed-query-dynamic-params)**.\
 There's no special API for pagination, the page itself is simply part of the query parameter.
 
 You can include `page`, `limit`, any cursor, or any additional filters in your query params:
 
 ```tsx
-import { createQuery } from "floppy-disk/react";
+import { createQuery } from "yuustate/react";
 
 const plantsQuery = createQuery<GetPlantsResponse, { page: number, pageSize?: number }>(
   (params) => {

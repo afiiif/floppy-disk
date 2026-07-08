@@ -14,8 +14,8 @@
     "types": ["@testing-library/jest-dom/vitest"],
     "noEmit": true,
     "paths": {
-      "floppy-disk": ["./src/index.ts"],
-      "floppy-disk/*": ["./src/*.ts"]
+      "yuustate": ["./src/index.ts"],
+      "yuustate/*": ["./src/*.ts"]
     }
   },
   "include": ["src/**/*", "tests/**/*"],

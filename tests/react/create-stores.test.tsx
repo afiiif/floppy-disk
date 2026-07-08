@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { act, fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
-import { createStores } from "floppy-disk/react";
+import { createStores } from "yuustate/react";
 
 describe("createStores", () => {
   it("returns same underlying store for same key", () => {

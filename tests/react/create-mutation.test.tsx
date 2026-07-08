@@ -1,6 +1,6 @@
 import { act, render, renderHook } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
-import { createMutation } from "floppy-disk/react";
+import { createMutation } from "yuustate/react";
 
 describe("createMutation", () => {
   it("returns initial state correctly", () => {

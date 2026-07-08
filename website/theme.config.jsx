@@ -4,29 +4,32 @@ import { useConfig } from "nextra-theme-docs";
 
 /** @type {import('nextra-theme-docs').DocsThemeConfig} */
 const themeConfig = {
-  docsRepositoryBase: "https://github.com/afiiif/floppy-disk/blob/main/website",
-  project: { link: "https://github.com/afiiif/floppy-disk" },
+  docsRepositoryBase: "https://github.com/afiiif/yuustate/blob/main/website",
+  project: { link: "https://github.com/afiiif/yuustate" },
   logo: (
-    <div className="group flex items-center gap-3 py-2.5 pr-2.5 text-xl font-bold">
-      <div className="-rotate-12 transition-transform group-hover:rotate-12 group-hover:scale-125">
-        💾
-      </div>
-      <div>
-        Floppy<span className="ml-0.5">Disk</span>
-        <span className="ml-0.5 text-sm font-normal">.ts</span>
+    <div className="group flex items-center gap-4 py-2.5 pr-2.5 text-xl font-bold">
+      <img
+        src="/yuustate-icon.webp"
+        width={24}
+        height={24}
+        className="-rotate-12 transition-transform group-hover:rotate-12 group-hover:scale-125"
+      />
+      <div className="tracking-wider">
+        YUU<span className="opacity-70">STATE</span>
       </div>
     </div>
   ),
   useNextSeoProps: () => {
     const { route } = useRouter();
     if (route === "/" || route === "/blog") return { titleTemplate: "%s" };
-    if (route.startsWith("/blog/")) return { titleTemplate: "%s – 📚 Floppy Disk Blog" };
-    return { titleTemplate: "%s – FloppyDisk.ts" };
+    if (route.startsWith("/blog/")) return { titleTemplate: "%s – 📚 YuuState Blog" };
+    return { titleTemplate: "%s – YuuState" };
   },
   head: () => {
-    const DEFAULT_KEYWORDS = "Floppy Disk, React, State Management, JS, JavaScript, NPM, Store";
+    const DEFAULT_KEYWORDS =
+      "YuuState, React, State Management, JS, JavaScript, NPM, Store, Async State";
     const { frontMatter } = useConfig();
-    const ogImage = frontMatter.image || "https://floppy-disk.vercel.app/floppy-disk-banner.jpg";
+    const ogImage = frontMatter.image || "https://yuustate.vercel.app/yuustate-banner.jpg";
     const { route } = useRouter();
     const isBlog = route.startsWith("/blog");
     const author =

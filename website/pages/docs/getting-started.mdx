@@ -5,9 +5,9 @@ import JsOrTs from '@/pages/_components/JsOrTs';
 
 # Introduction
 
-Welcome to the FloppyDisk.ts documentation!
+Welcome to the YuuState documentation!
 
-FloppyDisk is a lightweight state management library for both **sync** & **async** state.\
+YuuState is a lightweight state management library for both **sync** & **async** state.\
 It brings together familiar patterns into a simpler, more predictable model.
 
 ## Installation
@@ -15,22 +15,22 @@ It brings together familiar patterns into a simpler, more predictable model.
 <Tabs items={[ 'npm','pnpm', 'yarn', 'bun']}>
   <Tab>
     ```bash
-    npm i floppy-disk
+    npm i yuustate
     ```
   </Tab>
   <Tab>
     ```bash
-    pnpm i floppy-disk
+    pnpm i yuustate
     ```
   </Tab>
   <Tab>
     ```bash
-    yarn add floppy-disk
+    yarn add yuustate
     ```
   </Tab>
   <Tab>
     ```bash
-    bun add floppy-disk
+    bun add yuustate
     ```
   </Tab>
 </Tabs>
@@ -44,7 +44,7 @@ Compatible with React 17+ and works any renderers such as `react-dom`, `react-na
 Create a store:
 
 ```tsx
-import { createStore } from "floppy-disk/react";
+import { createStore } from "yuustate/react";
 
 const useLawn = createStore({
   plants: 3,
@@ -79,7 +79,7 @@ Create a query store for async data with `createQuery`:
 <>
 
 ```tsx
-import { createQuery } from "floppy-disk/react";
+import { createQuery } from "yuustate/react";
 
 const plantDetailQuery = createQuery(
   async ({ id }) => {
@@ -108,7 +108,7 @@ function PlantDetail({ id }) {
 <>
 
 ```tsx
-import { createQuery } from "floppy-disk/react";
+import { createQuery } from "yuustate/react";
 
 import { type GetPlantByIdResponse } from "../api"; // Your own module
 

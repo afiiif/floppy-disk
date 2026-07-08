@@ -4,10 +4,10 @@ import { Callout } from 'nextra-theme-docs';
 
 A store is a global state container that can be used both inside and outside React.
 
-With FloppyDisk, creating a store is simple:
+With YuuState, creating a store is simple:
 
 ```tsx
-import { createStore } from "floppy-disk/react";
+import { createStore } from "yuustate/react";
 
 const useLawn = createStore({
   plants: 3,
@@ -111,7 +111,7 @@ useLawn.setState(prev => ({ plants: prev.plant + 2 })); // 👈 Using function
 
 ### Recommended Pattern
 
-FloppyDisk encourages keeping your store **minimal** and defining actions **outside the store**.
+YuuState encourages keeping your store **minimal** and defining actions **outside the store**.
 
 ```tsx
 const useLawn = createStore({ plants: 3, zombies: 1 });

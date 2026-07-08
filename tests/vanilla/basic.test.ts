@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { getValue } from "floppy-disk";
+import { getValue } from "yuustate";
 
 describe("getValue", () => {
   it("getValue returns value directly", () => {

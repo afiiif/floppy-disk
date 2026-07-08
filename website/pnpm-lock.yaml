@@ -26,9 +26,6 @@ importers:
       eslint-config-next:
         specifier: 13.4.19
         version: 13.4.19(eslint@8.57.1)(typescript@5.2.2)
-      floppy-disk:
-        specifier: ~3.7.2
-        version: 3.7.2(@types/react@18.2.21)(react@18.2.0)
       next:
         specifier: 13.4.19
         version: 13.4.19(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
@@ -56,6 +53,9 @@ importers:
       typescript:
         specifier: 5.2.2
         version: 5.2.2
+      yuustate:
+        specifier: ^3.9.0
+        version: 3.9.0(@types/react@18.2.21)(react@18.2.0)
     devDependencies:
       '@commitlint/cli':
         specifier: ^17.7.1
@@ -1641,17 +1641,6 @@ packages:
 
   flexsearch@0.7.43:
     resolution: {integrity: sha512-c5o/+Um8aqCSOXGcZoqZOm+NqtVwNsvVpWv6lfmSclU954O3wvQKxxK8zj74fPaSJbXpSLTs4PRhh+wnoCXnKg==}
-
-  floppy-disk@3.7.2:
-    resolution: {integrity: sha512-F9gs7WIkiB/29EqIkHz2KXXK2qgzerSyxw+DsXVtwLLtIwzlzqJykA6g34bUZq+siKAdLZULT3btmmzgQgAuXA==}
-    peerDependencies:
-      '@types/react': '>=17.0'
-      react: '>=17.0'
-    peerDependenciesMeta:
-      '@types/react':
-        optional: true
-      react:
-        optional: true
 
   focus-visible@5.2.1:
     resolution: {integrity: sha512-8Bx950VD1bWTQJEH/AM6SpEk+SU55aVnp4Ujhuuxy3eMEBCRwBnTBnVXr9YAPvZL3/CNjCa8u4IWfNmEO53whA==}
@@ -3676,6 +3665,17 @@ packages:
     resolution: {integrity: sha512-rVksvsnNCdJ/ohGc6xgPwyN8eheCxsiLM8mxuE/t/mOVqJewPuO1miLpTHQiRgTKCLexL4MeAFVagts7HmNZ2Q==}
     engines: {node: '>=10'}
 
+  yuustate@3.9.0:
+    resolution: {integrity: sha512-HCTpoUjvnv2tvB5AgFNU98ujCv8AQVpkgGxvQQJBHgXtxpdeTWDH2fANQ/oDMQLqcfKIUiNm2pAifLV5jtDGdA==}
+    peerDependencies:
+      '@types/react': '>=17.0'
+      react: '>=17.0'
+    peerDependenciesMeta:
+      '@types/react':
+        optional: true
+      react:
+        optional: true
+
   zod@3.21.4:
     resolution: {integrity: sha512-m46AKbrzKVzOzs/DZgVnG5H55N1sv1M8qZU3A8RIKbs3mrACDNeIOeilDymVb2HdmP8uwshOCF4uJ8uM9rCqJw==}
 
@@ -5415,11 +5415,6 @@ snapshots:
   flatted@3.4.2: {}
 
   flexsearch@0.7.43: {}
-
-  floppy-disk@3.7.2(@types/react@18.2.21)(react@18.2.0):
-    optionalDependencies:
-      '@types/react': 18.2.21
-      react: 18.2.0
 
   focus-visible@5.2.1: {}
 
@@ -8009,6 +8004,11 @@ snapshots:
   yn@3.1.1: {}
 
   yocto-queue@0.1.0: {}
+
+  yuustate@3.9.0(@types/react@18.2.21)(react@18.2.0):
+    optionalDependencies:
+      '@types/react': 18.2.21
+      react: 18.2.0
 
   zod@3.21.4: {}
 

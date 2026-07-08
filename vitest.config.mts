@@ -4,12 +4,12 @@ import { defineConfig } from "vitest/config";
 export default defineConfig({
   resolve: {
     alias: [
-      { find: /^floppy-disk$/, replacement: resolve("./src/index.ts") },
-      { find: /^floppy-disk(.*)$/, replacement: resolve("./src/$1.ts") },
+      { find: /^yuustate$/, replacement: resolve("./src/index.ts") },
+      { find: /^yuustate(.*)$/, replacement: resolve("./src/$1.ts") },
     ],
   },
   test: {
-    name: "floppy-disk",
+    name: "yuustate",
     // Keeping globals to true triggers React Testing Library's auto cleanup
     // https://vitest.dev/guide/migration.html
     globals: true,

@@ -1,25 +1,25 @@
 export function meta() {
   return [
-    { title: "FloppyDisk.ts Comparison" },
-    { name: "description", content: "FloppyDisk.ts comparison with Zustand & TanStack-Query" },
+    { title: "YuuState Comparison" },
+    { name: "description", content: "YuuState comparison with Zustand & TanStack-Query" },
   ];
 }
 
-// Use a____s to prevent "/assets" replacement to "/floppy-disk/assets" on CI
+// Use a____s to prevent "/assets" replacement to "/yuustate/assets" on CI
 const buildOutput = `✓ 103 modules transformed.
-build/client/.vite/manifest.json                     3.23 kB │ gzip:  0.60 kB
-build/client/a____s/root-DS469DaY.css               15.33 kB │ gzip:  3.74 kB
-build/client/a____s/components-DrxDq1-G.js           1.01 kB │ gzip:  0.59 kB
-build/client/a____s/store-floppy-disk-yMq1m5Ah.js    1.13 kB │ gzip:  0.51 kB
-build/client/a____s/store-zustand-BJYVMYXp.js        1.68 kB │ gzip:  0.79 kB
-build/client/a____s/utils-DpvILWFZ.js                1.95 kB │ gzip:  0.60 kB
-build/client/a____s/root-CB2-KCWF.js                 2.48 kB │ gzip:  1.01 kB
-build/client/a____s/home-C8prno_k.js                 2.77 kB │ gzip:  1.19 kB
-build/client/a____s/async-floppy-disk-BBLXq8EL.js    7.15 kB │ gzip:  1.99 kB
-build/client/a____s/react-DhFcpcuC.js               11.47 kB │ gzip:  3.88 kB
-build/client/a____s/async-tanstack-Bqi-YPia.js      43.94 kB │ gzip: 12.62 kB
-build/client/a____s/chunk-UVKPFVEO-BCVTWmlK.js     126.29 kB │ gzip: 42.59 kB
-build/client/a____s/entry.client-CMKBzKJ-.js       190.57 kB │ gzip: 60.05 kB
+build/client/.vite/manifest.json                  3.20 kB │ gzip:  0.60 kB
+build/client/a____s/root-CRn6MgiL.css            15.45 kB │ gzip:  3.77 kB
+build/client/a____s/components-DrxDq1-G.js        1.01 kB │ gzip:  0.59 kB
+build/client/a____s/store-yuustate-ANnGAsrD.js    1.12 kB │ gzip:  0.51 kB
+build/client/a____s/store-zustand-BJYVMYXp.js     1.68 kB │ gzip:  0.79 kB
+build/client/a____s/utils-DuanyUhp.js             1.94 kB │ gzip:  0.60 kB
+build/client/a____s/root-CDn2kOZF.js              2.46 kB │ gzip:  1.01 kB
+build/client/a____s/home-DQiCh3EF.js              2.74 kB │ gzip:  1.18 kB
+build/client/a____s/async-yuustate-DoDkgSCs.js    7.13 kB │ gzip:  1.99 kB
+build/client/a____s/react-yNhF9ZRY.js            11.80 kB │ gzip:  4.02 kB
+build/client/a____s/async-tanstack-Cq-pcNs-.js   43.94 kB │ gzip: 12.62 kB
+build/client/a____s/chunk-UVKPFVEO-BCVTWmlK.js  126.29 kB │ gzip: 42.59 kB
+build/client/a____s/entry.client-CMKBzKJ-.js    190.57 kB │ gzip: 60.05 kB
 ✓ built in 715ms`.split("\n");
 
 export default function Home() {
@@ -35,7 +35,7 @@ export default function Home() {
           {buildOutput.map((line, i) => {
             let className: string | undefined = undefined;
             let emoji = "";
-            if (line.includes("floppy-disk")) {
+            if (line.includes("yuustate")) {
               className = "bg-green-500/10 text-green-300";
               emoji = " 🎉";
             } else if (line.includes("zustand") || line.includes("tanstack")) {
@@ -57,13 +57,13 @@ export default function Home() {
       </p>
 
       <div className="pt-5">You can find the code here:</div>
-      <a className="link" href="https://github.com/afiiif/floppy-disk/tree/main/comparison">
-        github.com/afiiif/floppy-disk/tree/main/comparison
+      <a className="link" href="https://github.com/afiiif/yuustate/tree/main/comparison">
+        github.com/afiiif/yuustate/tree/main/comparison
       </a>
 
       <div className="pt-5">Documentation is available here:</div>
-      <a className="link" href="https://floppy-disk.vercel.app">
-        floppy-disk.vercel.app
+      <a className="link" href="https://yuustate.vercel.app">
+        yuustate.vercel.app
       </a>
     </div>
   );

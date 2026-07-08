@@ -33,9 +33,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <Meta />
         <Links />
-        {process.env.NODE_ENV === "production" && (
-          <link rel="icon" href="/floppy-disk/favicon.ico" />
-        )}
+        {process.env.NODE_ENV === "production" && <link rel="icon" href="/yuustate/favicon.ico" />}
       </head>
       <body>
         {children}
@@ -67,7 +65,7 @@ export default function App() {
                 <span className="sm:hidden">├</span>
                 <span className="hidden sm:inline">└</span>──{" "}
               </div>
-              <NavLink to="/store/floppy-disk">FloppyDisk's store</NavLink>
+              <NavLink to="/store/yuustate">YuuState's store</NavLink>
             </div>
           </span>
           <span>
@@ -80,8 +78,8 @@ export default function App() {
             </div>
             <div className="flex">
               <div> └── </div>
-              <NavLink to={{ pathname: "/async/floppy-disk", search: searchParams.toString() }}>
-                FloppyDisk's query & mutation
+              <NavLink to={{ pathname: "/async/yuustate", search: searchParams.toString() }}>
+                YuuState's query & mutation
               </NavLink>
             </div>
           </span>
