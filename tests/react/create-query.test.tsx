@@ -1,6 +1,6 @@
 import { act, render, renderHook } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
-import { createQuery } from "floppy-disk/react";
+import { createQuery } from "yuustate/react";
 import * as basic from "../../src/vanilla/basic";
 
 const DEFAULT_STALE_TIME = 2500;

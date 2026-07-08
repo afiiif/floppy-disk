@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { getHash, isPlainObject } from "floppy-disk";
+import { getHash, isPlainObject } from "yuustate";
 
 describe("isPlainObject", () => {
   it("returns `true` for a plain object", () => {

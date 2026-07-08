@@ -1,6 +1,6 @@
 import { act, render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
-import { createStore } from "floppy-disk/react";
+import { createStore } from "yuustate/react";
 
 describe("createStore", () => {
   it("creates a store hook and api object", () => {

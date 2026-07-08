@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { initStore } from "floppy-disk";
+import { initStore } from "yuustate";
 import * as basic from "../../src/vanilla/basic";
 
 describe("initStore", () => {

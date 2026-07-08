@@ -1,5 +1,5 @@
 {
-  "name": "floppy-disk",
+  "name": "yuustate",
   "description": "Lightweight unified state management for sync and async data.",
   "private": true,
   "version": "3.9.0",
@@ -18,12 +18,12 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/afiiif/floppy-disk"
+    "url": "https://github.com/afiiif/yuustate"
   },
   "bugs": {
-    "url": "https://github.com/afiiif/floppy-disk/issues"
+    "url": "https://github.com/afiiif/yuustate/issues"
   },
-  "homepage": "https://github.com/afiiif/floppy-disk#readme",
+  "homepage": "https://github.com/afiiif/yuustate#readme",
   "sideEffects": false,
   "files": [
     "**"
