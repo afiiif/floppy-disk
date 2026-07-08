@@ -1,8 +1,8 @@
 import { useState } from "react";
+import { createStream } from "yuustate/react";
 
 import { CardWithReRenderHighlight } from "../shared/components";
 import { FakeWebSocket } from "../shared/utils";
-import { createStream } from "yuustate/react";
 
 export function meta() {
   return [{ title: "YuuState Stream" }, { name: "description", content: "YuuState stream" }];
