@@ -6,24 +6,6 @@ import { useConfig } from "nextra-theme-docs";
 const themeConfig = {
   docsRepositoryBase: "https://github.com/afiiif/floppy-disk/blob/main/website",
   project: { link: "https://github.com/afiiif/floppy-disk" },
-  banner: {
-    dismissible: false,
-    text: (
-      <>
-        <div className="xl:inline-block">
-          This library has been rebranded as{" "}
-          <a href="/" className="text-amber-300 hover:underline">
-            {"{new-name}"}
-          </a>
-          .
-        </div>{" "}
-        <div className="text-balance xl:inline-block">
-          Existing functionality and APIs remain unchanged. Please use the new package name for all
-          future installations and imports.
-        </div>
-      </>
-    ),
-  },
   logo: (
     <div className="group flex items-center gap-3 py-2.5 pr-2.5 text-xl font-bold">
       <div className="-rotate-12 transition-transform group-hover:rotate-12 group-hover:scale-125">

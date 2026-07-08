@@ -1,4 +1,4 @@
-const GITHUB_URL = "afiiif/floppy-disk/tree/before-rebrand/website/examples";
+const GITHUB_URL = "afiiif/floppy-disk/tree/main/website/examples";
 const BASE_SANDBOX_URL = `https://stackblitz.com/github/${GITHUB_URL}`;
 
 type Props = {
