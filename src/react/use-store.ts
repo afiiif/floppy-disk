@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useSyncExternalStore } from "react";
 import { type StoreApi } from "../vanilla.ts";
 
 type Path = Array<string | number | symbol>;
@@ -111,22 +111,33 @@ export const useStoreState = <TState extends Record<string, any>>(
 
   const [trackedState, usedPathsRef] = useStoreStateProxy(state);
 
-  const [, reRender] = useState({});
+  const snapshotRef = useRef(store.getState());
+  const getSnapshot = () => snapshotRef.current;
 
-  useEffect(() => {
-    return store.subscribe((nextState, prevState, changedKeys) => {
-      const paths = compressPaths(usedPathsRef.current);
-      for (const path of paths) {
-        const rootKey = path[0] as keyof TState;
-        if (!changedKeys.includes(rootKey)) continue;
-        const prevVal = getValueByPath(prevState, path);
-        const nextVal = getValueByPath(nextState, path);
-        if (!Object.is(prevVal, nextVal)) return reRender({});
-      }
-    });
-    // False positive (missing dependency: 'usedPathsRef'): usedPathsRef is a ref, no need to add to deps
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [store]);
+  useSyncExternalStore(
+    useCallback(
+      (onStoreChange) => {
+        return store.subscribe((nextState, prevState, changedKeys) => {
+          const paths = compressPaths(usedPathsRef.current);
+          for (const path of paths) {
+            const rootKey = path[0] as keyof TState;
+            if (!changedKeys.includes(rootKey)) continue;
+            const prevVal = getValueByPath(prevState, path);
+            const nextVal = getValueByPath(nextState, path);
+            if (!Object.is(prevVal, nextVal)) {
+              snapshotRef.current = nextState;
+              return onStoreChange();
+            }
+          }
+        });
+      },
+      // False positive (missing dependency: 'usedPathsRef'): usedPathsRef is a ref, no need to add to deps
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+      [store],
+    ),
+    getSnapshot,
+    getSnapshot,
+  );
 
   return trackedState;
 };
