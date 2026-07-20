@@ -27,8 +27,8 @@ importers:
         specifier: 7.14.0
         version: 7.14.0(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
       yuustate:
-        specifier: ^3.9.0
-        version: 3.9.0(@types/react@19.2.14)(react@19.2.4)
+        specifier: ^3.10.0
+        version: 3.10.0(@types/react@19.2.14)(react@19.2.4)
     devDependencies:
       '@react-router/dev':
         specifier: 7.14.0
@@ -1526,11 +1526,11 @@ packages:
   yallist@3.1.1:
     resolution: {integrity: sha512-a4UGQaWPH59mOXUYnAG2ewncQS4i4F43Tv3JoAM+s2VDAmS9NsK8GpDMLrCHPksFT7h3K6TOoUNn2pb7RoXx4g==}
 
-  yuustate@3.9.0:
-    resolution: {integrity: sha512-HCTpoUjvnv2tvB5AgFNU98ujCv8AQVpkgGxvQQJBHgXtxpdeTWDH2fANQ/oDMQLqcfKIUiNm2pAifLV5jtDGdA==}
+  yuustate@3.10.0:
+    resolution: {integrity: sha512-Xubs4na2PNtN5ot84ZLEQJJovL7XRx+QNw8dItTdD8iIsan7n5Z0Aq/oWjBrvB1SnTHWUEjs59PAMOrli69DoA==}
     peerDependencies:
-      '@types/react': '>=17.0'
-      react: '>=17.0'
+      '@types/react': '>=18.0'
+      react: '>=18.0'
     peerDependenciesMeta:
       '@types/react':
         optional: true
@@ -2856,7 +2856,7 @@ snapshots:
 
   yallist@3.1.1: {}
 
-  yuustate@3.9.0(@types/react@19.2.14)(react@19.2.4):
+  yuustate@3.10.0(@types/react@19.2.14)(react@19.2.4):
     optionalDependencies:
       '@types/react': 19.2.14
       react: 19.2.4

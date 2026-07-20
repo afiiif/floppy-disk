@@ -25,7 +25,7 @@
     "sharp": "^0.32.5",
     "tailwindcss": "^3.4.19",
     "typescript": "5.2.2",
-    "yuustate": "^3.9.0"
+    "yuustate": "^3.10.0"
   },
   "devDependencies": {
     "@commitlint/cli": "^17.7.1",

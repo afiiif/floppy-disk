@@ -16,7 +16,7 @@
     "react": "^19.2.4",
     "react-dom": "^19.2.4",
     "react-router": "7.13.2",
-    "yuustate": "^3.9.0",
+    "yuustate": "^3.10.0",
     "zustand": "^5.0.12"
   },
   "devDependencies": {
