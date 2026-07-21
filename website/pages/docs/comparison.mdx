@@ -41,9 +41,8 @@ state.count++;
 
 YuuState combines the strengths of both:
 
-- ✅ No selectors (like Valtio)
-- ✅ Immutable updates (like React & Zustand)
-- ✅ Automatic fine-grained reactivity
+- ✅ No selectors, automatic fine-grained reactivity (like Valtio)
+- ✅ Immutable updates, consistent with React, no mixed mental models (like Zustand)
 
 ```tsx
 const { count } = useStore();
@@ -69,7 +68,7 @@ But it comes with trade-offs:
 2. **Query keys**\
    Every query must be identified manually. You are responsible for structuring and maintaining query keys.
    ```tsx
-   useQuery(["user", id], getUserById);
+   useQuery(["product", id], getProductById);
    ```
 
 </div>
@@ -90,20 +89,20 @@ YuuState approaches async state differently:
 ```tsx
 import { createQuery } from "yuustate/react";
 
-const userDetailQuery = createQuery<GetUserByIdResponse, { id: string }>(
-  getUserById,
+const productDetailQuery = createQuery<GetProductByIdResponse, { id: string }>(
+  getProductById,
 );
 ```
 
 ```tsx
-function UserDetail({ id }: { id: string }) {
-  const useUserDetailQuery = userDetailQuery({ id });
-  const { data, error } = useUserDetailQuery();
+function ProductDetail({ id }: { id: string }) {
+  const useProductDetailQuery = productDetailQuery({ id });
+  const { data, error } = useProductDetailQuery();
 
   if (!data && !error) return <div>Loading...</div>;
   if (error) return <div>Error: {error.message}</div>;
 
-  return <div>Name: {data.name}, email: {data.email}</div>;
+  return <div>Name: {data.name}, price: {data.price}</div>;
 }
 ```
 
