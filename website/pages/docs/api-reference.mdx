@@ -238,8 +238,9 @@ const useQuery = getQuery(variable);
 <div className="text-sm">
 - Queries are keyed by query variable (deterministic hash)
 - Each variable has its own isolated state
-- Invalidated queries bypass `staleTime`
-- Unused queries are garbage collected after gcTime
+- Unused queries are garbage collected after `gcTime`
+- Revalidating a query respects `staleTime`, while invalidating a query bypasses `staleTime`.\
+  See [Concept of Stale, Revalidate, & Invalidate](/docs/query-concepts).
 </div>
 
 ## createMutation
